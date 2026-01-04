@@ -4,37 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Try It</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #000;
+        }
+        input {
+            padding: 10px;
+            font-size: 18px;
+        }
+    </style>
 </head>
 <body>
-    
-</body>
-
-
 <div class="autoplay">
-  <a class="overPassword">
-    <input id="password" placeholder="Enter the password">
-  </a>
+    <a class="overPassword">
+        <input id="password" placeholder="Enter the password">
+    </a>
 </div>
 
-const passwordForm = document.querySelector(".overPassword");
-const passwordInput = document.querySelector("#password");
+<script>
+    const passwordForm = document.querySelector(".overPassword");
+    const passwordInput = document.querySelector("#password");
 
-password_input.addEventListener("keypress", (e) => {
-  //TODO: code here
-});
+    // Palitan mo ito ng YouTube video ID
+    const id = "w78HrrmSje4";
+const correctPassword = "1234"; // 
+    passwordInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            passwordForm.remove();
+let iframe = document.createElement("iframe");
+            iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&controls=0`;
+            iframe.frameBorder = "0";
+            iframe.allow =
+                "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+            iframe.allowFullscreen = true;
+            iframe.width = "1280";
+            iframe.height = "620";
 
-passwordInput.addEventListener("keypress", (e) => {
-  passwordForm.remove();
+            document.querySelector(".autoplay").appendChild(iframe);
+        }
+    });
+</script>
 
-  let iframe = document.createElement('iframe');
-  iframe.setAttribute('src', `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&controls=0&showinfo=0`);
-  iframe.setAttribute('frameborder', '0');
-  iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
-  iframe.setAttribute('allowfullscreen', '');
-  iframe.setAttribute('width', '1280');
-  iframe.setAttribute('height', '620');
-
-  document.querySelector('.autoplay').appendChild(iframe);
-});
-
-</html>
+</body>
+</html> 
