@@ -1,5 +1,17 @@
 
 
+/* RANDOM + JACKPOT */
+function getReward(){
+ if(Math.random()<0.1) return 1.0;      // 🎯 10% JACKPOT ₱1
+ return parseFloat((Math.random()*(0.5-0.1)+0.1).toFixed(1));
+}
+
+/* LOAD VIDEO */
+function loadVideo(){
+ if(currentVideo>=videos.length){
+   earned.textContent="✅ All videos done";
+   return;
+ }
 const vid=videos[currentVideo];
  if(USERS[currentUser].data.watched.includes(vid.id)){
    currentVideo++; loadVideo(); return;
