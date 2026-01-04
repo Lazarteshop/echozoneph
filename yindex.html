@@ -1,54 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-         <meta name="viewport" content="width=device-width"> 
-  <meta http-equiv="refresh" content=" 10; url = https://echozoneph.netlify.app">
-    <title>Try It</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: #000;
-        }
-        input {
-            padding: 10px;
-            font-size: 2px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Earn System</title>
+<style>
+    body {
+        background: #000;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+    input {
+        padding: 10px;
+        font-size: 18px;
+    }
+    #timer {
+        font-size: 24px;
+        margin-top: 10px;
+    }
+    #earned {
+        font-size: 26px;
+        color: #0f0;
+        margin-top: 20px;
+    }
+</style>
 </head>
 <body>
 <div class="autoplay">
-    <a class="overPassword">
-        <input id="password" placeholder="play and get paid">
-    </a>
+    <div class="overPassword">
+        <input id="password" type="password" placeholder="Enter password">
+    </div>
 </div>
 
+<div id="timer"></div>
+<div id="earned"></div>
+
 <script>
-    const passwordForm = document.querySelector(".overPassword");
-    const passwordInput = document.querySelector("#password");
+const passwordForm = document.querySelector(".overPassword");
+const passwordInput = document.querySelector("#password");
+const timerEl = document.getElementById("timer");
+const earnedEl = document.getElementById("earned");
+const correctPassword = "1234";
+const videoId = "dQw4w9WgXcQ"; // YouTube ID
+const videoDuration = 212; // ⏱️ seconds (palitan ayon sa video)
+const reward = 0.5;
 
-    // Palitan mo ito ng YouTube video ID
-    const id = "w78HrrmSje4";
-const correctPassword = "1234"; // 
-    passwordInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") {
-            passwordForm.remove();
-let iframe = document.createElement("iframe");
-            iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&controls=0`;
-            iframe.frameBorder = "0";
-            iframe.allow =
-                "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
-            iframe.allowFullscreen = true;
-            iframe.width = "1000";
-            iframe.height = "620";
+// Kunin saved earnings
+let totalEarnings = parseFloat(localStorage.getItem("earnings")) || 0;
 
-            document.querySelector(".autoplay").appendChild(iframe);
+passwordInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+        if (passwordInput.value === correctPassword) {
+            startVideo();
+        } else {
+            alert("Maling password!");
+            passwordInput.value = "";
         }
-    });
+    }
+});
+function startVideo() {
+    passwordForm.remove();
+
+    let iframe = document.createElement("iframe");
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0`;
+    iframe.width = "800";
+    iframe.height = "450";
+    iframe.allow = "autoplay";
+    iframe.frameBorder = "0";
+
+    document.querySelector(".autoplay").appendChild(iframe);
+
+    startTimer(videoDuration);
+}
+function startTimer(seconds) {
+    let remaining = seconds;
+
+    const interval = setInterval(() => {
+        let min = Math.floor(remaining / 60);
+        let sec = remaining % 60;
+        timerEl.textContent = `Time Remaining: ${min}:${sec.toString().padStart(2,"0")}`;
+
+        remaining--;
+
+        if (remaining < 0) {
+            clearInterval(interval);
+            finishVideo();
+        }
+    }, 1000);
+}
+function finishVideo() {
+    totalEarnings += reward;
+    localStorage.setItem("earnings", totalEarnings.toFixed(2));
+
+    earnedEl.innerHTML = `
+        🎉 You earned ₱${reward}! <br>
+        💰 Total Earnings: ₱${totalEarnings.toFixed(2)}
+    `;
+}
 </script>
 
 </body>
-</html> 
+</html>
