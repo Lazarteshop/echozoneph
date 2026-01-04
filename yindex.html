@@ -1,5 +1,16 @@
 
 
+
+/* USER DATA */
+function loadUserData(){
+ USERS[currentUser].data=
+ JSON.parse(localStorage.getItem("earn_"+currentUser))||
+ {total:0,watched:[],history:[]};
+}
+
+function saveUserData(){
+ localStorage.setItem("earn_"+currentUser,JSON.stringify(USERS[currentUser].data));
+}
 /* RANDOM + JACKPOT */
 function getReward(){
  if(Math.random()<0.1) return 1.0;      // 🎯 10% JACKPOT ₱1
