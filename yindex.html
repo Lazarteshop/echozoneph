@@ -1,3 +1,30 @@
+
+/* 💳 UPDATE BALANCE */
+function updateBalance() {
+    const box = document.getElementById("balanceBox");
+    document.getElementById("balance").textContent =
+        earnings.total.toFixed(2);
+
+    box.classList.remove("bump");
+    void box.offsetWidth;
+    box.classList.add("bump");
+
+    document.getElementById("withdrawBtn").disabled =
+        earnings.total < 5;
+}
+/* 📊 HISTORY */
+function renderHistory() {
+    const list = document.getElementById("historyList");
+    list.innerHTML = "";
+    earnings.history.forEach(h => {
+        const d = document.createElement("div");
+        d.className = "card";
+        d.innerHTML =
+            `<strong>${h.title}</strong><br>
+             ₱${h.amount} — ${h.time}`;
+        list.appendChild(d);
+    });
+}
 /* 💸 WITHDRAW (DEMO) */
 document.getElementById("withdrawBtn").onclick = () => {
     alert(`Withdraw ₱${earnings.total.toFixed(2)} successful (DEMO ONLY)`);
