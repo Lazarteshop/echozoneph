@@ -1,3 +1,11 @@
+
+/* BALANCE */
+function updateBalance(){
+ balance.textContent=USERS[currentUser].data.total.toFixed(2);
+ withdrawBtn.disabled=USERS[currentUser].data.total<=0;
+ balanceBox.classList.remove("bump");void balanceBox.offsetWidth;
+ balanceBox.classList.add("bump");
+}
 /* HISTORY */
 function renderHistory(){
  historyList.innerHTML="";
