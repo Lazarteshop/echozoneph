@@ -2,102 +2,198 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width">
-<title>Earn System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watch & Earn Demo</title>
+
 <style>
-    body {
-        background: #000;
-        color: #fff;
-        font-family: Arial, sans-serif;
-        text-align: center;
-    }
-    input {
-        padding: 10px;
-        font-size: 18px;
-    }
-    #timer {
-        font-size: 24px;
-        margin-top: 10px;
-    }
-    #earned {
-        font-size: 26px;
-        color: #0f0;
-        margin-top: 20px;
-    }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0b0b0b;
+    color: #fff;
+    text-align: center;
+}
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+}
+input {
+    padding: 12px;
+    font-size: 18px;
+    width: 100%;
+    max-width: 300px;
+}
+button {
+    padding: 12px 20px;
+    font-size: 16px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+#timer {
+    font-size: 22px;
+    margin-top: 15px;
+}
+#earned {
+    font-size: 26px;
+    color: #00ff88;
+    margin-top: 20px;
+}
+.history {
+    margin-top: 30px;
+    text-align: left;
+}
+.card {
+    background: #111;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+}
+video, iframe {
+
+    width: 100%;
+    max-width: 800px;
+    height: 450px;
+    border-radius: 10px;
+}
 </style>
 </head>
-<body>
-<div class="autoplay">
-    <div class="overPassword">
+
+<body oncontextmenu="return false">
+
+<div class="container">
+    <h1>🎬 Watch & Earn</h1>
+
+    <div id="login">
         <input id="password" type="password" placeholder="Enter password">
     </div>
-</div>
+<div id="playerArea"></div>
+    <div id="timer"></div>
+    <div id="earned"></div>
 
-<div id="timer"></div>
-<div id="earned"></div>
+    <div class="history">
+        <h3>💰 Earnings History</h3>
+        <div id="historyList"></div>
+    </div>
+</div>
+<script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
-const passwordForm = document.querySelector(".overPassword");
-const passwordInput = document.querySelector("#password");
-const timerEl = document.getElementById("timer");
-const earnedEl = document.getElementById("earned");
-const correctPassword = "1234";
-const videoId = "dQw4w9WgXcQ"; // YouTube ID
-const videoDuration = 212; // ⏱️ seconds (palitan ayon sa video)
-const reward = 0.5;
+/* 🔐 BASIC CONFIG */
+const PASSWORD = "1234";
+const REWARD = 0.5;
 
-// Kunin saved earnings
-let totalEarnings = parseFloat(localStorage.getItem("earnings")) || 0;
-
-passwordInput.addEventListener("keypress", (e) => {
+/* 🎥 VIDEO LIST */
+const videos = [
+    { id: "dQw4w9WgXcQ", title: "Video 1" },
+    { id: "9bZkp7q19f0", title: "Video 2" }
+];
+let currentVideoIndex = 0;
+let player;
+let earnings = JSON.parse(localStorage.getItem("earningsData")) || {
+    total: 0,
+    watched: [],
+    history: []
+};
+/* 🔐 PASSWORD CHECK */
+document.getElementById("password").addEventListener("keypress", e => {
     if (e.key === "Enter") {
-        if (passwordInput.value === correctPassword) {
-            startVideo();
+        if (e.target.value === PASSWORD) {
+            document.getElementById("login").remove();
+            loadVideo();
+            renderHistory();
         } else {
-            alert("Maling password!");
-            passwordInput.value = "";
+            alert("Maling password");
+            e.target.value = "";
         }
     }
 });
-function startVideo() {
-    passwordForm.remove();
+/* 🎥 LOAD VIDEO */
+function loadVideo() {
+    if (currentVideoIndex >= videos.length) {
+        document.getElementById("earned").innerHTML = "✅ Lahat ng video ay napanood na.";
+        return;
+    }
 
-    let iframe = document.createElement("iframe");
-    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0`;
-    iframe.width = "800";
-    iframe.height = "450";
-    iframe.allow = "autoplay";
-    iframe.frameBorder = "0";
+    const vid = videos[currentVideoIndex];
 
-    document.querySelector(".autoplay").appendChild(iframe);
+    if (earnings.watched.includes(vid.id)) {
+        currentVideoIndex++;
+        loadVideo();
+        return;
+    }
+const div = document.createElement("div");
+    div.id = "player";
+    document.getElementById("playerArea").innerHTML = "";
+    document.getElementById("playerArea").appendChild(div);
 
-    startTimer(videoDuration);
-}
-function startTimer(seconds) {
-    let remaining = seconds;
-
-    const interval = setInterval(() => {
-        let min = Math.floor(remaining / 60);
-        let sec = remaining % 60;
-        timerEl.textContent = `Time Remaining: ${min}:${sec.toString().padStart(2,"0")}`;
-
-        remaining--;
-
-        if (remaining < 0) {
-            clearInterval(interval);
-            finishVideo();
+    player = new YT.Player("player", {
+        videoId: vid.id,
+        playerVars: { autoplay: 1, controls: 0 },
+        events: {
+            onReady: startTimer,
+            onStateChange: stateChange
         }
+    });
+}
+/* ⏱️ TIMER */
+function startTimer() {
+    let duration = Math.floor(player.getDuration());
+    let interval = setInterval(() => {
+        let min = Math.floor(duration / 60);
+        let sec = duration % 60;
+        document.getElementById("timer").textContent =
+            `⏱️ ${min}:${sec.toString().padStart(2,"0")}`;
+        duration--;
+        if (duration < 0) clearInterval(interval);
     }, 1000);
 }
-function finishVideo() {
-    totalEarnings += reward;
-    localStorage.setItem("earnings", totalEarnings.toFixed(2));
-
-    earnedEl.innerHTML = `
-        🎉 You earned ₱${reward}! <br>
-        💰 Total Earnings: ₱${totalEarnings.toFixed(2)}
-    `;
+/* 🎯 VIDEO END */
+function stateChange(e) {
+    if (e.data === YT.PlayerState.ENDED) {
+        rewardUser();
+    }
 }
+
+/* 💰 REWARD */
+function rewardUser() {
+    const vid = videos[currentVideoIndex];
+    earnings.total += REWARD;
+    earnings.watched.push(vid.id);
+    earnings.history.push({
+        title: vid.title,
+        amount: REWARD,
+        time: new Date().toLocaleString()
+    });
+    localStorage.setItem("earningsData", JSON.stringify(earnings));
+
+    document.getElementById("earned").innerHTML =
+        `🎉 You earned ₱${REWARD}<br>💰 Total: ₱${earnings.total.toFixed(2)}`;
+
+    currentVideoIndex++;
+    setTimeout(loadVideo, 3000);
+}
+
+/* 📊 HISTORY */
+function renderHistory() {
+    const list = document.getElementById("historyList");
+    list.innerHTML = "";
+    earnings.history.forEach(h => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+            <strong>${h.title}</strong><br>
+            ₱${h.amount} — ${h.time}
+        `;
+        list.appendChild(div);
+    });
+}
+/* 🚫 BASIC ANTI-INSPECT */
+document.addEventListener("keydown", e => {
+    if (e.key === "F12" || (e.ctrlKey && e.shiftKey)) {
+        e.preventDefault();
+    }
+});
 </script>
 
 </body>
