@@ -1,6 +1,18 @@
 
 
-
+const vid=videos[currentVideo];
+ if(USERS[currentUser].data.watched.includes(vid.id)){
+   currentVideo++; loadVideo(); return;
+ }
+ playerArea.innerHTML="<div id='player'></div>";
+ player=new YT.Player("player",{
+  videoId:vid.id,
+  playerVars:{autoplay:1,controls:0},
+  events:{onReady:startTimer,onStateChange:e=>{
+    if(e.data===YT.PlayerState.ENDED) rewardUser();
+  }}
+ });
+}
 /* TIMER + PROGRESS */
 function startTimer(){
  let wait=setInterval(()=>{
