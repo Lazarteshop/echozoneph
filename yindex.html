@@ -1,4 +1,92 @@
 
+#timer {
+    font-size: 22px;
+    margin-top: 15px;
+}
+#earned {
+    font-size: 26px;
+    color: #00ff88;
+    margin-top: 20px;
+}
+.history {
+    margin-top: 30px;
+    text-align: left;
+}
+.card {
+    background: #111;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+}
+iframe {
+    width: 100%;
+    max-width: 800px;
+    height: 450px;
+    border-radius: 10px;
+}
+</style>
+</head>
+<body oncontextmenu="return false">
+
+<div class="container">
+
+    <button id="themeToggle">🌙 Toggle Theme</button>
+
+    <div id="balanceBox">
+        💰 Total Balance: ₱<span id="balance">0.00</span><br>
+        <button id="withdrawBtn" disabled>💸 Withdraw</button>
+    </div>
+<h2>🎬 Watch & Earn</h2>
+
+    <div id="login">
+        <input id="password" type="password" placeholder="Enter password">
+    </div>
+
+    <div id="playerArea"></div>
+    <div id="timer"></div>
+    <div id="earned"></div>
+
+    <div class="history">
+        <h3>📊 Earnings History</h3>
+        <div id="historyList"></div>
+    </div>
+</div>
+<audio id="earnSound">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3" type="audio/mpeg">
+</audio>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+/* 🔐 CONFIG */
+const PASSWORD = "1234";
+/* 🎥 VIDEO LIST */
+const videos = [
+    { id: "dQw4w9WgXcQ", title: "Video 1" },
+    { id: "9bZkp7q19f0", title: "Video 2" }
+];
+
+let player;
+let currentVideo = 0;
+
+/* 💾 LOAD SAVED DATA */
+let earnings = JSON.parse(localStorage.getItem("earningsData")) || {
+    total: 0,
+    watched: [],
+    history: []
+};
+/* 🎨 THEME */
+const themeToggle = document.getElementById("themeToggle");
+if (localStorage.getItem("theme") === "light") {
+    document.body.classList.add("light");
+}
+themeToggle.onclick = () => {
+    document.body.classList.toggle("light");
+    localStorage.setItem(
+        "theme",
+        document.body.classList.contains("light") ? "light" : "dark"
+    );
+};
 /* 🔑 LOGIN */
 document.getElementById("password").addEventListener("keypress", e => {
     if (e.key === "Enter") {
