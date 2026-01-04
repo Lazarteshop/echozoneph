@@ -1,4 +1,13 @@
 
+/* 🔑 LOGIN */
+document.getElementById("password").addEventListener("keypress", e => {
+    if (e.key === "Enter") {
+        if (e.target.value === PASSWORD) {
+            document.getElementById("login").remove();
+            updateBalance();
+            renderHistory();
+            loadVideo();
+        } else {
 alert("Maling password");
             e.target.value = "";
         }
