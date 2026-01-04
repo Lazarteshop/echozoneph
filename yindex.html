@@ -1,3 +1,13 @@
+/* HISTORY */
+function renderHistory(){
+ historyList.innerHTML="";
+ USERS[currentUser].data.history.forEach(h=>{
+  let d=document.createElement("div");
+  d.className="card";
+  d.innerHTML=`<b>${h.title}</b><br>₱${h.amount} — ${h.time}`;
+  historyList.appendChild(d);
+ });
+}
 /* WITHDRAW (DEMO) */
 withdrawBtn.onclick=()=>{
  if(USERS[currentUser].data.total<=0)return alert("No balance");
