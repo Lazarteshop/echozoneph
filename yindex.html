@@ -111,6 +111,7 @@ document.getElementById("password").addEventListener("keypress", e => {
     if (e.key === "Enter") {
         if (e.target.value === PASSWORD) {
             document.getElementById("login").remove();
+            updateBalance()
             loadVideo();
             renderHistory();
         } else {
@@ -168,6 +169,7 @@ function startTimer() {
 function stateChange(e) {
     if (e.data === YT.PlayerState.ENDED) {
         rewardUser();
+       updateBalance();
     }
 }
 
