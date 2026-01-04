@@ -1,4 +1,79 @@
 
+alert("Maling password");
+            e.target.value = "";
+        }
+    }
+});
+
+/* 🎲 RANDOM REWARD (₱0.1 – ₱0.5) */
+function getRandomReward() {
+    return parseFloat((Math.random() * (0.5 - 0.1) + 0.1).toFixed(1));
+}
+/* ▶️ LOAD VIDEO */
+function loadVideo() {
+    if (currentVideo >= videos.length) {
+        document.getElementById("earned").textContent =
+            "✅ All videos completed.";
+        return;
+    }
+
+    const vid = videos[currentVideo];
+    if (earnings.watched.includes(vid.id)) {
+        currentVideo++;
+        loadVideo();
+        return;
+    }
+document.getElementById("playerArea").innerHTML =
+        `<div id="player"></div>`;
+
+    player = new YT.Player("player", {
+        videoId: vid.id,
+        playerVars: { autoplay: 1, controls: 0 },
+        events: {
+            onReady: startTimer,
+            onStateChange: e => {
+                if (e.data === YT.PlayerState.ENDED) rewardUser();
+            }
+        }
+    });
+}
+/* ⏱️ TIMER */
+function startTimer() {
+    let t = Math.floor(player.getDuration());
+    const i = setInterval(() => {
+        let m = Math.floor(t / 60);
+        let s = t % 60;
+        document.getElementById("timer").textContent =
+            `⏱️ ${m}:${s.toString().padStart(2,"0")}`;
+        t--;
+        if (t < 0) clearInterval(i);
+    }, 1000);
+}
+/* 💰 REWARD USER */
+function rewardUser() {
+    const vid = videos[currentVideo];
+    const reward = getRandomReward();
+
+    earnings.total += reward;
+    earnings.watched.push(vid.id);
+    earnings.history.push({
+        title: vid.title,
+        amount: reward,
+        time: new Date().toLocaleString()
+    });
+
+localStorage.setItem("earningsData", JSON.stringify(earnings));
+    document.getElementById("earnSound").play();
+
+    document.getElementById("earned").innerHTML =
+        `🎉 You earned ₱${reward}<br>💰 Total: ₱${earnings.total.toFixed(2)}`;
+
+    updateBalance();
+    renderHistory();
+
+    currentVideo++;
+    setTimeout(loadVideo, 3000);
+}
 /* 💳 UPDATE BALANCE */
 function updateBalance() {
     const box = document.getElementById("balanceBox");
