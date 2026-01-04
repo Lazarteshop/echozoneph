@@ -1,5 +1,20 @@
 
 
+/* USERS */
+const USERS={
+  user1:{password:"1234",data:null},
+  user2:{password:"abcd",data:null}
+};
+
+let currentUser=null;
+
+/* VIDEOS */
+const videos=[
+ {id:"dQw4w9WgXcQ",title:"Video 1"},
+ {id:"9bZkp7q19f0",title:"Video 2"}
+];
+
+let player,currentVideo=0,timerInterval;
 
 /* THEME */
 if(localStorage.getItem("theme")==="light")document.body.classList.add("light");
