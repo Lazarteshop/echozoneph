@@ -1,6 +1,22 @@
 
 
-
+/* TIMER + PROGRESS */
+function startTimer(){
+ let wait=setInterval(()=>{
+  let d=Math.floor(player.getDuration());
+  if(d>0){clearInterval(wait);runTimer(d);}
+ },200);
+}
+function runTimer(total){
+ let t=total;
+ clearInterval(timerInterval);
+ timerInterval=setInterval(()=>{
+  let m=Math.floor(t/60),s=t%60;
+  timer.textContent=`⏱️ ${m}:${s.toString().padStart(2,"0")}`;
+  progressBar.style.width=((total-t)/total*100)+"%";
+  t--; if(t<0)clearInterval(timerInterval);
+ },1000);
+}
 /* REWARD */
 function rewardUser(){
  const r=getReward();
