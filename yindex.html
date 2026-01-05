@@ -3,197 +3,213 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width">
-<title>Watch & Earn</title>
+<title>Watch & Earn ph</title>
 
 <style>
 body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff;text-align:center}
 .container{max-width:900px;margin:auto;padding:20px}
-#balanceBox{background:#111;padding:15px;border-radius:10px;font-size:22px;color:#00ff88}
-#balanceBox.bump{animation:bump .4s ease}
-@keyframes bump{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
-input,select{padding:12px;font-size:16px;width:100%;max-width:300px}
-button{padding:10px 15px;margin-top:10px;border-radius:6px;border:none;cursor:pointer}
-#withdrawBtn{background:#00ff88}
-#withdrawBtn:disabled{background:#555;cursor:not-allowed}
+.box{background:#111;padding:15px;border-radius:10px;margin-bottom:15px}
+.green{color:#00ff88}
+button{padding:10px 15px;border:none;border-radius:6px;cursor:pointer}
+button:disabled{background:#555}
+input,select{padding:10px;width:100%;max-width:300px}
+.progress{width:100%;height:12px;background:#333;border-radius:10px;overflow:hidden;margin-top:5px}
+.progress div{height:100%;background:#00ff88;width:0}
 iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
-#timer{font-size:22px;margin-top:10px}
-#earned{font-size:24px;color:#00ff88;margin-top:15px}
-.progress{width:100%;max-width:800px;height:12px;background:#333;border-radius:10px;margin:10px auto;overflow:hidden}
-.progress div{height:100%;width:0;background:#00ff88}
-.section{margin-top:30px;text-align:left}
-.card{background:#111;padding:10px;border-radius:8px;margin-bottom:8px}
-.note{font-size:14px;color:#aaa}
+.card{background:#111;padding:10px;border-radius:8px;margin-bottom:8px;text-align:left}
+.lock{color:#ff6666;font-size:18px}
+.hidden{display:none}
 </style>
 </head>
-<body>
 <div class="container">
 
-<div id="balanceBox">
+<div class="box">
 💰 Balance: ₱<span id="balance">0.00</span><br>
-<button id="withdrawBtn" disabled>💸 Withdraw</button>
-<div class="note">Minimum withdrawal: ₱50</div>
+<div class="progress"><div id="withdrawProgress"></div></div>
+<small>Minimum ₱50</small><br><br>
+<button id="withdrawBtn" disabled>Withdraw</button>
 </div>
 
-<h2>🎬 Watch & Earn</h2>
-<div id="login">
-<select id="userSelect"></select><br>
+<h2>🎬 Watch & Earn ph</h2>
+
+<div id="login" class="box">
+<select id="userSelect"></select><br><br>
 <input id="password" type="password" placeholder="Password">
 </div>
+<div id="lockMsg" class="lock"></div>
 
 <div id="playerArea"></div>
-<div class="progress"><div id="progressBar"></div></div>
+<div class="progress"><div id="videoProgress"></div></div>
 <div id="timer"></div>
-<div id="earned"></div>
-<div class="section">
+<div id="earned" class="green"></div>
+
+<div class="box">
+<h3>⏳ Next Reset In:</h3>
+<div id="countdown"></div>
+</div>
+<div class="box">
 <h3>📊 Earnings History</h3>
 <div id="earnHistory"></div>
 </div>
 
-<div class="section">
+<div class="box">
 <h3>📤 Withdrawal History</h3>
 <div id="withdrawHistory"></div>
 </div>
-
+<div id="withdrawModal" class="box hidden">
+<h3>Select Method</h3>
+<button onclick="confirmWithdraw('GCash')">GCash</button>
+<button onclick="confirmWithdraw('Maya')">Maya</button>
+</div>
+<div id="adminPanel" class="box hidden">
+<h3>🛠 Admin Panel</h3>
+<label>Min Reward</label>
+<input id="minReward" type="number" step="0.1"><br>
+<label>Max Reward</label>
+<input id="maxReward" type="number" step="0.1"><br><br>
+<button onclick="saveAdmin()">Save</button>
+<button onclick="resetAll()">Reset All Users</button>
+</div>
 </div>
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
+/* CONFIG */
+const ADMIN_PASSWORD="admin123";
+let rewardConfig=JSON.parse(localStorage.getItem("rewardCfg"))||{min:0.1,max:0.5};
+
 /* USERS */
-const USERS={
- user1:{password:"1234",data:null},
- user2:{password:"abcd",data:null}
-};
-let currentUser=null;
+const USERS={user1:{pass:"1234"},user2:{pass:"abcd"},admin:{pass:ADMIN_PASSWORD}};
+let currentUser,data;
+
 /* VIDEOS */
-const videos=[
- {id:"dQw4w9WgXcQ",title:"sponsor1"},
-{id:"JATpLtghZCY",title:"sponsor2"},
-{id:"ZspGPko6-1w",title:"sponsor3"},
-{id:"nLmaGOOMLr8",title:"sponsor4"},
-{id:"tUMXTD8STeU",title:"sponsor5"},
- {id:"9bZkp7q19f0",title:"sponsor"}
-];
+const videos=["dQw4w9WgXcQ","9bZkp7q19f0"];
+let player,vidIndex=0,timerInt;
 
-let player,currentVideo=0,timerInterval;
-
-/* LOAD USERS */
+/* INIT USERS */
 Object.keys(USERS).forEach(u=>{
  let o=document.createElement("option");
  o.value=u;o.textContent=u;
  userSelect.appendChild(o);
 });
-/* LOGIN */
-password.addEventListener("keypress",e=>{
- if(e.key==="Enter"){
-  const u=userSelect.value;
-  if(password.value===USERS[u].password){
-   currentUser=u;
-   loadUserData();
-   login.remove();
-   updateBalance();
-   renderHistory();
-   loadVideo();
-  }else alert("Wrong password");
- }
-});
-/* USER DATA */
-function loadUserData(){
- USERS[currentUser].data=
- JSON.parse(localStorage.getItem("earn_"+currentUser))||
- {total:0,watched:[],earnHistory:[],withdrawHistory:[]};
+
+/* DATE */
+function today(){return new Date().toISOString().split("T")[0];}
+function tomorrow(){
+ let d=new Date();d.setDate(d.getDate()+1);
+ d.setHours(0,0,0,0);return d;
 }
-function saveUserData(){
- localStorage.setItem("earn_"+currentUser,JSON.stringify(USERS[currentUser].data));
+/* LOGIN */
+password.onkeypress=e=>{
+ if(e.key==="Enter"){
+  let u=userSelect.value;
+  if(password.value!==USERS[u].pass) return alert("Wrong password");
+  currentUser=u;
+  if(u==="admin"){ adminPanel.classList.remove("hidden"); return; }
+  loadData(); login.remove();
+  dailyCheck(); render();
+ }
+};
+/* DATA */
+function loadData(){ data=JSON.parse(localStorage.getItem("user_"+currentUser))||
+ {total:0,watched:[],earn:[],withdraw:[],lastDate:null,lastTime:null};
+}
+function save(){localStorage.setItem("user_"+currentUser,JSON.stringify(data));}
+
+/* DAILY CHECK + ANTI CHEAT */
+function dailyCheck(){
+ let now=Date.now();
+ if(data.lastTime && now<data.lastTime){
+  lockMsg.textContent="⚠️ Time manipulation detected";
+  return;
+ }
+data.lastTime=now;
+ if(data.lastDate!==today()){
+  data.watched=[];
+  data.lastDate=today();
+ }
+ save();
+ loadVideo();
+ startCountdown();
 }
 /* REWARD */
 function getReward(){
- if(Math.random()<0.1) return 1.0;
- return parseFloat((Math.random()*(0.5-0.1)+0.1).toFixed(1));
-}
+ return +(Math.random()*(rewardConfig.max-rewardConfig.min)+rewardConfig.min).toFixed(2);
 
 /* VIDEO */
 function loadVideo(){
- if(currentVideo>=videos.length){
-  earned.textContent="✅ All videos completed";
+ if(data.watched.length>=videos.length){
+  lockMsg.textContent="🔒 Come back tomorrow";
   return;
- }
-const vid=videos[currentVideo];
- if(USERS[currentUser].data.watched.includes(vid.id)){
-  currentVideo++; loadVideo(); return;
  }
  playerArea.innerHTML="<div id='player'></div>";
  player=new YT.Player("player",{
-  videoId:vid.id,
+  videoId:videos[vidIndex],
   playerVars:{autoplay:1,controls:0},
-  events:{
-   onReady:startTimer,
-   onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)rewardUser();}
-  }
+  events:{onReady:startTimer,onStateChange:e=>{
+   if(e.data===YT.PlayerState.ENDED) reward();
+  }}
  });
 }
-
 /* TIMER */
 function startTimer(){
  let wait=setInterval(()=>{
-  let d=Math.floor(player.getDuration());
+  let d=player.getDuration();
   if(d>0){clearInterval(wait);runTimer(d);}
  },200);
 }
 function runTimer(total){
  let t=total;
- clearInterval(timerInterval);
- timerInterval=setInterval(()=>{
-  let m=Math.floor(t/60),s=t%60;
-  timer.textContent=`⏱️ ${m}:${s.toString().padStart(2,"0")}`;
-  progressBar.style.width=((total-t)/total*100)+"%";
-  t--; if(t<0)clearInterval(timerInterval);
+ timerInt=setInterval(()=>{
+  timer.textContent=`⏱️ ${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`;
+  videoProgress.style.width=((total-t)/total*100)+"%";
+  t--; if(t<0)clearInterval(timerInt);
  },1000);
 }
-/* EARN */
-function rewardUser(){
- const r=getReward();
- const d=USERS[currentUser].data;
- d.total+=r;
- d.watched.push(videos[currentVideo].id);
- d.earnHistory.push({title:videos[currentVideo].title,amount:r,time:new Date().toLocaleString()});
- saveUserData();
- earned.textContent=`🎉 You earned ₱${r}`;
- updateBalance();
- renderHistory();
- currentVideo++;
- setTimeout(loadVideo,3000);
+/* REWARD APPLY */
+function reward(){
+ let r=getReward();
+ data.total+=r;
+ data.watched.push(videos[vidIndex]);
+ data.earn.push({amount:r,time:new Date().toLocaleString()});
+ save();
+ earned.textContent="You earned ₱"+r;
+ vidIndex++; render(); setTimeout(loadVideo,3000);
 }
-
-/* BALANCE */
-function updateBalance(){
- const total=USERS[currentUser].data.total;
- balance.textContent=total.toFixed(2);
- withdrawBtn.disabled=total<50;
- balanceBox.classList.remove("bump");void balanceBox.offsetWidth;
- balanceBox.classList.add("bump");
-}
-/* HISTORY */
-function renderHistory(){
- earnHistory.innerHTML="";
- withdrawHistory.innerHTML="";
- USERS[currentUser].data.earnHistory.forEach(h=>{
-  earnHistory.innerHTML+=`<div class="card">${h.title} — ₱${h.amount}<br>${h.time}</div>`;
- });
- USERS[currentUser].data.withdrawHistory.forEach(w=>{
-  withdrawHistory.innerHTML+=`<div class="card">Withdraw ₱${w.amount}<br>${w.time}</div>`;
- });
+/* RENDER */
+function render(){
+ balance.textContent=data.total.toFixed(2);
+ withdrawBtn.disabled=data.total<50;
+ withdrawProgress.style.width=Math.min(data.total/50*100,100)+"%";
+ earnHistory.innerHTML=data.earn.map(e=>`<div class="card">₱${e.amount}<br>${e.time}</div>`).join("");
+ withdrawHistory.innerHTML=data.withdraw.map(w=>`<div class="card">${w.method} ₱${w.amount}<br>${w.time}</div>`).join("");
 }
 /* WITHDRAW */
-withdrawBtn.onclick=()=>{
- const d=USERS[currentUser].data;
- if(d.total<50)return alert("Minimum withdrawal is ₱50");
- const amt=d.total;
- d.total=0;
- d.withdrawHistory.push({amount:amt,time:new Date().toLocaleString()});
- saveUserData();
- updateBalance();
- renderHistory();
- alert("Withdraw successful\n₱"+amt.toFixed(2));
-};
+withdrawBtn.onclick=()=>withdrawModal.classList.remove("hidden");
+function confirmWithdraw(m){
+ data.withdraw.push({method:m,amount:data.total,time:new Date().toLocaleString()});
+ data.total=0; save(); render();
+ withdrawModal.classList.add("hidden");
+}
+/* COUNTDOWN */
+function startCountdown(){
+ setInterval(()=>{
+  let diff=tomorrow()-new Date();
+  countdown.textContent=
+   `${Math.floor(diff/3600000)}h ${Math.floor(diff%3600000/60000)}m`;
+ },1000);
+}
+
+/* ADMIN */
+function saveAdmin(){
+ rewardConfig.min=+minReward.value;
+ rewardConfig.max=+maxReward.value;
+ localStorage.setItem("rewardCfg",JSON.stringify(rewardConfig));
+ alert("Saved");
+}
+function resetAll(){
+ Object.keys(localStorage).forEach(k=>k.startsWith("user_")&&localStorage.removeItem(k));
+ alert("All users reset");
+}
 </script>
 </body>
 </html>
