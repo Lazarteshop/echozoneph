@@ -1,6 +1,21 @@
 
 
 
+
+
+/* THEME */
+if(localStorage.getItem("theme")==="light")document.body.classList.add("light");
+themeToggle.onclick=()=>{
+ document.body.classList.toggle("light");
+ localStorage.setItem("theme",document.body.classList.contains("light")?"light":"dark");
+};
+
+/* LOAD USERS */
+Object.keys(USERS).forEach(u=>{
+ let o=document.createElement("option");
+ o.value=u;o.textContent=u;
+ userSelect.appendChild(o);
+});
 /* LOGIN */
 password.addEventListener("keypress",e=>{
  if(e.key==="Enter"){
