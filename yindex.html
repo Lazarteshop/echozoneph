@@ -1,7 +1,21 @@
 
 
 
-
+/* REWARD */
+function rewardUser(){
+ const r=getReward();
+ const d=USERS[currentUser].data;
+ d.total+=r;
+ d.watched.push(videos[currentVideo].id);
+ d.history.push({title:videos[currentVideo].title,amount:r,time:new Date().toLocaleString()});
+ saveUserData();
+ earnSound.play();
+ earned.innerHTML=`🎉 You earned ₱${r}${r===1?" (JACKPOT!)":""}`;
+ updateBalance();
+ renderHistory();
+ currentVideo++;
+ setTimeout(loadVideo,3000);
+}
 /* BALANCE + WITHDRAW LIMIT */
 function updateBalance(){
  const total=USERS[currentUser].data.total;
