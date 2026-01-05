@@ -1,6 +1,20 @@
 
 
 
+/* LOGIN */
+password.addEventListener("keypress",e=>{
+ if(e.key==="Enter"){
+  const u=userSelect.value;
+  if(password.value===USERS[u].password){
+   currentUser=u;
+   loadUserData();
+   login.remove();
+   updateBalance();
+   renderHistory();
+   loadVideo();
+  }else alert("Wrong password");
+ }
+});
 
 /* USER DATA */
 function loadUserData(){
