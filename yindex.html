@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width">
-<title>Watch & Earn ph</title>
+<title>Watch & Earn</title>
+
 <style>
 body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff;text-align:center}
-.light{background:#f4f4f4;color:#111}
 .container{max-width:900px;margin:auto;padding:20px}
 #balanceBox{background:#111;padding:15px;border-radius:10px;font-size:22px;color:#00ff88}
-.light #balanceBox,.light .card{background:#fff;color:#111}
 #balanceBox.bump{animation:bump .4s ease}
 @keyframes bump{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
 input,select{padding:12px;font-size:16px;width:100%;max-width:300px}
@@ -18,19 +17,16 @@ button{padding:10px 15px;margin-top:10px;border-radius:6px;border:none;cursor:po
 #withdrawBtn:disabled{background:#555;cursor:not-allowed}
 iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 #timer{font-size:22px;margin-top:10px}
-#earned{font-size:26px;color:#00ff88;margin-top:15px}
+#earned{font-size:24px;color:#00ff88;margin-top:15px}
 .progress{width:100%;max-width:800px;height:12px;background:#333;border-radius:10px;margin:10px auto;overflow:hidden}
 .progress div{height:100%;width:0;background:#00ff88}
-.history{text-align:left;margin-top:30px}
-.card{background:#111;padding:10px;border-radius:8px;margin-bottom:10px}
-.note{font-size:14px;color:#aaa;margin-top:5px}
+.section{margin-top:30px;text-align:left}
+.card{background:#111;padding:10px;border-radius:8px;margin-bottom:8px}
+.note{font-size:14px;color:#aaa}
 </style>
 </head>
-
-<body oncontextmenu="return false">
+<body>
 <div class="container">
-
-<button id="themeToggle">🌙 Toggle Theme</button>
 
 <div id="balanceBox">
 💰 Balance: ₱<span id="balance">0.00</span><br>
@@ -39,7 +35,6 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </div>
 
 <h2>🎬 Watch & Earn</h2>
-
 <div id="login">
 <select id="userSelect"></select><br>
 <input id="password" type="password" placeholder="Password">
@@ -49,45 +44,32 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <div class="progress"><div id="progressBar"></div></div>
 <div id="timer"></div>
 <div id="earned"></div>
-
-<div class="history">
+<div class="section">
 <h3>📊 Earnings History</h3>
-<div id="historyList"></div>
+<div id="earnHistory"></div>
+</div>
+
+<div class="section">
+<h3>📤 Withdrawal History</h3>
+<div id="withdrawHistory"></div>
 </div>
 
 </div>
-
-<audio id="earnSound">
-<source src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3">
-</audio>
-
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 /* USERS */
 const USERS={
-  user1:{password:"1234",data:null},
-  user2:{password:"abcd",data:null}
+ user1:{password:"1234",data:null},
+ user2:{password:"abcd",data:null}
 };
 let currentUser=null;
-
 /* VIDEOS */
 const videos=[
- {id:"dQw4w9WgXcQ",title:"sponsor1"},
- {id:"9bZkp7q19f0",title:"sponsor2"},
- {id:"nLmaGOOMLr8",title:"sponsor3"},
- {id:"ZspGPko6-1w",title:"sponsor4"},
- {id:"JATpLtghZCY",title:"sponsor5"},
- {id:"tUMXTD8STeU",title:"sponsor"}
+ {id:"dQw4w9WgXcQ",title:"Video 1"},
+ {id:"9bZkp7q19f0",title:"Video 2"}
 ];
 
 let player,currentVideo=0,timerInterval;
-
-/* THEME */
-if(localStorage.getItem("theme")==="light")document.body.classList.add("light");
-themeToggle.onclick=()=>{
- document.body.classList.toggle("light");
- localStorage.setItem("theme",document.body.classList.contains("light")?"light":"dark");
-};
 
 /* LOAD USERS */
 Object.keys(USERS).forEach(u=>{
@@ -109,23 +91,22 @@ password.addEventListener("keypress",e=>{
   }else alert("Wrong password");
  }
 });
-
 /* USER DATA */
 function loadUserData(){
  USERS[currentUser].data=
  JSON.parse(localStorage.getItem("earn_"+currentUser))||
- {total:0,watched:[],history:[]};
+ {total:0,watched:[],earnHistory:[],withdrawHistory:[]};
 }
 function saveUserData(){
  localStorage.setItem("earn_"+currentUser,JSON.stringify(USERS[currentUser].data));
 }
-/* RANDOM + JACKPOT */
+/* REWARD */
 function getReward(){
- if(Math.random()<0.1) return 1.0; // JACKPOT
+ if(Math.random()<0.1) return 1.0;
  return parseFloat((Math.random()*(0.5-0.1)+0.1).toFixed(1));
 }
 
-/* LOAD VIDEO */
+/* VIDEO */
 function loadVideo(){
  if(currentVideo>=videos.length){
   earned.textContent="✅ All videos completed";
@@ -141,14 +122,12 @@ const vid=videos[currentVideo];
   playerVars:{autoplay:1,controls:0},
   events:{
    onReady:startTimer,
-   onStateChange:e=>{
-    if(e.data===YT.PlayerState.ENDED) rewardUser();
-   }
+   onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)rewardUser();}
   }
  });
 }
 
-/* TIMER + PROGRESS */
+/* TIMER */
 function startTimer(){
  let wait=setInterval(()=>{
   let d=Math.floor(player.getDuration());
@@ -165,57 +144,52 @@ function runTimer(total){
   t--; if(t<0)clearInterval(timerInterval);
  },1000);
 }
-/* REWARD */
+/* EARN */
 function rewardUser(){
  const r=getReward();
  const d=USERS[currentUser].data;
  d.total+=r;
  d.watched.push(videos[currentVideo].id);
- d.history.push({title:videos[currentVideo].title,amount:r,time:new Date().toLocaleString()});
+ d.earnHistory.push({title:videos[currentVideo].title,amount:r,time:new Date().toLocaleString()});
  saveUserData();
- earnSound.play();
- earned.innerHTML=`🎉 You earned ₱${r}${r===1?" (JACKPOT!)":""}`;
+ earned.textContent=`🎉 You earned ₱${r}`;
  updateBalance();
  renderHistory();
  currentVideo++;
  setTimeout(loadVideo,3000);
 }
-/* BALANCE + WITHDRAW LIMIT */
+
+/* BALANCE */
 function updateBalance(){
  const total=USERS[currentUser].data.total;
  balance.textContent=total.toFixed(2);
- withdrawBtn.disabled = total < 50;
+ withdrawBtn.disabled=total<50;
  balanceBox.classList.remove("bump");void balanceBox.offsetWidth;
  balanceBox.classList.add("bump");
 }
 /* HISTORY */
 function renderHistory(){
- historyList.innerHTML="";
- USERS[currentUser].data.history.forEach(h=>{
-  let d=document.createElement("div");
-  d.className="card";
-  d.innerHTML=`<b>${h.title}</b><br>₱${h.amount} — ${h.time}`;
-  historyList.appendChild(d);
+ earnHistory.innerHTML="";
+ withdrawHistory.innerHTML="";
+ USERS[currentUser].data.earnHistory.forEach(h=>{
+  earnHistory.innerHTML+=`<div class="card">${h.title} — ₱${h.amount}<br>${h.time}</div>`;
+ });
+ USERS[currentUser].data.withdrawHistory.forEach(w=>{
+  withdrawHistory.innerHTML+=`<div class="card">Withdraw ₱${w.amount}<br>${w.time}</div>`;
  });
 }
 /* WITHDRAW */
 withdrawBtn.onclick=()=>{
- const total=USERS[currentUser].data.total;
- if(total<50){
-  alert("Minimum withdrawal is ₱50");
-  return;
- }
- alert("Withdraw SUCCESS (DEMO)\nAmount: ₱"+total.toFixed(2));
- USERS[currentUser].data.total=0;
+ const d=USERS[currentUser].data;
+ if(d.total<50)return alert("Minimum withdrawal is ₱50");
+ const amt=d.total;
+ d.total=0;
+ d.withdrawHistory.push({amount:amt,time:new Date().toLocaleString()});
  saveUserData();
  updateBalance();
  renderHistory();
+ alert("Withdraw successful\n₱"+amt.toFixed(2));
 };
-
-/* BASIC ANTI INSPECT */
-document.addEventListener("keydown",e=>{
- if(e.key==="F12"||(e.ctrlKey&&e.shiftKey))e.preventDefault();
-});
 </script>
 </body>
 </html>
