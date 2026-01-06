@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,7 +12,6 @@
 body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff}
 .container{max-width:900px;margin:auto;padding:20px;text-align:center}
 .box{background:#111;padding:15px;border-radius:10px;margin-bottom:15px}
-
 .green{color:#00ff88}
 .lock{color:#ff6666;font-size:18px;margin:10px 0}
 button{padding:10px 15px;border:none;border-radius:6px;cursor:pointer}
@@ -27,6 +27,7 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 
 <body>
 <div class="container">
+
 <div class="box">
 💰 Balance: ₱<span id="balance">0.00</span><br>
 <div class="progress"><div id="withdrawProgress"></div></div>
@@ -34,7 +35,8 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <button id="withdrawBtn" disabled>Withdraw</button>
 </div>
 
-<h2>🎬 Watch & Earn ph</h2>
+<h2>🎬 Watch & Earn ph </h2>
+<h>BASIC PLAN</h>
 
 <div id="login" class="box">
 <select id="userSelect"></select><br>
@@ -49,8 +51,10 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <div id="earned" class="green"></div>
 
 <div class="box">
+🎁 Daily Check-in Bonus: <span id="dailyBonus" class="green"></span><br>
 ⏳ Next reset in: <span id="countdown"></span>
 </div>
+
 <div class="box">
 <h3>📊 Earnings History</h3>
 <div id="earnHistory"></div>
@@ -72,8 +76,6 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 Min reward:
 <input id="minReward" type="number" step="0.1"><br>
 Max reward:
-<input id="minReward" type="number" step="0.1"><br>
-Max reward:
 <input id="maxReward" type="number" step="0.1"><br><br>
 <button onclick="saveAdmin()">Save</button>
 <button onclick="resetUsers()">Reset All Users</button>
@@ -92,15 +94,13 @@ const USERS={
 };
 
 const VIDEOS=[
- "tUMXTD8STeU",
-"ZspGPko6-1w",
-"JATpLtghZCY",
-"vJ7iZH6ILJM",
-"MaLbebYE83E",
- "nLmaGOOMLr8"
+ "dQw4w9WgXcQ",
+ "9bZkp7q19f0"
 ];
 
 let rewardCfg=JSON.parse(localStorage.getItem("rewardCfg"))||{min:0.1,max:0.5};
+
+
 
 /* ================= GLOBAL ================= */
 let currentUser=null;
@@ -108,13 +108,18 @@ let data=null;
 let player=null;
 let videoIndex=0;
 let timerInt=null;
+
 /* ================= HELPERS ================= */
 function today(){return new Date().toISOString().split("T")[0];}
 function tomorrow(){
  let d=new Date(); d.setDate(d.getDate()+1);
  d.setHours(0,0,0,0); return d;
 }
-/* ================= INIT USERS (FIXED) ================= */
+function rand(min,max){
+ return +(Math.random()*(max-min)+min).toFixed(2);
+}
+
+/* ================= INIT USERS ================= */
 window.onload=()=>{
  const sel=document.getElementById("userSelect");
  Object.keys(USERS).forEach(u=>{
@@ -123,6 +128,7 @@ window.onload=()=>{
   sel.appendChild(o);
  });
 };
+
 /* ================= LOGIN ================= */
 password.addEventListener("keypress",e=>{
  if(e.key!=="Enter") return;
@@ -130,7 +136,8 @@ password.addEventListener("keypress",e=>{
  if(password.value!==USERS[u].pass) return alert("Wrong password");
 
  currentUser=u;
- if(u==="admin"){
+
+if(u==="admin"){
   adminPanel.classList.remove("hidden");
   minReward.value=rewardCfg.min;
   maxReward.value=rewardCfg.max;
@@ -141,8 +148,10 @@ password.addEventListener("keypress",e=>{
  loadData();
  login.remove();
  dailyCheck();
+ dailyBonusCheck();
  render();
 });
+
 /* ================= DATA ================= */
 function loadData(){
  data=JSON.parse(localStorage.getItem("user_"+currentUser))||{
@@ -151,14 +160,36 @@ function loadData(){
   earn:[],
   withdraw:[],
   lastDate:null,
-  lastTime:null
+  lastTime:null,
+  lastCheckIn:null
  };
 }
 function save(){
  localStorage.setItem("user_"+currentUser,JSON.stringify(data));
 }
 
-/* ================= DAILY CHECK + ANTI CHEAT ================= */
+/* ================= DAILY CHECK-IN BONUS ================= */
+function dailyBonusCheck(){
+ if(data.lastCheckIn===today()){
+  dailyBonus.textContent="Already claimed today";
+  return;
+ }
+
+ const bonus=rand(0.1,5);
+ data.total+=bonus;
+ data.lastCheckIn=today();
+
+ data.earn.push({
+  amount:bonus,
+  time:new Date().toLocaleString(),
+  type:"Daily Check-in Bonus"
+ });
+
+ save();
+ dailyBonus.textContent="₱"+bonus+" received 🎉";
+}
+
+/* ================= DAILY VIDEO RESET + ANTI CHEAT ================= */
 function dailyCheck(){
  const now=Date.now();
  if(data.lastTime && now<data.lastTime){
@@ -167,11 +198,11 @@ function dailyCheck(){
  }
  data.lastTime=now;
 
- if(data.lastDate!==today()){
+if(data.lastDate!==today()){
   data.watched=[];
   data.lastDate=today();
  }
-save();
+ save();
  loadVideo();
  startCountdown();
 }
@@ -182,7 +213,7 @@ function loadVideo(){
   lockMsg.textContent="🔒 Come back tomorrow";
   return;
  }
- 
+
 playerArea.innerHTML="<div id='player'></div>";
  player=new YT.Player("player",{
   videoId:VIDEOS[videoIndex],
@@ -206,6 +237,7 @@ function startTimer(){
   }
  },200);
 }
+
 function runTimer(total){
  let t=total;
  clearInterval(timerInt);
@@ -216,23 +248,25 @@ function runTimer(total){
   if(t<0) clearInterval(timerInt);
  },1000);
 }
-/* ================= REWARD ================= */
-function randomReward(){
- return +(Math.random()*(rewardCfg.max-rewardCfg.min)+rewardCfg.min).toFixed(2);
-}
 
+/* ================= VIDEO REWARD ================= */
 function giveReward(){
- const r=randomReward();
+ const r=rand(rewardCfg.min,rewardCfg.max);
  data.total+=r;
  data.watched.push(VIDEOS[videoIndex]);
- data.earn.push({amount:r,time:new Date().toLocaleString()});
+ data.earn.push({
+  amount:r,
+  time:new Date().toLocaleString(),
+  type:"Video"
+ });
  save();
 
- earned.textContent="🎉 You earned ₱"+r;
+earned.textContent="🎉 You earned ₱"+r;
  videoIndex++;
  render();
  setTimeout(loadVideo,3000);
 }
+
 /* ================= RENDER ================= */
 function render(){
  balance.textContent=data.total.toFixed(2);
@@ -240,11 +274,18 @@ function render(){
  withdrawProgress.style.width=Math.min(data.total/50*100,100)+"%";
 
  earnHistory.innerHTML=data.earn.map(e=>
-  `<div class="card">₱${e.amount}<br>${e.time}</div>`
+  `<div class="card">
+   ${e.type||"Video"}<br>
+   ₱${e.amount}<br>
+   ${e.time}
+  </div>`
  ).join("");
 
- withdrawHistory.innerHTML=data.withdraw.map(w=>
-  `<div class="card">${w.method} ₱${w.amount}<br>${w.time}</div>`
+withdrawHistory.innerHTML=data.withdraw.map(w=>
+  `<div class="card">
+   ${w.method} ₱${w.amount}<br>
+   ${w.time}
+  </div>`
  ).join("");
 }
 
@@ -252,6 +293,7 @@ function render(){
 withdrawBtn.onclick=()=>{
  withdrawModal.classList.remove("hidden");
 };
+
 function confirmWithdraw(method){
  data.withdraw.push({
   method,
@@ -276,6 +318,7 @@ function startCountdown(){
  },1000);
 }
 
+
 /* ================= ADMIN ================= */
 function saveAdmin(){
  rewardCfg.min=parseFloat(minReward.value);
@@ -291,6 +334,5 @@ function resetUsers(){
  alert("All users reset");
 }
 </script>
-
 </body>
 </html>
