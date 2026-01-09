@@ -23,7 +23,6 @@ input,select{padding:10px;width:100%;max-width:300px;margin:5px}
 iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </style>
 </head>
-<body>
 <div class="container">
 
 <div class="box">
@@ -32,6 +31,7 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <small>Minimum withdrawal ₱250</small><br><br>
 <button id="withdrawBtn" disabled>Withdraw</button>
 </div>
+
 <h2>🎬 Watch & Earn ph</h2>
 <h>PREMIUM PLAN</h>
 
@@ -41,10 +41,9 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </div>
 
 <div id="lockMsg" class="lock"></div>
-
 <!-- INVITE USERNAME BOX -->
 <div id="refBox" class="box">
-<h3>👥 Inviter Username</h3>
+<h3>👥 Invite Username</h3>
 <input type="text" id="refUsername" placeholder="Username ng nag-invite">
 <button id="saveRef">Save</button>
 <div id="refMsg" class="green"></div>
@@ -61,11 +60,11 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 🎬 Watched today: <span id="watchedCount">0</span>/6<br>
 ⏳ Next reset in: <span id="countdown"></span>
 </div>
-
 <div class="box">
 <h3>📊 Earnings History</h3>
 <div id="earnHistory"></div>
 </div>
+
 <div class="box">
 <h3>📤 Withdrawal History</h3>
 <div id="withdrawHistory"></div>
@@ -90,6 +89,7 @@ const USERS={
  userB:{pass:"dipwdabcd",role:"user"},
  userC:{pass:"dipwdadmin123",role:"admin"}
 };
+
 /* VIDEOS */
 const VIDEO_POOL=["tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","MaLbebYE83E","nLmaGOOMLr8"];
 const DAILY_LIMIT=6;
@@ -98,6 +98,7 @@ let currentUser,currentRole,data;
 let dailyVideos=[],videoIndex=0;
 let player,timerInt,countdownInt;
 let ytReady=false;
+
 /* HELPERS */
 function today(){return new Date().toISOString().split("T")[0];}
 function tomorrow(){let d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0);return d;}
@@ -131,6 +132,7 @@ password.onkeypress=e=>{
  loadReferral();
  render();
 };
+
 /* DATA */
 function loadData(){
  data=JSON.parse(localStorage.getItem("user_"+currentUser))||{
@@ -178,6 +180,7 @@ function dailyReset(){
  loadVideo();
  startCountdown();
 }
+
 /* BONUS */
 function dailyBonusCheck(){
  if(data.lastCheckIn===today()){dailyBonus.textContent="Already claimed";return;}
@@ -204,6 +207,7 @@ function loadVideo(){
   events:{onReady:startTimer,onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)reward();}}
  });
 }
+
 /* TIMER */
 function startTimer(){
  let chk=setInterval(()=>{
@@ -251,6 +255,7 @@ function confirmWithdraw(m){
  withdrawModal.classList.add("hidden");
  render();
 }
+
 /* COUNTDOWN */
 function startCountdown(){
  clearInterval(countdownInt);
@@ -259,6 +264,7 @@ function startCountdown(){
   countdown.textContent=`${Math.floor(d/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s`;
  },1000);
 }
+
 /* ADMIN */
 function resetAllUsers(){
  if(!confirm("Reset ALL users data?"))return;
