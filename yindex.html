@@ -2,38 +2,36 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Watch & Earn ph</title>
+<title>Watch & Earn PH</title>
 <meta name="viewport" content="width=device-width">
-  <meta http-equiv="refresh" content=" 300; url = https://echozoneph-viewers-watchtoearn2026.netlify.app/yindex.html"> 
+
 <style>
 body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff}
 .container{max-width:900px;margin:auto;padding:20px;text-align:center}
 .box{background:#111;padding:15px;border-radius:10px;margin-bottom:15px}
 .green{color:#00ff88}
-.lock{color:#ff6666;font-size:18px;margin:10px 0}
+.lock{color:#ff6666}
 button{padding:10px 15px;border:none;border-radius:6px;cursor:pointer}
 button:disabled{background:#555}
 input,select{padding:10px;width:100%;max-width:300px;margin:5px}
-.progress{width:100%;height:12px;background:#333;border-radius:10px;overflow:hidden;margin:8px 0}
+.progress{width:100%;height:12px;background:#333;border-radius:10px;overflow:hidden}
 .progress div{height:100%;background:#00ff88;width:0}
 .card{background:#111;padding:10px;border-radius:8px;margin-bottom:6px;text-align:left}
 .hidden{display:none}
-.admin{border:2px dashed #00ff88;padding:10px;margin-top:10px}
 iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </style>
 </head>
 <body>
 <div class="container">
-
 <div class="box">
-💰 Balance: ₱<span id="balance">0.00</span><br>
+💰 Balance: ₱<span id="balance">0.00</span>
 <div class="progress"><div id="withdrawProgress"></div></div>
-<small>Minimum withdrawal ₱50</small><br><br>
+<small>Minimum withdrawal ₱50</small><br>
 <button id="withdrawBtn" disabled>Withdraw</button>
 </div>
 
-<h2>🎬 Watch & Earn ph</h2>
-<h>BASIC PLAN</h>
+<h2>🎬 Watch & Earn PH</h2>
+  <h>BASIC PLAN</h>
 
 <div id="login" class="box">
 <select id="userSelect"></select><br>
@@ -41,6 +39,13 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </div>
 
 <div id="lockMsg" class="lock"></div>
+
+<div id="refBox" class="box hidden">
+<h3>👥 Invite Username</h3>
+<input id="refUsername" placeholder="Username ng nag-invite">
+<button id="saveRef">Save</button>
+<div id="refMsg" class="green"></div>
+</div>
 
 <div id="playerArea"></div>
 <div class="progress"><div id="videoProgress"></div></div>
@@ -64,19 +69,13 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </div>
 
 <div id="withdrawModal" class="box hidden">
-<h3>Select withdrawal method</h3>
 <button onclick="confirmWithdraw('GCash')">GCash</button>
 <button onclick="confirmWithdraw('Maya')">Maya</button>
 </div>
 
-<div id="adminPanel" class="box admin hidden">
-<h3>🛠 ADMIN PANEL</h3>
-<button onclick="resetAllUsers()">Reset ALL users data</button>
-</div>
-
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-/* USERS CONFIG */
+/* USERS */
 const USERS={
  user1:{pass:"dipwd1234",role:"user"},
  user2:{pass:"dipwdabcd",role:"user"},
@@ -85,59 +84,86 @@ const USERS={
 jaynegalleon:{pass:"jayne1",role:"user"},
  user3:{pass:"dipwdadmin123",role:"admin"}
 };
-/* VIDEO POOL */
+/* VIDEOS */
 const VIDEO_POOL=[
 "tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","MaLbebYE83E","iIiv0j5v6t8","ugz6RrkaN94","QQf0Qm-o9is", "lGmpCB6-LUA","X6UvWJ3ApIw","YfE4a_qwYjQ","nLmaGOOMLr8"];
 const DAILY_LIMIT=6;
-/* GLOBAL VARIABLES */
-let currentUser,currentRole,data;
+
+let currentUser,data,player,ytReady=false;
 let dailyVideos=[],videoIndex=0;
-let player,timerInt,countdownInt;
-let ytReady=false;
+let timerInt,countdownInt;
 
 /* HELPERS */
-function today(){return new Date().toISOString().split("T")[0];}
-function tomorrow(){let d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0);return d;}
-function rand(min,max){return +(Math.random()*(max-min)+min).toFixed(2);}
-function shuffle(arr){let a=[...arr];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a;}
+const today=()=>new Date().toISOString().split("T")[0];
+const tomorrow=()=>{let d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0);return d;}
+const rand=(a,b)=>+(Math.random()*(b-a)+a).toFixed(2);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 
-/* INIT USERS */
+/* INIT */
 window.onload=()=>{
  Object.keys(USERS).forEach(u=>{
   let o=document.createElement("option");
   o.value=u;o.textContent=u;
   userSelect.appendChild(o);
  });
-};
+}
 
-/* YOUTUBE API READY */
-function onYouTubeIframeAPIReady(){ ytReady=true; }
+/* YT */
+function onYouTubeIframeAPIReady(){ytReady=true}
 
 /* LOGIN */
 password.onkeypress=e=>{
  if(e.key!=="Enter")return;
  let u=userSelect.value;
  if(password.value!==USERS[u].pass){alert("Wrong password");return;}
- currentUser=u; currentRole=USERS[u].role;
+ currentUser=u;
  login.remove();
- if(currentRole==="admin"){adminPanel.classList.remove("hidden");return;}
- loadData(); dailyReset(); dailyBonusCheck(); render();
-};
-/* LOAD/ SAVE DATA */
+ refBox.classList.remove("hidden");
+ loadData();
+ dailyReset();
+ dailyBonus();
+ loadReferral();
+ render();
+}
+/* DATA */
 function loadData(){
  data=JSON.parse(localStorage.getItem("user_"+currentUser))||{
-  total:0,earn:[],withdraw:[],watchedToday:[],dailyVideos:[],lastDate:null,lastCheckIn:null
+  total:0,earn:[],withdraw:[],
+  watchedToday:[],dailyVideos:[],
+  lastDate:null,lastBonus:null,
+  refUser:null,refReward:0,bonusVideo:null
  };
 }
-function save(){localStorage.setItem("user_"+currentUser,JSON.stringify(data));}
+const save=()=>localStorage.setItem("user_"+currentUser,JSON.stringify(data));
 
+/* REFERRAL */
+function loadReferral(){
+ if(data.refUser){
+  refUsername.value=data.refUser;
+  refUsername.disabled=true;
+  saveRef.disabled=true;
+ }
+}
+saveRef.onclick=()=>{
+ if(data.refUser)return;
+ let r=rand(0.1,8);
+ data.refUser=refUsername.value;
+ data.refReward=r;
+ data.total+=r;
+ data.earn.push({type:"Invite Reward",amount:r,time:new Date().toLocaleString()});
+ save();render();
+ refUsername.disabled=true;saveRef.disabled=true;
+ refMsg.textContent="₱"+r+" added";
+}
 /* DAILY RESET */
 function dailyReset(){
  if(data.lastDate!==today()){
   data.lastDate=today();
   data.watchedToday=[];
   videoIndex=0;
-  data.dailyVideos=shuffle(VIDEO_POOL).slice(0,Math.min(DAILY_LIMIT,VIDEO_POOL.length));
+  dailyVideos=shuffle([...VIDEO_POOL]).slice(0,DAILY_LIMIT);
+  data.dailyVideos=dailyVideos;
+  data.bonusVideo=dailyVideos[Math.floor(Math.random()*dailyVideos.length)];
  }
  dailyVideos=data.dailyVideos;
  save();
@@ -146,38 +172,57 @@ function dailyReset(){
 }
 
 /* DAILY BONUS */
-function dailyBonusCheck(){
- if(data.lastCheckIn===today()){dailyBonus.textContent="Already claimed";return;}
- let bonus=rand(0.1,5); data.total+=bonus;
- data.lastCheckIn=today();
- data.earn.push({type:"Daily Bonus",amount:bonus,time:new Date().toLocaleString()});
- save(); dailyBonus.textContent="₱"+bonus+" received 🎉";
+function dailyBonus(){
+ if(data.lastBonus===today()){dailyBonus.textContent="Claimed";return;}
+ let b=rand(0.1,5);
+ data.lastBonus=today();
+ data.total+=b;
+ data.earn.push({type:"Daily Bonus",amount:b,time:new Date().toLocaleString()});
+ save();
+ dailyBonus.textContent="₱"+b;
 }
-/* LOAD VIDEO */
+/* VIDEO */
 function loadVideo(){
  if(!ytReady){setTimeout(loadVideo,500);return;}
  watchedCount.textContent=data.watchedToday.length;
- if(data.watchedToday.length>=dailyVideos.length){
-  lockMsg.textContent="🔒 Daily limit reached. Come back tomorrow."; return;
+ if(data.watchedToday.length>=DAILY_LIMIT){
+  lockMsg.textContent="🔒 Daily limit reached";
+  return;
  }
  playerArea.innerHTML="<div id='player'></div>";
- player=new YT.Player("player",{videoId:dailyVideos[videoIndex],playerVars:{autoplay:1,controls:0},events:{onReady:startTimer,onStateChange:e=>{if(e.data===YT.PlayerState.ENDED) reward();}}});
+ player=new YT.Player("player",{
+  videoId:dailyVideos[videoIndex],
+  playerVars:{autoplay:1,controls:0},
+  events:{onReady:startTimer,onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)reward()}}
+ });
 }
 /* TIMER */
 function startTimer(){
- let chk=setInterval(()=>{let d=player.getDuration();if(d>0){clearInterval(chk);runTimer(Math.floor(d));}},200);}
-function runTimer(total){let t=total; clearInterval(timerInt); timerInt=setInterval(()=>{timer.textContent=`⏱️ ${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`;videoProgress.style.width=((total-t)/total*100)+"%"; t--; if(t<0)clearInterval(timerInt);},1000);}
-
+ let chk=setInterval(()=>{
+  let d=player.getDuration();
+  if(d>0){clearInterval(chk);runTimer(Math.floor(d));}
+ },200);
+}
+function runTimer(t){
+ let total=t;
+ clearInterval(timerInt);
+ timerInt=setInterval(()=>{
+  timer.textContent=`⏱ ${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`;
+  videoProgress.style.width=((total-t)/total*100)+"%";
+  t--; if(t<0)clearInterval(timerInt);
+ },1000);
+}
 /* REWARD */
 function reward(){
- let r=rand(0.1,0.5); data.total+=r;
+ let r=(dailyVideos[videoIndex]===data.bonusVideo)?5:rand(0.1,1.00);
+ data.total+=r;
  data.watchedToday.push(dailyVideos[videoIndex]);
  data.earn.push({type:"Video",amount:r,time:new Date().toLocaleString()});
- videoIndex++; save();
- earned.textContent="🎉 You earned ₱"+r; render();
- setTimeout(loadVideo,2000);
+ videoIndex++;
+ save();render();
+ earned.textContent="₱"+r+" earned";
+ setTimeout(loadVideo,1500);
 }
-
 /* RENDER */
 function render(){
  balance.textContent=data.total.toFixed(2);
@@ -186,15 +231,23 @@ function render(){
  earnHistory.innerHTML=data.earn.map(e=>`<div class="card">${e.type}<br>₱${e.amount}<br>${e.time}</div>`).join("");
  withdrawHistory.innerHTML=data.withdraw.map(w=>`<div class="card">${w.method} ₱${w.amount}<br>${w.time}</div>`).join("");
 }
+
 /* WITHDRAW */
 withdrawBtn.onclick=()=>withdrawModal.classList.remove("hidden");
-function confirmWithdraw(m){data.withdraw.push({method:m,amount:data.total,time:new Date().toLocaleString()});data.total=0;save();withdrawModal.classList.add("hidden");render();}
-
+function confirmWithdraw(m){
+ data.withdraw.push({method:m,amount:data.total,time:new Date().toLocaleString()});
+ data.total=0;
+ save();render();
+ withdrawModal.classList.add("hidden");
+}
 /* COUNTDOWN */
-function startCountdown(){clearInterval(countdownInt);countdownInt=setInterval(()=>{let diff=tomorrow()-new Date();countdown.textContent=`${Math.floor(diff/3600000)}h ${Math.floor(diff%3600000/60000)}m ${Math.floor(diff%60000/1000)}s`;},1000);}
-
-/* ADMIN RESET */
-function resetAllUsers(){if(!confirm("Reset ALL users data?"))return;Object.keys(localStorage).forEach(k=>{if(k.startsWith("user_"))localStorage.removeItem(k);});alert("All users reset");}
+function startCountdown(){
+ clearInterval(countdownInt);
+ countdownInt=setInterval(()=>{
+  let d=tomorrow()-new Date();
+  countdown.textContent=`${Math.floor(d/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s`;
+ },1000);
+}
 </script>
 </body>
 </html>
