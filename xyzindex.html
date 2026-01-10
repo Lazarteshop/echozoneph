@@ -58,6 +58,16 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 ⏳ Next reset in: <span id="countdown"></span>
 </div>
 
+ <!-- 🎯 GUESSING GAME -->
+<div class="box hidden" id="guessBox">
+<h3>🎯 Guessing Game</h3>
+<p>Guess a number (1–50)</p>
+<input type="number" id="guessInput" min="1" max="50">
+<button id="guessBtn">Guess</button>
+<div id="guessHint"></div>
+<div id="guessTimer" class="green"></div>
+</div>
+
 <div class="box">
 <h3>📊 Earnings History</h3>
 <div id="earnHistory"></div>
@@ -112,19 +122,28 @@ window.onload=()=>{
 function onYouTubeIframeAPIReady(){ytReady=true}
 
 /* LOGIN */
-password.onkeypress=e=>{
- if(e.key!=="Enter")return;
+function doLogin(){
  let u=userSelect.value;
- if(password.value!==USERS[u].pass){alert("Wrong password");return;}
- currentUser=u;
+ if(!USERS[u]){ alert("Select user"); return; }
+ if(password.value!==USERS[u].pass){
+  alert("Wrong password");
+  return;
+ }
+currentUser=u;
  login.remove();
  refBox.classList.remove("hidden");
+ guessBox.classList.remove("hidden");
  loadData();
  dailyReset();
- dailyBonus();
- loadReferral();
+ dailyBonusClaim();
+ initGuessGame();
  render();
 }
+
+loginBtn.onclick = doLogin;
+password.onkeypress = e=>{
+ if(e.key==="Enter") doLogin();
+};
 /* DATA */
 function loadData(){
  data=JSON.parse(localStorage.getItem("user_"+currentUser))||{
@@ -212,6 +231,31 @@ function runTimer(t){
   t--; if(t<0)clearInterval(timerInt);
  },1000);
 }
+
+/* 🎯 GUESSING GAME */
+
+let secretNumber,guessEnd,guessInt;
+function initGuessGame(){
+ secretNumber=Math.floor(Math.random()*50)+1;
+ guessEnd=Date.now()+15*60*1000;
+ guessBtn.disabled=false;
+ guessHint.textContent="";
+ startGuessTimer();
+}
+function startGuessTimer(){
+ clearInterval(guessInt);
+ guessInt=setInterval(()=>{
+  let r=guessEnd-Date.now();
+  if(r<=0){
+   guessBtn.disabled=true;
+   guessTimer.textContent="⛔ Time expired";
+   clearInterval(guessInt);return;
+  }
+  let m=Math.floor(r/60000),s=Math.floor(r%60000/1000);
+  guessTimer.textContent=`⏳ ${m}:${String(s).padStart(2,"0")}`;
+ },1000);
+}
+
 /* REWARD */
 function reward(){
  let r=(dailyVideos[videoIndex]===data.bonusVideo)?1.99:rand(0.1,1.00);
