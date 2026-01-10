@@ -181,7 +181,7 @@ guessHint.textContent="🎉 Correct ₱"+w;
   data.secret=Math.floor(Math.random()*50)+1;
   data.guessEnd=Date.now()+15*60000;
  }else{
-  data.total-=0.4;
+  data.total-=0.05;
   guessHint.textContent=g>data.secret?"⬇ Lower":"⬆ Higher";
  }
  if(data.total<=0)unlockVideos();
