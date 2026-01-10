@@ -256,6 +256,35 @@ function startGuessTimer(){
   guessTimer.textContent=`⏳ ${m}:${String(s).padStart(2,"0")}`;
  },1000);
 }
+guessBtn.onclick=()=>{
+ if(guessBtn.disabled)return;
+ let g=Number(guessInput.value);
+ if(g<1||g>50)return;
+if(g===secretNumber){
+  let w=rand(0.1,0.5);
+  data.total+=w;
+  data.earn.push({type:"Guess Win",amount:w,time:new Date().toLocaleString()});
+  guessHint.textContent="🎉 Correct! ₱"+w;
+  initGuessGame();
+ }else{
+  data.total-=0.1;
+  data.earn.push({type:"Guess Lose",amount:-0.1,time:new Date().toLocaleString()});
+  guessHint.textContent=g>secretNumber?"⬇ Lower":"⬆ Higher";
+ }
+ if(data.total<=0)unlockVideos();
+ save();render();
+}
+function unlockVideos(){
+ data.total=0;
+ data.watchedToday=[];
+ data.dailyVideos=shuffle([...VIDEO_POOL]).slice(0,10);
+ dailyVideos=data.dailyVideos;
+ videoIndex=0;
+ lockMsg.textContent="🔓 Balance zero! 10 videos unlocked";
+ loadVideo();
+}
+
+
 
 /* REWARD */
 function reward(){
