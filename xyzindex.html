@@ -130,24 +130,30 @@ let last=localStorage.getItem("lastUser");
 };
 
 /* YT */
-function onYouTubeIframeAPIReady(){ytReady=true}
-
+function onYouTubeIframeAPIReady(){
+ ytReady=true;
+ if(currentUser && data){
+   loadVideo();   // siguradong maglo-load pag ready na ang YT
+ }
+}
 /* LOGIN */
 function doLogin(){
  let u=userSelect.value;
  if(!USERS[u]){alert("Select user");return;}
  if(password.value!==USERS[u].pass){alert("Wrong password");return;}
+
  currentUser=u;
  localStorage.setItem("lastUser",u);
- 
-login.remove();
+ login.remove();
  refBox.classList.remove("hidden");
  guessBox.classList.remove("hidden");
+
  loadData();
  dailyReset();
  loadReferral();
  resumeGuess();
- render();
+render();
+ loadVideo();   // <-- important
 }
 
 /* EVENTS */
@@ -201,17 +207,34 @@ save();
 
 /* VIDEO */
 function loadVideo(){
- if(!ytReady){setTimeout(loadVideo,500);return;}
- watchedCount.textContent=data.watchedToday.length;
+ if(!ytReady){
+   setTimeout(loadVideo,500);
+   return;
+ }
+
+ if(!data.dailyVideos || data.dailyVideos.length===0){
+   dailyReset();
+   return;
+ }
+watchedCount.textContent=data.watchedToday.length;
+
  if(data.watchedToday.length>=DAILY_LIMIT){
   lockMsg.textContent="🔒 Daily limit reached";
+  playerArea.innerHTML="";
   return;
  }
+
  playerArea.innerHTML="<div id='player'></div>";
+
  player=new YT.Player("player",{
   videoId:data.dailyVideos[data.videoIndex],
   playerVars:{autoplay:1,controls:0},
-  events:{onReady:startTimer,onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)reward()}}
+  events:{
+onReady:startTimer,
+    onStateChange:e=>{
+      if(e.data===YT.PlayerState.ENDED) reward();
+    }
+  }
  });
 }
 
