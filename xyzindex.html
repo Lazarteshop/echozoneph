@@ -125,8 +125,7 @@ Object.keys(USERS).forEach(u=>{
 function onYouTubeIframeAPIReady(){ytReady=true}
 
 /* LOGIN */
-password.onkeypress=e=>{
- if(e.key!=="Enter")return;
+function doLogin(){
  let u=userSelect.value;
  if(password.value!==USERS[u].pass){alert("Wrong password");return;}
  currentUser=u;
@@ -137,7 +136,11 @@ password.onkeypress=e=>{
  dailyBonusClaim();
  initGuessGame();
  render();
-};
+}
+loginBtn.onclick=doLogin;
+password.onkeypress=e=>{if(e.key==="Enter")doLogin();}
+
+
 /* DATA */
 function loadData(){
  data=JSON.parse(localStorage.getItem("user_"+currentUser))||{
@@ -214,8 +217,8 @@ function reward(){
 }
 
 /* 🎯 GUESSING GAME */
-let secretNumber,guessEnd,guessInt;
 
+let secretNumber,guessEnd,guessInt;
 function initGuessGame(){
  secretNumber=Math.floor(Math.random()*50)+1;
  guessEnd=Date.now()+15*60*1000;
@@ -230,20 +233,19 @@ function startGuessTimer(){
   if(r<=0){
    guessBtn.disabled=true;
    guessTimer.textContent="⛔ Time expired";
-   clearInterval(guessInt);
-   return;
+   clearInterval(guessInt);return;
   }
-let m=Math.floor(r/60000),s=Math.floor(r%60000/1000);
+  let m=Math.floor(r/60000),s=Math.floor(r%60000/1000);
   guessTimer.textContent=`⏳ ${m}:${String(s).padStart(2,"0")}`;
  },1000);
 }
-
 guessBtn.onclick=()=>{
+ if(guessBtn.disabled)return;
  let g=Number(guessInput.value);
  if(g<1||g>50)return;
- if(g===secretNumber){
+if(g===secretNumber){
   let w=rand(0.1,0.5);
-data.total+=w;
+  data.total+=w;
   data.earn.push({type:"Guess Win",amount:w,time:new Date().toLocaleString()});
   guessHint.textContent="🎉 Correct! ₱"+w;
   initGuessGame();
