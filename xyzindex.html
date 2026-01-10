@@ -59,6 +59,16 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </div>
 
 <div class="box">
+<h3>🎯 Guessing Game</h3>
+<p>Guess a number from <b>1 to 50</b></p>
+<input type="number" id="guessInput" min="1" max="50" placeholder="Enter your guess">
+<button id="guessBtn">Guess</button>
+<div id="guessHint"></div>
+<div id="guessTimer" class="green"></div>
+</div>
+
+
+<div class="box">
 <h3>📊 Earnings History</h3>
 <div id="earnHistory"></div>
 </div>
@@ -248,6 +258,84 @@ function startCountdown(){
   countdown.textContent=`${Math.floor(d/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s`;
  },1000);
 }
+
+
+/* GUESSING GAME */
+let secretNumber = Math.floor(Math.random()*50)+1;
+let guessEndTime = null;
+let guessInterval = null;
+
+/* INIT GUESS TIMER AFTER LOGIN */
+function initGuessGame(){
+ secretNumber = Math.floor(Math.random()*50)+1;
+ guessEndTime = Date.now() + (15 * 60 * 1000);
+ guessBtn.disabled = false;
+ guessHint.textContent = "";
+ startGuessTimer();
+}
+
+/* TIMER */
+function startGuessTimer(){
+ clearInterval(guessInterval);
+ guessInterval = setInterval(()=>{
+  let remaining = guessEndTime - Date.now();
+  if(remaining <= 0){
+   guessBtn.disabled = true;
+   guessTimer.textContent = "⛔ Guessing time expired";
+   clearInterval(guessInterval);
+   return;
+  }
+  let m = Math.floor(remaining/60000);
+  let s = Math.floor((remaining%60000)/1000);
+  guessTimer.textContent = `⏳ Time left: ${m}:${String(s).padStart(2,"0")}`;
+ },1000);
+}
+
+/* GUESS ACTION */
+guessBtn.onclick = ()=>{
+ if(guessBtn.disabled) return;
+
+ let g = Number(guessInput.value);
+ if(g < 1 || g > 50) return alert("1–50 only");
+
+ if(g === secretNumber){
+  let win = rand(0.1,0.5);
+  data.total += win;
+  data.earn.push({type:"Guess Win",amount:win,time:new Date().toLocaleString()});
+  guessHint.textContent = "🎉 Correct! You win ₱"+win;
+  initGuessGame();
+ }else{
+  data.total -= 0.4;
+  data.earn.push({type:"Guess Lose",amount:-0.4,time:new Date().toLocaleString()});
+  guessHint.textContent = g > secretNumber ? "📉 Lower!" : "📈 Higher!";
+ }
+save();
+ render();
+ checkZeroBalance();
+}
+
+/* UNLOCK 10 VIDEOS IF BALANCE ZERO */
+function checkZeroBalance(){
+ if(data.total <= 0){
+  data.total = 0;
+  data.watchedToday = [];
+  data.dailyVideos = shuffle([...VIDEO_POOL]).slice(0,10);
+  dailyVideos = data.dailyVideos;
+  videoIndex = 0;
+  lockMsg.textContent = "🔓 Balance zero! 10 videos unlocked to earn";
+  save();
+  loadVideo();
+ }
+}
+/* START GAME AFTER LOGIN */
+const originalLogin = password.onkeypress;
+password.onkeypress = e=>{
+ originalLogin(e);
+ if(currentUser){
+  initGuessGame();
+ }
+};
 </script>
+
 </body>
 </html>
