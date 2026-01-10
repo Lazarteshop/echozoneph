@@ -62,7 +62,7 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </div>
 
 <!-- 🎯 GUESSING GAME -->
-<div class="box">
+<div class="box hidden" id="guessBox">
 <h3>🎯 Guessing Game</h3>
 <p>Guess a number (1–50)</p>
 <input type="number" id="guessInput" min="1" max="50">
@@ -131,7 +131,8 @@ function doLogin(){
  currentUser=u;
  login.remove();
  refBox.classList.remove("hidden");
- loadData();
+ guessBox.classList.remove("hidden");
+loadData();
  dailyReset();
  dailyBonusClaim();
  initGuessGame();
