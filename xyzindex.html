@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <title>Watch & Earn PH</title>
 <meta name="viewport" content="width=device-width">
-<meta http-equiv="refresh" content="300">
-
+<meta http-equiv="refresh" content=" 300; url = https://echozoneph-viewers-watchtoearn2026.netlify.app/yindex.html"> 
 <style>
 body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff}
 .container{max-width:900px;margin:auto;padding:20px;text-align:center}
@@ -18,33 +17,30 @@ input,select{padding:10px;width:100%;max-width:300px;margin:5px}
 .progress{width:100%;height:12px;background:#333;border-radius:10px;overflow:hidden}
 .progress div{height:100%;background:#00ff88;width:0}
 .card{background:#111;padding:10px;border-radius:8px;margin-bottom:6px;text-align:left}
-
 .hidden{display:none}
 iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </style>
 </head>
 <body>
-
 <div class="container">
-
 <div class="box">
 💰 Balance: ₱<span id="balance">0.00</span>
 <div class="progress"><div id="withdrawProgress"></div></div>
 <small>Minimum withdrawal ₱50</small><br>
 <button id="withdrawBtn" disabled>Withdraw</button>
 </div>
+
 <h2>🎬 Watch & Earn PH</h2>
+  <h>BASIC PLAN</h>
 
 <div id="login" class="box">
-<select id="userSelect"></select>
+<select id="userSelect"></select><br>
 <input id="password" type="password" placeholder="Enter password">
-<button id="loginBtn">Login</button>
 </div>
 
 <div id="lockMsg" class="lock"></div>
 
 <div id="refBox" class="box hidden">
-
 <h3>👥 Invite Username</h3>
 <input id="refUsername" placeholder="Username ng nag-invite">
 <button id="saveRef">Save</button>
@@ -62,20 +58,11 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 ⏳ Next reset in: <span id="countdown"></span>
 </div>
 
-<!-- 🎯 GUESSING GAME -->
-<div class="box hidden" id="guessBox">
-<h3>🎯 Guessing Game</h3>
-<p>Guess a number (1–50)</p>
-<input type="number" id="guessInput" min="1" max="50">
-<button id="guessBtn">Guess</button>
-<div id="guessHint"></div>
-<div id="guessTimer" class="green"></div>
-</div>
-
 <div class="box">
 <h3>📊 Earnings History</h3>
 <div id="earnHistory"></div>
 </div>
+
 <div class="box">
 <h3>📤 Withdrawal History</h3>
 <div id="withdrawHistory"></div>
@@ -86,25 +73,22 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <button onclick="confirmWithdraw('Maya')">Maya</button>
 </div>
 
-</div>
-
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 /* USERS */
 const USERS={
- user1:{pass:"dipwd1234"},
- user2:{pass:"dipwdabcd"},
- Johnv:{pass:"101017"},
- Benggalleon041:{pass:"beng41"},
- jaynegalleon:{pass:"jayne1"}
+ user1:{pass:"dipwd1234",role:"user"},
+ user2:{pass:"dipwdabcd",role:"user"},
+ Johnv:{pass:"101017",role:"user"},
+  Benggalleon041:{pass:"beng41",role:"user"},
+jaynegalleon:{pass:"jayne1",role:"user"},
+ user3:{pass:"dipwdadmin123",role:"admin"}
 };
-
 /* VIDEOS */
 const VIDEO_POOL=[
-"tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","jGyG5Xty37c","jP96fZG48h4",
-"evj4fzBBiFI","HRaVepQYHRA","QtBuiOSrffQ","2mEte_9nhSs","U6yvT288bY8"
-];
+"tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","jGyG5Xty37c","jP96fZG48h4","evj4fzBBiFI","HRaVepQYHRA","QtBuiOSrffQ","2mEte_9nhSs","U6yvT288bY8","r-jw-aWkbgc","Saf0QgV2dBs","oY_yCQvZ5Ko","4bJBloATeRw","MaLbebYE83E","iIiv0j5v6t8","ugz6RrkaN94","QQf0Qm-o9is","lGmpCB6-LUA","X6UvWJ3ApIw","YfE4a_qwYjQ","nLmaGOOMLr8"];
 const DAILY_LIMIT=6;
+
 let currentUser,data,player,ytReady=false;
 let dailyVideos=[],videoIndex=0;
 let timerInt,countdownInt;
@@ -115,52 +99,63 @@ const tomorrow=()=>{let d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0
 const rand=(a,b)=>+(Math.random()*(b-a)+a).toFixed(2);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 
-/* INIT USERS */
-Object.keys(USERS).forEach(u=>{
- let o=document.createElement("option");
- o.value=u;o.textContent=u;
- userSelect.appendChild(o);
-});
+/* INIT */
+window.onload=()=>{
+ Object.keys(USERS).forEach(u=>{
+  let o=document.createElement("option");
+  o.value=u;o.textContent=u;
+  userSelect.appendChild(o);
+ });
+}
 
-/* YT READY */
+/* YT */
 function onYouTubeIframeAPIReady(){ytReady=true}
 
 /* LOGIN */
-function doLogin(){
+password.onkeypress=e=>{
+ if(e.key!=="Enter")return;
  let u=userSelect.value;
- if(!USERS[u]){ alert("Select user"); return; }
- if(password.value!==USERS[u].pass){
-  alert("Wrong password");
-  return;
- }
-currentUser=u;
+ if(password.value!==USERS[u].pass){alert("Wrong password");return;}
+ currentUser=u;
  login.remove();
  refBox.classList.remove("hidden");
- guessBox.classList.remove("hidden");
  loadData();
  dailyReset();
- dailyBonusClaim();
- initGuessGame();
+ dailyBonus();
+ loadReferral();
  render();
 }
-
-loginBtn.onclick = doLogin;
-password.onkeypress = e=>{
- if(e.key==="Enter") doLogin();
-};
-
 /* DATA */
 function loadData(){
  data=JSON.parse(localStorage.getItem("user_"+currentUser))||{
   total:0,earn:[],withdraw:[],
   watchedToday:[],dailyVideos:[],
   lastDate:null,lastBonus:null,
-  refUser:null
+  refUser:null,refReward:0,bonusVideo:null
  };
 }
 const save=()=>localStorage.setItem("user_"+currentUser,JSON.stringify(data));
 
-/* DAILY */
+/* REFERRAL */
+function loadReferral(){
+ if(data.refUser){
+  refUsername.value=data.refUser;
+  refUsername.disabled=true;
+  saveRef.disabled=true;
+ }
+}
+saveRef.onclick=()=>{
+ if(data.refUser)return;
+ let r=rand(0.1,8);
+ data.refUser=refUsername.value;
+ data.refReward=r;
+ data.total+=r;
+ data.earn.push({type:"Invite Reward",amount:r,time:new Date().toLocaleString()});
+ save();render();
+ refUsername.disabled=true;saveRef.disabled=true;
+ refMsg.textContent="₱"+r+" added";
+}
+/* DAILY RESET */
 function dailyReset(){
  if(data.lastDate!==today()){
   data.lastDate=today();
@@ -168,20 +163,23 @@ function dailyReset(){
   videoIndex=0;
   dailyVideos=shuffle([...VIDEO_POOL]).slice(0,DAILY_LIMIT);
   data.dailyVideos=dailyVideos;
+  data.bonusVideo=dailyVideos[Math.floor(Math.random()*dailyVideos.length)];
  }
  dailyVideos=data.dailyVideos;
  save();
  loadVideo();
  startCountdown();
 }
-function dailyBonusClaim(){
+
+/* DAILY BONUS */
+function dailyBonus(){
  if(data.lastBonus===today()){dailyBonus.textContent="Claimed";return;}
  let b=rand(0.1,5);
  data.lastBonus=today();
  data.total+=b;
  data.earn.push({type:"Daily Bonus",amount:b,time:new Date().toLocaleString()});
- dailyBonus.textContent="₱"+b;
  save();
+ dailyBonus.textContent="₱"+b;
 }
 /* VIDEO */
 function loadVideo(){
@@ -195,9 +193,10 @@ function loadVideo(){
  player=new YT.Player("player",{
   videoId:dailyVideos[videoIndex],
   playerVars:{autoplay:1,controls:0},
-  events:{onReady:startTimer,onStateChange:e=>{if(e.data===0)reward()}}
+  events:{onReady:startTimer,onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)reward()}}
  });
 }
+/* TIMER */
 function startTimer(){
  let chk=setInterval(()=>{
   let d=player.getDuration();
@@ -213,8 +212,9 @@ function runTimer(t){
   t--; if(t<0)clearInterval(timerInt);
  },1000);
 }
+/* REWARD */
 function reward(){
- let r=rand(0.1,1);
+ let r=(dailyVideos[videoIndex]===data.bonusVideo)?1.99:rand(0.1,1.00);
  data.total+=r;
  data.watchedToday.push(dailyVideos[videoIndex]);
  data.earn.push({type:"Video",amount:r,time:new Date().toLocaleString()});
@@ -222,57 +222,6 @@ function reward(){
  save();render();
  earned.textContent="₱"+r+" earned";
  setTimeout(loadVideo,1500);
-}
-
-/* 🎯 GUESSING GAME */
-
-let secretNumber,guessEnd,guessInt;
-function initGuessGame(){
- secretNumber=Math.floor(Math.random()*50)+1;
- guessEnd=Date.now()+15*60*1000;
- guessBtn.disabled=false;
- guessHint.textContent="";
- startGuessTimer();
-}
-function startGuessTimer(){
- clearInterval(guessInt);
- guessInt=setInterval(()=>{
-  let r=guessEnd-Date.now();
-  if(r<=0){
-   guessBtn.disabled=true;
-   guessTimer.textContent="⛔ Time expired";
-   clearInterval(guessInt);return;
-  }
-  let m=Math.floor(r/60000),s=Math.floor(r%60000/1000);
-  guessTimer.textContent=`⏳ ${m}:${String(s).padStart(2,"0")}`;
- },1000);
-}
-guessBtn.onclick=()=>{
- if(guessBtn.disabled)return;
- let g=Number(guessInput.value);
- if(g<1||g>50)return;
-if(g===secretNumber){
-  let w=rand(0.1,0.5);
-  data.total+=w;
-  data.earn.push({type:"Guess Win",amount:w,time:new Date().toLocaleString()});
-  guessHint.textContent="🎉 Correct! ₱"+w;
-  initGuessGame();
- }else{
-  data.total-=0.4;
-  data.earn.push({type:"Guess Lose",amount:-0.4,time:new Date().toLocaleString()});
-  guessHint.textContent=g>secretNumber?"⬇ Lower":"⬆ Higher";
- }
- if(data.total<=0)unlockVideos();
- save();render();
-}
-function unlockVideos(){
- data.total=0;
- data.watchedToday=[];
- data.dailyVideos=shuffle([...VIDEO_POOL]).slice(0,10);
- dailyVideos=data.dailyVideos;
- videoIndex=0;
- lockMsg.textContent="🔓 Balance zero! 10 videos unlocked";
- loadVideo();
 }
 /* RENDER */
 function render(){
@@ -282,6 +231,7 @@ function render(){
  earnHistory.innerHTML=data.earn.map(e=>`<div class="card">${e.type}<br>₱${e.amount}<br>${e.time}</div>`).join("");
  withdrawHistory.innerHTML=data.withdraw.map(w=>`<div class="card">${w.method} ₱${w.amount}<br>${w.time}</div>`).join("");
 }
+
 /* WITHDRAW */
 withdrawBtn.onclick=()=>withdrawModal.classList.remove("hidden");
 function confirmWithdraw(m){
@@ -290,7 +240,6 @@ function confirmWithdraw(m){
  save();render();
  withdrawModal.classList.add("hidden");
 }
-
 /* COUNTDOWN */
 function startCountdown(){
  clearInterval(countdownInt);
