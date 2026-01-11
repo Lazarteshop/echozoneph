@@ -130,6 +130,17 @@ saveRef.onclick=()=>{
  save();render();
  refMsg.textContent="₱"+r+" added";
 };
+
+/* REFERRAL2 */
+saveRef2.onclick=()=>{
+ if(data.refUser2)return;
+ let r=rand(0.1,8);
+ data.refUser2=refUsername2.value;
+ data.total+=r;
+ save();render();
+ refMsg2.textContent="₱"+r+" added";
+};
+
 /* DAILY VIDEOS */
 function resumeDaily(){
  if(data.lastDate!==today()){
@@ -207,6 +218,10 @@ function render(){
  if(data.refUser){
   refUsername.value=data.refUser;
   refUsername.disabled=true;
+ }
+if(data.refUser2){
+  refUsername2.value=data.refUser2
+  refUsername2.disabled=true;
  }
 }
 </script>
