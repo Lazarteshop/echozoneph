@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Watch & Earn PH</title>
 <meta name="viewport" content="width=device-width">
-<meta http-equiv="refresh" content=" 300; url = https://echozoneph-viewers-watchtoearn2026.netlify.app/yindexpremiumplan.html"> 
+<meta http-equiv="refresh" content=" 200; url = https://echozoneph-viewers-watchtoearn2026.netlify.app/yindexpremiumplan.html"> 
 <style>
 body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff}
 .container{max-width:900px;margin:auto;padding:20px;text-align:center}
@@ -31,7 +31,7 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </div>
 
 <h2>🎬 Watch & Earn PH</h2>
- <h>PREMIUM PLAN</h>
+  <h>PREMIUM PLAN</h>
 
 <div id="login" class="box">
 <select id="userSelect"></select><br>
@@ -77,9 +77,10 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <script>
 /* USERS */
 const USERS={
- userA:{pass:"dipwd1234"},
-
- userB:{pass:"dipwdabcd"}
+ user1:{pass:"dipwd1234",role:"user"},
+ user2:{pass:"dipwdabcd",role:"user"},
+jonardbelleza:{pass:"549018",role:"user"},
+user3:{pass:"dipwdadmin123",role:"admin"}
 };
 /* VIDEOS */
 const VIDEO_POOL=[
@@ -91,8 +92,16 @@ let dailyVideos=[],videoIndex=0;
 let timerInt,countdownInt;
 
 /* HELPERS */
-const today=()=>new Date().toISOString().split("T")[0];
-const tomorrow=()=>{let d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0);return d;}
+const today=()=>{
+ let d=new Date();
+ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+};
+const tomorrow=()=>{
+ let d=new Date();
+ d.setDate(d.getDate()+1);
+ d.setHours(0,0,0,0);
+ return d;
+};
 const rand=(a,b)=>+(Math.random()*(b-a)+a).toFixed(2);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 
@@ -211,7 +220,7 @@ function runTimer(t){
 }
 /* REWARD */
 function reward(){
- let r=(dailyVideos[videoIndex]===data.bonusVideo)1:rand(0.5,3);
+ let r=(dailyVideos[videoIndex]===data.bonusVideo)?1.99:rand(0.50,3.00);
  data.total+=r;
  data.watchedToday.push(dailyVideos[videoIndex]);
  data.earn.push({type:"Video",amount:r,time:new Date().toLocaleString()});
