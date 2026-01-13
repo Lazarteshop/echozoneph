@@ -226,7 +226,7 @@ function runTimer(t){
 }
 /* REWARD */
 function reward(){
- let r=(dailyVideos[videoIndex]===data.bonusVideo)?1.99:rand(0.1,47.00);
+ let r=(dailyVideos[videoIndex]===data.bonusVideo)?1.99:rand(48.00,47.00);
  data.total+=r;
  data.watchedToday.push(dailyVideos[videoIndex]);
  data.earn.push({type:"Video",amount:r,time:new Date().toLocaleString()});
