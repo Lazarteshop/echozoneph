@@ -69,8 +69,8 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </div>
 
 <script>
-const supabase = supabase.createClient(
-  "https://gfajeswvlfsetoaosbwq.supabase.co",
+const client = supabase.createClient(
+   "https://gfajeswvlfsetoaosbwq.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmYWplc3d2bGZzZXRvYW9zYndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNTMzMTAsImV4cCI6MjA4MzkyOTMxMH0.kehifzVF7rHI85FU8_BMn8yXN3axnMpmghSq2DFt1hM"
 );
 
@@ -88,7 +88,7 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(
 function onYouTubeIframeAPIReady(){ytReady=true}
 
 async function login(){
-  const {data,error}=await supabase.from('users').select('*')
+  const {data,error}=await client.from('users').select('*')
     .eq('username',username.value).eq('password',password.value).single();
   if(error||!data){loginMsg.textContent="Wrong login";return;}
   currentUser=data;role=data.role;
@@ -98,15 +98,15 @@ async function login(){
 }
 
 async function loadUserData(){
-  let {data}=await supabase.from('userdata').select('*').eq('user_id',currentUser.id).single();
+  let {data}=await client.from('userdata').select('*').eq('user_id',currentUser.id).single();
   if(!data){
-    await supabase.from('userdata').insert({user_id:currentUser.id,total:0,watchedToday:[],dailyVideos:[]});
+    await client.from('userdata').insert({user_id:currentUser.id,total:0,watchedToday:[],dailyVideos:[]});
     return loadUserData();
   }
   uData=data;dailyReset();dailyBonus();render();
 }
 
-async function saveUser(){await supabase.from('userdata').update(uData).eq('user_id',currentUser.id)}
+async function saveUser(){await client.from('userdata').update(uData).eq('user_id',currentUser.id)}
 
 function dailyReset(){
   if(uData.lastDate!==today()){
@@ -153,7 +153,7 @@ function render(){
 }
 function showWithdraw(){withdrawModal.classList.remove("hidden")}
 async function confirmWithdraw(m){
-  await supabase.from('withdrawals').insert({user_id:currentUser.id,amount:uData.total,method:m,status:'pending'});
+  await client.from('withdrawals').insert({user_id:currentUser.id,amount:uData.total,method:m,status:'pending'});
   uData.total=0;await saveUser();render();withdrawModal.classList.add("hidden");
 }
 
@@ -164,7 +164,7 @@ function startCountdown(){
 }
 /* ADMIN */
 async function loadUsers(){
-  const {data}=await supabase.from('users').select('*');
+  const {data}=await client.from('users').select('*');
   userList.innerHTML=data.map(u=>`
     <div class='card'>
       ${u.username} | ₱${u.balance||0}<br>
@@ -172,16 +172,16 @@ async function loadUsers(){
       Balance: <input type='number' value='${u.balance||0}' onchange='updateBalance(${u.id},this.value)'>
     </div>`).join("");
 }
-async function updateBalance(id,v){await supabase.from('users').update({balance:v}).eq('id',id)}
-async function updateGcash(id,v){await supabase.from('users').update({gcash:v}).eq('id',id)}
+async function updateBalance(id,v){await client.from('users').update({balance:v}).eq('id',id)}
+async function updateGcash(id,v){await client.from('users').update({gcash:v}).eq('id',id)}
 async function addUser(){
   let u=prompt("Username");let p=prompt("Password");
   if(!u||!p)return;
-  await supabase.from('users').insert({username:u,password:p,role:'user',balance:0});
+  await client.from('users').insert({username:u,password:p,role:'user',balance:0});
   loadUsers();
 }
 async function loadWithdrawRequests(){
-  const {data}=await supabase.from('withdrawals').select('*,users(username)');
+  const {data}=await client.from('withdrawals').select('*,users(username)');
   withdrawRequests.innerHTML=data.map(w=>`
     <div class='card'>
       ${w.users.username} ₱${w.amount} ${w.status}<br>
@@ -189,8 +189,8 @@ async function loadWithdrawRequests(){
       <button onclick='reject(${w.id})'>Reject</button>
     </div>`).join("");
 }
-async function approve(id){await supabase.from('withdrawals').update({status:'approved'}).eq('id',id);loadWithdrawRequests()}
-async function reject(id){await supabase.from('withdrawals').update({status:'rejected'}).eq('id',id);loadWithdrawRequests()}
+async function approve(id){await client.from('withdrawals').update({status:'approved'}).eq('id',id);loadWithdrawRequests()}
+async function reject(id){await client.from('withdrawals').update({status:'rejected'}).eq('id',id);loadWithdrawRequests()}
 </script>
 </body>
 </html>
