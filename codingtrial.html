@@ -89,21 +89,26 @@ function onYouTubeIframeAPIReady(){ytReady=true}
 
 
 async function login(){
-  const {data,error}=await client.from('users').select('*')
-    .eq('username',username.value)
-    .eq('password',password.value)
+  const { data, error } = await client
+    .from('users')
+    .select('*')
+    .eq('username', username.value)
+    .eq('password', password.value)
     .single();
 
+  console.log("LOGIN DATA:", data);
+  console.log("LOGIN ERROR:", error);
+
   if(error || !data){
-    loginMsg.textContent="Wrong login";
+    loginMsg.textContent = "Wrong login";
     return;
   }
-currentUser=data;
-  role=data.role;
+currentUser = data;
+  role = data.role;
 
   loginBox.classList.add('hidden');
 
-  if(role==='admin'){
+  if(role === 'admin'){
     adminPanel.classList.remove('hidden');
     loadUsers();
     loadWithdrawRequests();
@@ -112,6 +117,7 @@ currentUser=data;
     loadUserData();
   }
 }
+
 
 
 async function loadUserData(){
