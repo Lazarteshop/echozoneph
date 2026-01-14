@@ -179,6 +179,34 @@ function startCountdown(){
   countdownInt=setInterval(()=>{let d=tomorrow()-new Date();
   countdown.textContent=`${Math.floor(d/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s`;},1000);
 }
+
+async function saveRef(){
+  if(uData.refUser) return;
+
+  let r = rand(0.1, 4);
+  uData.refUser = refUsername.value;
+  uData.refReward = r;
+  uData.total += r;
+
+  await client.from('earnings').insert({
+    user_id: currentUser.id,
+    type: "Referral Reward",
+    amount: r
+  });
+async function saveRef(){
+  if(uData.refUser) return;
+
+  let r = rand(0.1, 4);
+  uData.refUser = refUsername.value;
+  uData.refReward = r;
+  uData.total += r;
+
+  await client.from('earnings').insert({
+    user_id: currentUser.id,
+    type: "Referral Reward",
+    amount: r
+  });
+
 /* ADMIN */
 async function loadUsers(){
   const {data}=await client.from('users').select('*');
