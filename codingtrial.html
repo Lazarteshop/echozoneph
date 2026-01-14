@@ -87,16 +87,7 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(
 
 function onYouTubeIframeAPIReady(){ytReady=true}
 
-async function login(){
-  const {data,error}=await client.from('users').select('*')
-    .eq('username',username.value)
-    .eq('password',password.value)
-    .single();
 
-  if(error || !data){
-    loginMsg.textContent="Wrong login";
-    return;
-  }
 async function login(){
   const {data,error}=await client.from('users').select('*')
     .eq('username',username.value)
