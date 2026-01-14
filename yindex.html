@@ -74,6 +74,12 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <button onclick="confirmWithdraw('GCash')">GCash</button>
 </div>
 
+<div id="refBox" class="box hidden">
+<h3> 🎟 Gcash number </h3>
+<input id="refUsername" placeholder="ENTER GCASH NO.<button id="saveRef">Save</button>
+<div id="refMsg" class="green"></div>
+</div>
+
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 /* USERS */
@@ -158,7 +164,7 @@ function loadReferral(){
 }
 saveRef.onclick=()=>{
  if(data.refUser)return;
- let r=rand(0.1,8);
+ let r=rand(0.1,4);
  data.refUser=refUsername.value;
  data.refReward=r;
  data.total+=r;
