@@ -126,7 +126,10 @@ async function loadUserData(){
     await client.from('userdata').insert({user_id:currentUser.id,total:0,watchedToday:[],dailyVideos:[]});
     return loadUserData();
   }
-  uData=data;dailyReset();dailyBonus();render();
+  uData=data;
+uData.total = parseFloat(uData.total) || 0;
+uData.watchedToday = uData.watchedToday || [];
+uData.dailyVideos = uData.dailyVideos || [];
 }
 
 async function saveUser(){await client.from('userdata').update(uData).eq('user_id',currentUser.id)}
@@ -139,6 +142,11 @@ function dailyReset(){
     uData.bonusVideo=dailyVideos[Math.floor(Math.random()*dailyVideos.length)];
   }
   dailyVideos=uData.dailyVideos;saveUser();loadVideo();startCountdown();
+}
+
+if(!uData.dailyVideos || uData.dailyVideos.length===0){
+  dailyVideos = shuffle([...VIDEO_POOL]).slice(0,DAILY_LIMIT);
+  uData.dailyVideos = dailyVideos;
 }
 
 async function dailyBonus(){
@@ -165,9 +173,10 @@ function loadVideo(){
   watchedCount.textContent=uData.watchedToday.length;
   if(uData.watchedToday.length>=DAILY_LIMIT)return;
   playerArea.innerHTML="<div id='player'></div>";
-  player=new YT.Player("player",{videoId:dailyVideos[videoIndex],playerVars:{autoplay:1,controls:0},
+  player=new YT.Player("player",{videoId:dailyVideos[videoIndex],playerVars:{autoplay:1,controls:1},
     events:{onReady:startTimer,onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)reward()}}});
 }
+
 function startTimer(){
   let chk=setInterval(()=>{let d=player.getDuration();if(d>0){clearInterval(chk);runTimer(Math.floor(d));}},200);
 }
