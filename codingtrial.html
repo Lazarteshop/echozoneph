@@ -106,19 +106,19 @@ async function loadUserData(){
   .select("*").eq("user_id",currentUser.id).single();
 
 if(!data){
-  await client.from("userdata").insert({
-   user_id:currentUser.id,total:0,watchedToday:[],dailyVideos:[]
+  await client.from('userdata').insert({
+    user_id: currentUser.id,
+    total: 0,
+    watchedToday: [],
+    dailyVideos: []
   });
   return loadUserData();
- }
-
- uData=data;
- dailyReset();
- dailyBonus();
- render();
- loadHistory();
- loadVideo();
 }
+uData = data;
+if(typeof uData.total !== "number") uData.total = 0;
+if(!Array.isArray(uData.watchedToday)) uData.watchedToday = [];
+if(!Array.isArray(uData.dailyVideos))
+uData.dailyVideos = [];
 
 async function saveUser(){
  await client.from("userdata").update(uData).eq("user_id",currentUser.id);
@@ -148,14 +148,46 @@ async function dailyBonus(){
 }
 
 function loadVideo(){
- if(videoIndex>=videoList.length)return;
- player=new YT.Player("player",{
-  videoId:videoList[videoIndex],
-  playerVars:{autoplay:1,controls:0,mute:0},
-  events:{onStateChange:e=>{
-   if(e.data===YT.PlayerState.ENDED)reward();
-  }}
- });
+  if(!ytReady){
+    setTimeout(loadVideo, 500);
+    return;
+  }
+
+  if(!dailyVideos || dailyVideos.length === 0){
+    console.log("Walang daily videos");
+    return;
+  }
+
+  if(uData.watchedToday.length >= DAILY_LIMIT){
+    playerArea.innerHTML = "<p>Daily limit reached</p>";
+    return;
+  }
+if(uData.watchedToday.length >= DAILY_LIMIT){
+    playerArea.innerHTML = "<p>Daily limit reached</p>";
+    return;
+  }
+
+  playerArea.innerHTML = "<div id='player'></div>";
+
+  player = new YT.Player("player", {
+    videoId: dailyVideos[videoIndex],
+    playerVars:{
+      autoplay:1,
+      controls:0,
+      mute:0   // HINDI muted
+    },
+events:{
+      onReady: e=>{
+        try{ e.target.playVideo(); }catch(err){}
+        startTimer();
+      },
+      onStateChange: e=>{
+        if(e.data === YT.PlayerState.ENDED){
+          reward();
+        }
+      }
+    }
+  });
 }
 
 async function reward(){
@@ -189,23 +221,52 @@ async function withdraw(m){
 }
 
 async function saveRef(){
- if(uData.refUser)return;
- let r=rand(0.1,8);
- uData.refUser=refInput.value;
- uData.total+=r;
- await client.from("earnings").insert({user_id:currentUser.id,type:"Referral",amount:r});
- await saveUser();
- render();
- loadHistory();
- refMsg.textContent="You earned ₱"+r;
+  if(uData.refUser) return;
+
+  let r = rand(0.1, 8);
+
+  if(typeof uData.total !== "number") uData.total = 0;
+
+  uData.refUser = refUsername.value;
+  uData.refReward = r;
+  uData.total = Number(uData.total) + Number(r);
+
+  await client.from('earnings').insert({
+    user_id: currentUser.id,
+    type: "Referral Reward",
+    amount: r
+  });
+async function saveRef(){
+  if(uData.refUser) return;
+
+  let r = rand(0.1, 8);
+
+  if(typeof uData.total !== "number") uData.total = 0;
+
+  uData.refUser = refUsername.value;
+  uData.refReward = r;
+  uData.total = Number(uData.total) + Number(r);
+
+  await client.from('earnings').insert({
+    user_id: currentUser.id,
+    type: "Referral Reward",
+    amount: r
+  });
+await saveUser();
+  render();
+  refMsg.textContent = "You earned ₱" + r;
 }
 
+
 async function loadHistory(){
- let {data:e}=await client.from("earnings").select("*").eq("user_id",currentUser.id).order("time",{ascending:false});
- earningsHistory.innerHTML="";
- (e||[]).forEach(x=>{
-  earningsHistory.innerHTML+=`<div>${x.type} ₱${x.amount}</div>`;
- });
+ let {data:e}=await client.from("earnings").insert({
+  user_id: currentUser.id,
+  type: "Video",
+  amount: r,
+  time: new Date().toISOString()
+});
+
+(!Array.isArray(earnings)) earnings = [];
 
  let {data:w}=await client.from("withdrawals").select("*").eq("user_id",currentUser.id);
  withdrawHistory.innerHTML="";
