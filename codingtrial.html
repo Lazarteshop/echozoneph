@@ -193,10 +193,7 @@ await saveUser();
   earned.textContent="₱"+r+" earned";
   setTimeout(loadVideo,1500);
 }
-  uData.total+=r;uData.watchedToday.push(dailyVideos[videoIndex]);videoIndex++;
-  await saveUser();render();earned.textContent="₱"+r+" earned";setTimeout(loadVideo,1500);
-}
-
+  
 function render(){
   balance.textContent=uData.total.toFixed(2);
   withdrawBtn.disabled=uData.total<50;
