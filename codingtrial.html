@@ -56,7 +56,11 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
     🎬 Watched today: <span id="watchedCount">0</span>/6<br>
     ⏳ Next reset in: <span id="countdown"></span>
   </div>
-</div>class="box"><h3>Users</h3><button onclick="addUser()">➕ Add User</button><div id="userList"></div></div>
+</div>
+
+<div id="adminPanel" class="hidden">
+  <div class="box"><h2>ADMIN PANEL</h2></div>
+  <div class="box"><h3>Users</h3><button onclick="addUser()">➕ Add User</button><div id="userList"></div></div>
   <div class="box"><h3>Withdrawal Requests</h3><div id="withdrawRequests"></div></div>
 </div>
 
