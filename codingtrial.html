@@ -23,7 +23,7 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </head>
 <body>
 <div class="container">
-<div id="login" class="box">
+<div id="loginBox" class="box">
   <h3>Login</h3>
   <input id="username" placeholder="Username">
   <input id="password" type="password" placeholder="Password">
@@ -89,13 +89,39 @@ function onYouTubeIframeAPIReady(){ytReady=true}
 
 async function login(){
   const {data,error}=await client.from('users').select('*')
-    .eq('username',username.value).eq('password',password.value).single();
-  if(error||!data){loginMsg.textContent="Wrong login";return;}
-  currentUser=data;role=data.role;
-  login.classList.add('hidden');
-  if(role==='admin'){adminPanel.classList.remove('hidden');loadUsers();loadWithdrawRequests();}
-  else{userPanel.classList.remove('hidden');loadUserData();}
+    .eq('username',username.value)
+    .eq('password',password.value)
+    .single();
+
+  if(error || !data){
+    loginMsg.textContent="Wrong login";
+    return;
+  }
+async function login(){
+  const {data,error}=await client.from('users').select('*')
+    .eq('username',username.value)
+    .eq('password',password.value)
+    .single();
+
+  if(error || !data){
+    loginMsg.textContent="Wrong login";
+    return;
+  }
+currentUser=data;
+  role=data.role;
+
+  loginBox.classList.add('hidden');
+
+  if(role==='admin'){
+    adminPanel.classList.remove('hidden');
+    loadUsers();
+    loadWithdrawRequests();
+  } else {
+    userPanel.classList.remove('hidden');
+    loadUserData();
+  }
 }
+
 
 async function loadUserData(){
   let {data}=await client.from('userdata').select('*').eq('user_id',currentUser.id).single();
