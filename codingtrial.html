@@ -135,9 +135,22 @@ function dailyReset(){
   dailyVideos=uData.dailyVideos;saveUser();loadVideo();startCountdown();
 }
 
-function dailyBonus(){
-  if(uData.lastBonus===today()){dailyBonus.textContent="Claimed";return;}
-  let b=rand(0.1,5);uData.lastBonus=today();uData.total+=b;saveUser();
+async function dailyBonus(){
+  if(uData.lastBonus===today()){
+    dailyBonus.textContent="Claimed";
+    return;
+  }
+
+  let b = rand(0.1,5);
+  uData.lastBonus = today();
+  uData.total += b;
+
+  await client.from('earnings').insert({
+    user_id: currentUser.id,
+    type: "Daily Bonus",
+    amount: b
+  });
+await saveUser();
   dailyBonus.textContent="₱"+b;
 }
 
@@ -158,7 +171,23 @@ function runTimer(t){
   videoProgress.style.width=((total-t)/total*100)+"%";t--;if(t<0)clearInterval(timerInt);},1000);
 }
 async function reward(){
-  let r=(dailyVideos[videoIndex]===uData.bonusVideo)?1.99:rand(0.1,1);
+  let r = (dailyVideos[videoIndex]===uData.bonusVideo)?1.99:rand(0.1,1);
+
+  uData.total += r;
+  uData.watchedToday.push(dailyVideos[videoIndex]);
+  videoIndex++;
+
+  await client.from('earnings').insert({
+    user_id: currentUser.id,
+    type: "Video",
+    amount: r
+  });
+
+  await saveUser();
+  render();
+  earned.textContent="₱"+r+" earned";
+  setTimeout(loadVideo,1500);
+}
   uData.total+=r;uData.watchedToday.push(dailyVideos[videoIndex]);videoIndex++;
   await saveUser();render();earned.textContent="₱"+r+" earned";setTimeout(loadVideo,1500);
 }
