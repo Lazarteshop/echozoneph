@@ -1,108 +1,100 @@
+
+
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <title>Watch & Earn PH</title>
 <meta name="viewport" content="width=device-width">
+
 <style>
-body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff}
-.container{max-width:900px;margin:auto;padding:15px;text-align:center}
-.box{background:#111;padding:15px;border-radius:10px;margin-bottom:15px}
+body{background:#111;color:#fff;font-family:Arial}
+.box{background:#1a1a1a;padding:15px;margin:10px;border-radius:8px}
 .hidden{display:none}
-button{padding:10px 15px;border:none;border-radius:6px}
-button:disabled{background:#555}
-input{padding:10px;width:100%;max-width:300px;margin:5px}
-.progress{width:100%;height:12px;background:#333;border-radius:10px;overflow:hidden}
-.progress div{height:100%;background:#00ff88;width:0}
-.card{background:#111;padding:10px;border-radius:8px;margin:5px;text-align:left}
-.green{color:#00ff88} 
-.red{color:#ff6666}
-iframe{width:100%;height:300px;border-radius:10px}
+button{padding:10px;border-radius:5px}
+.progress{width:100%;height:10px;background:#333}
+.progress div{height:100%;background:#0f0;width:0}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
-<div class="container">
+
 <div id="loginBox" class="box">
-<h3>Login</h3>
-<input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
-<div id="loginMsg" class="red"></div>
+  <h3>Login</h3>
+  <input id="username" placeholder="Username"><br>
+  <input id="password" type="password" placeholder="Password"><br>
+  <button onclick="login()">Login</button>
+  <div id="loginMsg"></div>
 </div>
 
 <div id="userPanel" class="hidden">
 
 <div class="box">
-💰 Balance: ₱<span id="balance">0.00</span>
-<div class="progress"><div id="withdrawProgress"></div></div>
-<small>Minimum ₱50</small><br>
-<button id="withdrawBtn" onclick="showWithdraw()" disabled>Withdraw</button>
+Balance: ₱<span id="balance">0</span>
+<div class="progress"><div id="bar"></div></div>
+<button id="withdrawBtn" disabled onclick="showWithdraw()">Withdraw</button>
 </div>
 
 <div class="box">
-<h2>Watch & Earn PH</h2>
-<p>BASIC PLAN</p>
-</div>
-<div class="box">
-<h3>Referrer Username</h3>
-<input id="refUsername">
+Referral:
+<input id="refInput">
 <button onclick="saveRef()">Save</button>
-<div id="refMsg" class="green"></div>
-</div>
-<div class="box">
-<button id="startBtn" onclick="startWatching()">Start Watching</button>
-<div id="playerArea"></div>
-<div class="progress"><div id="videoProgress"></div></div>
-<div id="timer"></div>
-<div id="earned" class="green"></div>
-</div>
-<div class="box">
-🎁 Daily Bonus: <span id="dailyBonus" class="green"></span><br>
-🎬 Watched today: <span id="watchedCount">0</span>/6<br>
-⏳ Next reset in: <span id="countdown"></span>
+<div id="refMsg"></div>
 </div>
 
 <div class="box">
-<h3>Earnings History</h3>
-<div id="earningsList"></div>
+Daily Bonus: <span id="dailyBonus"></span>
 </div>
+
 <div class="box">
-<h3>Withdrawal History</h3>
+<div id="player"></div>
+<div id="timer"></div>
+<div class="progress"><div id="videoBar"></div></div>
+</div>
+
+<div class="box">
+<h4>Earnings History</h4>
+<div id="earningsHistory"></div>
+</div>
+
+<div class="box">
+<h4>Withdrawals</h4>
 <div id="withdrawHistory"></div>
 </div>
 
 </div>
 
-<div id="withdrawModal" class="box hidden">
-<h3>Withdraw</h3>
-<button onclick="confirmWithdraw('GCash')">GCash</button>
-<button onclick="confirmWithdraw('Maya')">Maya</button>
+<div id="withdrawBox" class="box hidden">
+<button onclick="withdraw('GCash')">GCash</button>
+<button onclick="withdraw('Maya')">Maya</button>
 </div>
+
 <script>
 const client = supabase.createClient(
- "https://latimgzxirdlcetikufy.supabase.co",
- "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY"
+ "YOUR_SUPABASE_URL",
+ "YOUR_ANON_KEY"
 );
 
-const VIDEO_POOL=["tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","jGyG5Xty37c"];
+const VIDEO_POOL=["tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY"];
 const DAILY_LIMIT=6;
 
-let currentUser,uData={},dailyVideos=[],videoIndex=0,player,ytReady=false;
-let timerInt,countdownInt;
+let currentUser,uData={},player,videoList=[],videoIndex=0;
 
 const today=()=>new Date().toISOString().slice(0,10);
-const tomorrow=()=>{let d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0);return d};
 const rand=(a,b)=>+(Math.random()*(b-a)+a).toFixed(2);
-const shuffle=a=>{for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 
-function onYouTubeIframeAPIReady(){ytReady=true}
+function onYouTubeIframeAPIReady(){}
 
 async function login(){
- const {data,error}=await client.from("users").select("*")
- .eq("username",username.value).eq("password",password.value).single();
+ const {data,error}=await client.from("users")
+  .select("*")
+  .eq("username",username.value)
+  .eq("password",password.value)
+  .single();
+
  if(error||!data){loginMsg.textContent="Wrong login";return;}
+
  currentUser=data;
  loginBox.classList.add("hidden");
  userPanel.classList.remove("hidden");
@@ -110,140 +102,116 @@ async function login(){
 }
 
 async function loadUserData(){
- let {data}=await client.from("userdata").select("*").eq("user_id",currentUser.id).single();
- if(!data){
-   await client.from("userdata").insert({user_id:currentUser.id,total:0,watchedToday:[],dailyVideos:[]});
-   return loadUserData();
+ let {data}=await client.from("userdata")
+  .select("*").eq("user_id",currentUser.id).single();
+
+if(!data){
+  await client.from("userdata").insert({
+   user_id:currentUser.id,total:0,watchedToday:[],dailyVideos:[]
+  });
+  return loadUserData();
  }
+
  uData=data;
- uData.total=parseFloat(uData.total)||0;
- uData.watchedToday=uData.watchedToday||[];
- uData.dailyVideos=uData.dailyVideos||[];
  dailyReset();
- dailyBonusFunc();
+ dailyBonus();
  render();
  loadHistory();
+ loadVideo();
 }
+
 async function saveUser(){
  await client.from("userdata").update(uData).eq("user_id",currentUser.id);
 }
 
 function dailyReset(){
  if(uData.lastDate!==today()){
-   uData.lastDate=today();
-   uData.watchedToday=[];
-   videoIndex=0;
-   dailyVideos=shuffle([...VIDEO_POOL]).slice(0,DAILY_LIMIT);
-   uData.dailyVideos=dailyVideos;
-   uData.bonusVideo=dailyVideos[Math.floor(Math.random()*dailyVideos.length)];
-   saveUser();
+  uData.lastDate=today();
+  uData.watchedToday=[];
+  videoIndex=0;
+  videoList=[...VIDEO_POOL].sort(()=>Math.random()-0.5).slice(0,DAILY_LIMIT);
+  uData.dailyVideos=videoList;
+  uData.bonusVideo=videoList[Math.floor(Math.random()*videoList.length)];
+  saveUser();
  }
- dailyVideos=uData.dailyVideos;
- startCountdown();
+ videoList=uData.dailyVideos;
 }
 
-async function dailyBonusFunc(){
- if(uData.lastBonus===today()){
-   dailyBonus.textContent="Claimed";return;
- }
+async function dailyBonus(){
+ if(uData.lastBonus===today()){dailyBonus.textContent="Claimed";return;}
  let b=rand(0.1,5);
- uData.lastBonus=today();
  uData.total+=b;
+ uData.lastBonus=today();
  await client.from("earnings").insert({user_id:currentUser.id,type:"Daily Bonus",amount:b});
  await saveUser();
  dailyBonus.textContent="₱"+b;
 }
 
-function startWatching(){
- startBtn.classList.add("hidden");
- loadVideo();
-}
-
 function loadVideo(){
- if(!ytReady){setTimeout(loadVideo,500);return;}
- watchedCount.textContent=uData.watchedToday.length;
- if(uData.watchedToday.length>=DAILY_LIMIT)return;
- playerArea.innerHTML="<div id='player'></div>";
+ if(videoIndex>=videoList.length)return;
  player=new YT.Player("player",{
-  videoId:dailyVideos[videoIndex],
-  playerVars:{autoplay:1,controls:0},
-  events:{onReady:()=>player.unMute(),onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)reward()}}
+  videoId:videoList[videoIndex],
+  playerVars:{autoplay:1,controls:0,mute:0},
+  events:{onStateChange:e=>{
+   if(e.data===YT.PlayerState.ENDED)reward();
+  }}
  });
-}
-function startTimer(){
- let chk=setInterval(()=>{
-  let d=player.getDuration();
-  if(d>0){clearInterval(chk);runTimer(Math.floor(d));}
- },200);
-}
-
-function runTimer(t){
- let total=t;
- clearInterval(timerInt);
- timerInt=setInterval(()=>{
-  timer.textContent=`⏱ ${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`;
-  videoProgress.style.width=((total-t)/total*100)+"%";
-  t--;if(t<0)clearInterval(timerInt);
- },1000);
 }
 
 async function reward(){
- let r=(dailyVideos[videoIndex]===uData.bonusVideo)?1.99:rand(0.1,1);
+ let r=(videoList[videoIndex]===uData.bonusVideo)?1.99:rand(0.1,1);
  uData.total+=r;
- uData.watchedToday.push(dailyVideos[videoIndex]);
- videoIndex++;
+ uData.watchedToday.push(videoList[videoIndex]);
  await client.from("earnings").insert({user_id:currentUser.id,type:"Video",amount:r});
+ videoIndex++;
  await saveUser();
  render();
- earned.textContent="₱"+r+" earned";
- setTimeout(loadVideo,1500);
+ loadHistory();
+ loadVideo();
 }
 
 function render(){
  balance.textContent=uData.total.toFixed(2);
+ let p=Math.min(uData.total/50*100,100);
+ bar.style.width=p+"%";
  withdrawBtn.disabled=uData.total<50;
- withdrawProgress.style.width=Math.min(uData.total/50*100,100)+"%";
 }
 
-function showWithdraw(){withdrawModal.classList.remove("hidden")}
- 
-async function confirmWithdraw(m){
- await client.from("withdrawals").insert({user_id:currentUser.id,amount:uData.total,method:m});
+function showWithdraw(){withdrawBox.classList.remove("hidden");}
+
+async function withdraw(m){
+ await client.from("withdrawals").insert({user_id:currentUser.id,method:m,amount:uData.total,status:"pending"});
  uData.total=0;
  await saveUser();
  render();
- withdrawModal.classList.add("hidden");
  loadHistory();
+ withdrawBox.classList.add("hidden");
 }
-
-
-function startCountdown(){
- clearInterval(countdownInt);
- countdownInt=setInterval(()=>{
-  let d=tomorrow()-new Date();
-  countdown.textContent=`${Math.floor(d/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s`;
- },1000);
-}
-
 
 async function saveRef(){
  if(uData.refUser)return;
  let r=rand(0.1,8);
- uData.refUser=refUsername.value;
- uData.refReward=r;
+ uData.refUser=refInput.value;
  uData.total+=r;
  await client.from("earnings").insert({user_id:currentUser.id,type:"Referral",amount:r});
  await saveUser();
  render();
+ loadHistory();
  refMsg.textContent="You earned ₱"+r;
 }
 
-
 async function loadHistory(){
  let {data:e}=await client.from("earnings").select("*").eq("user_id",currentUser.id).order("time",{ascending:false});
- earningsList.innerHTML=e.map(x=>`<div class='card'>${x.type}: ₱${x.amount} - ${x.time}</div>`).join("");
- let {data:w}=await client.from("withdrawals").select("*").eq("user_id",currentUser.id).order("created_at",{ascending:false});
- withdrawHistory.innerHTML=w.map(x=>`<div class='card'>${x.method}: ₱${x.amount} - ${x.created_at}</div>`).join("");
+ earningsHistory.innerHTML="";
+ (e||[]).forEach(x=>{
+  earningsHistory.innerHTML+=`<div>${x.type} ₱${x.amount}</div>`;
+ });
+
+ let {data:w}=await client.from("withdrawals").select("*").eq("user_id",currentUser.id);
+ withdrawHistory.innerHTML="";
+ (w||[]).forEach(x=>{
+  withdrawHistory.innerHTML+=`<div>${x.method} ₱${x.amount} ${x.status}</div>`;
+ });
 }
 </script>
 </body>
