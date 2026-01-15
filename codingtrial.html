@@ -131,29 +131,48 @@ window.onload=()=>{
 function onYouTubeIframeAPIReady(){ytReady=true}
 
 /* LOGIN */
-password.onkeypress=e=>{
+password.onkeypress=async e=>{
  if(e.key!=="Enter")return;
  let u=userSelect.value;
  if(password.value!==USERS[u].pass){alert("Wrong password");return;}
  currentUser=u;
  login.remove();
  refBox.classList.remove("hidden");
- loadData();
+ await loadData();
  dailyReset();
  dailyBonus();
  loadReferral();
  render();
 }
 /* DATA */
-function loadData(){
- data=JSON.parse(localStorage.getItem("user_"+currentUser))||{
-  total:0,earn:[],withdraw:[],
-  watchedToday:[],dailyVideos:[],
-  lastDate:null,lastBonus:null,
-  refUser:null,refReward:0,bonusVideo:null
- };
+async function loadData(){
+ const { data:row, error } = await supabase
+  .from("users")
+  .select("data")
+  .eq("username", currentUser)
+  .single();
+
+ if(row){
+  data = row.data;
+ }else{
+  data={
+   total:0,earn:[],withdraw:[],
+   watchedToday:[],dailyVideos:[],
+   lastDate:null,lastBonus:null,
+   refUser:null,refReward:0,bonusVideo:null
+  };
+await supabase.from("users").insert({
+   username: currentUser,
+   data: data
+  });
+ }
 }
-const save=()=>localStorage.setItem("user_"+currentUser,JSON.stringify(data));
+async function save(){
+ await supabase
+  .from("users")
+  .update({ data: data })
+  .eq("username", currentUser);
+}
 
 /* REFERRAL */
 function loadReferral(){
@@ -163,14 +182,14 @@ function loadReferral(){
   saveRef.disabled=true;
  }
 }
-saveRef.onclick=()=>{
+saveRef.onclick=async ()=>{
  if(data.refUser)return;
  let r=rand(0.1,4);
  data.refUser=refUsername.value;
  data.refReward=r;
  data.total+=r;
  data.earn.push({type:"Invite Reward",amount:r,time:new Date().toLocaleString()});
- save();render();
+ await save();render();
  refUsername.disabled=true;saveRef.disabled=true;
  refMsg.textContent="₱"+r+" added";
 }
@@ -197,7 +216,7 @@ function dailyBonus(){
  data.lastBonus=today();
  data.total+=b;
  data.earn.push({type:"Daily Bonus",amount:b,time:new Date().toLocaleString()});
- save();
+ await save();
  dailyBonus.textContent="₱"+b;
 }
 /* VIDEO */
@@ -252,11 +271,11 @@ function render(){
 }
 
 /* WITHDRAW */
-withdrawBtn.onclick=()=>withdrawModal.classList.remove("hidden");
+withdrawBtn.onclick=async()=>withdrawModal.classList.remove("hidden");
 function confirmWithdraw(m){
  data.withdraw.push({method:m,amount:data.total,time:new Date().toLocaleString()});
  data.total=0;
- save();render();
+ await save();render();
  withdrawModal.classList.add("hidden");
 }
 /* COUNTDOWN */
