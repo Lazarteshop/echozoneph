@@ -220,6 +220,14 @@ async function save(){await supabaseClient.from("users").update({data:data}).eq(
 /* ... paste your original user-side functions here exactly ... */
 
 
+
+
+/* SUPABASE DATA */ async function loadData(){ const { data:row, error } = await supabaseClient.from("users") .select("data") .eq("username",currentUser) .single(); if(error) console.log("SUPABASE ERROR:", error);
+
+if(error || !row){ data={total:0,earn:[],withdraw:[],watchedToday:[],dailyVideos:[],lastDate:null,lastBonus:null,refUser:null,refReward:0,bonusVideo:null}; await supabaseClient.from("users").insert({username:currentUser,data:data}); }else{ data=row.data; } }
+
+async function save(){ await supabaseClient.from("users").update({data:data}).eq("username",currentUser); }
+
 /* REFERRAL */ function loadReferral(){ if(data.refUser){ refUsername.value=data.refUser; refUsername.disabled=true; saveRef.disabled=true; } } saveRef.onclick=async ()=>{ if(data.refUser)return; let r=rand(0.1,4);
 
 data.refUser=refUsername.value; data.refReward=r; data.total+=r; data.earn.push({type:"Invite Reward",amount:r,time:new Date().toLocaleString()}); await save();render(); refUsername.disabled=true;saveRef.disabled=true; refMsg.textContent="₱"+r+" added"; };
