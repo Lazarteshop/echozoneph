@@ -2,6 +2,116 @@
 
 
 
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Watch & Earn PH</title>
+<meta name="viewport" content="width=device-width">
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const supabaseUrl = "https://latimgzxirdlcetikufy.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY";
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+</script>
+
+<style>
+body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff}
+.container{max-width:900px;margin:auto;padding:20px;text-align:center}
+.box{background:#111;padding:15px;border-radius:10px;margin-bottom:15px}
+
+.green{color:#00ff88}
+.lock{color:#ff6666}
+button{padding:10px 15px;border:none;border-radius:6px;cursor:pointer}
+button:disabled{background:#555}
+input,select{padding:10px;width:100%;max-width:300px;margin:5px}
+.progress{width:100%;height:12px;background:#333;border-radius:10px;overflow:hidden}
+.progress div{height:100%;background:#00ff88;width:0}
+.card{background:#111;padding:10px;border-radius:8px;margin-bottom:6px;text-align:left}
+.hidden{display:none}
+iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- USER PANEL -->
+<div id="userPanel">
+<div class="box">
+💰 Balance: ₱<span id="balance">0.00</span>
+<div class="progress"><div id="withdrawProgress"></div></div>
+<small>Minimum withdrawal ₱50</small><br>
+<button id="withdrawBtn" disabled>Withdraw</button>
+</div>
+
+<h2>🎬 Watch & Earn PH</h2>
+<h>BASIC PLAN</h>
+
+<div id="login" class="box">
+<select id="userSelect"></select><br>
+<input id="password" type="password" placeholder="Enter password">
+</div>
+
+<div id="lockMsg" class="lock"></div>
+
+<div id="refBox" class="box hidden">
+<h3>👥 Referrer Username</h3>
+<input id="refUsername" placeholder="Username ng nag-invite">
+<button id="saveRef">Save</button>
+<div id="refMsg" class="green"></div>
+</div>
+
+<div id="playerArea"></div>
+<div class="progress"><div id="videoProgress"></div></div>
+<div id="timer"></div>
+<div id="earned" class="green"></div>
+
+<div class="box">
+🎁 Daily Bonus: <span id="dailyBonus" class="green"></span><br>
+🎬 Watched today: <span id="watchedCount">0</span>/6<br>
+⏳ Next reset in: <span id="countdown"></span>
+</div>
+
+<div class="box">
+<h3>📊 Earnings History</h3>
+<div id="earnHistory"></div>
+</div>
+
+<div class="box">
+<h3>📤 Withdrawal History</h3>
+<div id="withdrawHistory"></div>
+</div>
+
+<div id="withdrawModal" class="box hidden">
+<button onclick="confirmWithdraw('GCash')">GCash</button>
+</div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel" class="hidden">
+<h2>🛠 Admin Panel</h2>
+<div class="box">
+<select id="adminUserList"></select><br>
+<input id="adminBalance" type="number" step="0.01" placeholder="Edit Balance">
+<input id="adminGcash" placeholder="GCash Number">
+<button onclick="saveAdminEdit()">Save Changes</button>
+</div>
+<div class="box">
+<h3>📤 User Withdrawals</h3>
+<div id="adminWithdraws"></div>
+</div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+
 /* USERS */
 const USERS={
  user1:{pass:"dipwd1234",role:"user"},
