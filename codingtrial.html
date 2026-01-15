@@ -170,7 +170,7 @@ function loadReferral(){
 }
 saveRef.onclick=async ()=>{
  if(data.refUser)return;
- let r=rand(0.1,4);
+ let r=rand(0.1,2);
  data.refUser=refUsername.value;
  data.refReward=r;
  data.total+=r;
@@ -204,7 +204,7 @@ async function claimDailyBonus(){
  dailyBonus.textContent="Claimed";
  return;
 }
- let b=rand(0.1,5);
+ let b=rand(0.1,1);
  data.lastBonus=today();
  data.total+=b;
  data.earn.push({type:"Daily Bonus",amount:b,time:new Date().toLocaleString()});
