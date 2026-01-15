@@ -195,7 +195,10 @@ async function dailyReset(){
 
 /* DAILY BONUS */
 async function claimDailyBonus(){
- if(data.lastBonus===today()){dailyBonus.textContent="Claimed";return;}
+ if(data.lastBonus===today()){
+ document.getElementById("dailyBonus").textContent="Claimed";
+ return;
+}
  let b=rand(0.1,5);
  data.lastBonus=today();
  data.total+=b;
