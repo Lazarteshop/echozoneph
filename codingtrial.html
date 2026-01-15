@@ -219,6 +219,39 @@ async function save(){await supabaseClient.from("users").update({data:data}).eq(
 /* (All your original referral, video, reward, render, withdraw, countdown functions stay EXACTLY as you sent — unchanged) */
 /* ... paste your original user-side functions here exactly ... */
 
+
+/* REFERRAL */ function loadReferral(){ if(data.refUser){ refUsername.value=data.refUser; refUsername.disabled=true; saveRef.disabled=true; } } saveRef.onclick=async ()=>{ if(data.refUser)return; let r=rand(0.1,4);
+
+data.refUser=refUsername.value; data.refReward=r; data.total+=r; data.earn.push({type:"Invite Reward",amount:r,time:new Date().toLocaleString()}); await save();render(); refUsername.disabled=true;saveRef.disabled=true; refMsg.textContent="₱"+r+" added"; };
+
+/* DAILY RESET */ async function dailyReset(){ if(data.lastDate!==today()){ data.lastDate=today(); data.watchedToday=[]; videoIndex=0; dailyVideos=shuffle([...VIDEO_POOL]).slice(0,DAILY_LIMIT);
+
+data.dailyVideos=dailyVideos; data.bonusVideo=dailyVideos[Math.floor(Math.random()*dailyVideos.length)]; } dailyVideos = data.dailyVideos || []; await save(); if(dailyVideos.length>0){ loadVideo(); startCountdown(); } }
+
+/* DAILY BONUS */ async function claimDailyBonus(){ if(data.lastBonus===today()){
+
+dailyBonus.textContent="Claimed"; return; } let b=rand(0.1,5); data.lastBonus=today(); data.total+=b; data.earn.push({type:"Daily Bonus",amount:b,time:new Date().toLocaleString()}); await save(); dailyBonus.textContent="₱"+b; }
+
+/* VIDEO */ function loadVideo(){ if(!dailyVideos || !dailyVideos[videoIndex]){ lockMsg.textContent="🔒 No video available today"; return; } if(!ytReady){setTimeout(loadVideo,500);return;} watchedCount.textContent=data.watchedToday.length;
+
+if(data.watchedToday.length>=DAILY_LIMIT){lockMsg.textContent="🔒 Daily limit reached";return;} playerArea.innerHTML="<div id='player'></div>"; player=new YT.Player("player",{videoId:dailyVideos[videoIndex],playerVars:{autoplay:1,controls:0}, events:{onReady:startTimer,onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)reward()}} }); }
+
+/* TIMER */ function startTimer(){ let chk=setInterval(()=>{ let d=player.getDuration(); if(d>0){clearInterval(chk);runTimer(Math.floor(d));} },200); } function runTimer(t){ let total=t; clearInterval(timerInt); timerInt=setInterval(()=>{ timer.textContent=⏱ ${Math.floor(t/60)}:${String(t%60).padStart(2,"0")};
+
+videoProgress.style.width=((total-t)/total*100)+"%"; t--; if(t<0)clearInterval(timerInt); },1000); } /* REWARD */ async function reward(){ let r=(dailyVideos[videoIndex]===data.bonusVideo)?1.99:rand(0.1,1.00); data.total+=r;
+
+data.watchedToday.push(dailyVideos[videoIndex]); data.earn.push({type:"Video",amount:r,time:new Date().toLocaleString()}); videoIndex++; await save();render(); earned.textContent="₱"+r+" earned"; setTimeout(loadVideo,1500); }
+
+/* RENDER */ function render(){ balance.textContent=data.total.toFixed(2); withdrawBtn.disabled=data.total<50; withdrawProgress.style.width=Math.min(data.total/50*100,100)+"%"; earnHistory.innerHTML=data.earn.map(e=><div class="card">${e.type}<br>₱${e.amount}<br>${e.time}</div>).join("");
+
+withdrawHistory.innerHTML=data.withdraw.map(w=><div class="card">${w.method} ₱${w.amount}<br>${w.time}</div>).join(""); }
+
+/* WITHDRAW */ withdrawBtn.onclick=()=>withdrawModal.classList.remove("hidden"); async function confirmWithdraw(m){
+
+data.withdraw.push({method:m,amount:data.total,time:new Date().toLocaleString()}); data.total=0; await save();render(); withdrawModal.classList.add("hidden"); }
+
+/* COUNTDOWN */ function startCountdown(){ clearInterval(countdownInt); countdownInt=setInterval(()=>{ let d=tomorrow()-new Date();
+countdown.textContent=${Math.floor(d/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s; },1000); }
 </script>
 </body>
 </html>
