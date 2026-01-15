@@ -1,9 +1,4 @@
 
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,8 +10,9 @@
 <script>
 const supabaseUrl = "https://latimgzxirdlcetikufy.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY";
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 </script>
+
 <style>
 body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff}
 .container{max-width:900px;margin:auto;padding:20px;text-align:center}
@@ -83,12 +79,10 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 
 <div id="withdrawModal" class="box hidden">
 <button onclick="confirmWithdraw('GCash')">GCash</button>
-<button onclick="confirmWithdraw('GCash')">GCash</button>
 </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-
 /* USERS */
 const USERS={
  user1:{pass:"dipwd1234",role:"user"},
@@ -146,28 +140,23 @@ password.onkeypress = async e => {
 /* SUPABASE DATA */
 async function loadData(){
  const { data:row, error } =
-   await supabase.from("users")
+   await supabaseClient.from("users")
    .select("data")
    .eq("username",currentUser)
    .single();
 
- if(error){
-   console.log("SUPABASE ERROR:", error);
- }
-if(error || !row){
+if(error) console.log("SUPABASE ERROR:", error);
+
+ if(error || !row){
   data={total:0,earn:[],withdraw:[],watchedToday:[],dailyVideos:[],lastDate:null,lastBonus:null,refUser:null,refReward:0,bonusVideo:null};
-  const { error:insErr } = await supabase.from("users").insert({username:currentUser,data:data});
-  if(insErr) console.log("INSERT ERROR:", insErr);
+  await supabaseClient.from("users").insert({username:currentUser,data:data});
  }else{
   data=row.data;
  }
 }
 
-
-
-
 async function save(){
- await supabase.from("users").update({data:data}).eq("username",currentUser);
+ await supabaseClient.from("users").update({data:data}).eq("username",currentUser);
 }
 
 /* REFERRAL */
@@ -200,7 +189,7 @@ async function dailyReset(){
   data.dailyVideos=dailyVideos;
   data.bonusVideo=dailyVideos[Math.floor(Math.random()*dailyVideos.length)];
  }
- dailyVideos = data.dailyVideos || [];
+dailyVideos = data.dailyVideos || [];
  await save();
  if(dailyVideos.length>0){
   loadVideo();
@@ -211,7 +200,7 @@ async function dailyReset(){
 /* DAILY BONUS */
 async function claimDailyBonus(){
  if(data.lastBonus===today()){
- document.getElementById("dailyBonus").textContent="Claimed";
+ dailyBonus.textContent="Claimed";
  return;
 }
  let b=rand(0.1,5);
@@ -219,8 +208,10 @@ async function claimDailyBonus(){
  data.total+=b;
  data.earn.push({type:"Daily Bonus",amount:b,time:new Date().toLocaleString()});
  await save();
- document.getElementById("dailyBonus").textContent = "₱"+b;
+ dailyBonus.textContent="₱"+b;
 }
+
+
 /* VIDEO */
 function loadVideo(){
  if(!dailyVideos || !dailyVideos[videoIndex]){
@@ -235,6 +226,7 @@ function loadVideo(){
   events:{onReady:startTimer,onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)reward()}}
  });
 }
+
 /* TIMER */
 function startTimer(){
  let chk=setInterval(()=>{
@@ -272,6 +264,7 @@ function render(){
  earnHistory.innerHTML=data.earn.map(e=>`<div class="card">${e.type}<br>₱${e.amount}<br>${e.time}</div>`).join("");
  withdrawHistory.innerHTML=data.withdraw.map(w=>`<div class="card">${w.method} ₱${w.amount}<br>${w.time}</div>`).join("");
 }
+
 /* WITHDRAW */
 withdrawBtn.onclick=()=>withdrawModal.classList.remove("hidden");
 async function confirmWithdraw(m){
