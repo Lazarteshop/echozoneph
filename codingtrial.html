@@ -152,6 +152,7 @@ async function loadData(){
  }else{
   data=row.data;
  }
+}
  else{
   data={total:0,earn:[],withdraw:[],watchedToday:[],dailyVideos:[],lastDate:null,lastBonus:null,refUser:null,refReward:0,bonusVideo:null};
   await supabase.from("users").insert({username:currentUser,data:data});
@@ -192,10 +193,11 @@ async function dailyReset(){
   data.bonusVideo=dailyVideos[Math.floor(Math.random()*dailyVideos.length)];
  }
  dailyVideos = data.dailyVideos || [];
-await save();
-if(dailyVideos.length>0){
- loadVideo();
- startCountdown();
+ await save();
+ if(dailyVideos.length>0){
+  loadVideo();
+  startCountdown();
+ }
 }
 
 /* DAILY BONUS */
@@ -212,12 +214,11 @@ async function claimDailyBonus(){
  document.getElementById("dailyBonus").textContent = "₱"+b;
 }
 /* VIDEO */
-function loadVideo()
-if(!dailyVideos || !dailyVideos[videoIndex]){
- lockMsg.textContent="🔒 No video available today";
- return;
-}
-{
+function loadVideo(){
+ if(!dailyVideos || !dailyVideos[videoIndex]){
+  lockMsg.textContent="🔒 No video available today";
+  return;
+ }
  if(!ytReady){setTimeout(loadVideo,500);return;}
  watchedCount.textContent=data.watchedToday.length;
  if(data.watchedToday.length>=DAILY_LIMIT){lockMsg.textContent="🔒 Daily limit reached";return;}
