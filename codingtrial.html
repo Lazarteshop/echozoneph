@@ -153,11 +153,6 @@ async function loadData(){
   data=row.data;
  }
 }
- else{
-  data={total:0,earn:[],withdraw:[],watchedToday:[],dailyVideos:[],lastDate:null,lastBonus:null,refUser:null,refReward:0,bonusVideo:null};
-  await supabase.from("users").insert({username:currentUser,data:data});
- }
-}
 async function save(){
  await supabase.from("users").update({data:data}).eq("username",currentUser);
 }
