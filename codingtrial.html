@@ -136,8 +136,8 @@ password.onkeypress=async e=>{
  login.remove();
  refBox.classList.remove("hidden");
  await loadData();
- dailyReset();
- dailyBonus();
+await dailyReset();   // ✅
+await dailyBonus();   // ✅
  loadReferral();
  render();
 };
