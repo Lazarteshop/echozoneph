@@ -128,16 +128,18 @@ window.onload=()=>{
 function onYouTubeIframeAPIReady(){ytReady=true}
 
 /* LOGIN */
-password.onkeypress=async e=>{
+password.onkeypress = async e => {
  if(e.key!=="Enter")return;
  let u=userSelect.value;
  if(password.value!==USERS[u].pass){alert("Wrong password");return;}
  currentUser=u;
  login.remove();
  refBox.classList.remove("hidden");
+
  await loadData();
-await dailyReset();   // ✅
-await dailyBonus();   // ✅
+ await dailyReset();
+ await dailyBonus();
+
  loadReferral();
  render();
 };
