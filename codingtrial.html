@@ -21,6 +21,12 @@ input,select{padding:10px;width:100%;max-width:300px;margin:5px}
 .hidden{display:none}
 iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const supabaseUrl = "https://latimgzxirdlcetikufy.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY";
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+</script>
 </head>
 <body>
 <div class="container">
