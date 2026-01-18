@@ -1,0 +1,94 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>User Invite Panel</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+body{background:#0b0b0b;color:#fff;font-family:Arial;text-align:center}
+input,button{padding:10px;margin:5px;width:90%;max-width:300px}
+button{cursor:pointer}
+#panel{margin-top:20px;display:none}
+</style>
+</head>
+<body>
+<h2>User Invite Panel</h2>
+
+<input id="username" placeholder="Your username"><br>
+<input id="password" type="password" placeholder="Password"><br>
+<button id="loginBtn">Login</button>
+
+<div id="panel">
+  <h3>Create Invite Account</h3>
+  <input id="inviteUser" placeholder="New username"><br>
+  <button id="createBtn">Create Invite</button>
+  <div id="msg"></div>
+</div>
+
+<script>
+/* USERS */
+const USERS={
+ user1:{pass:"dipwd1234",role:"user"},
+ risadelapate:{pass:"460613",role:"user"},
+ user2:{pass:"dipwdabcd",role:"user"},
+ John:{pass:"101017",role:"user"},
+ Delf:{pass:"230738",role:"user"},
+ jonardbelleza:{pass:"251935",role:"user"},
+ Regine:{pass:"230293",role:"user"},
+ Benggalleon041:{pass:"beng41",role:"user"},
+ jaynegalleon:{pass:"jayne1",role:"user"},
+ user3:{pass:"dipwdadmin123",role:"admin"}
+};
+/* SUPABASE */
+const supabase = window.supabase.createClient(
+  "https://latimgzxirdlcetikufy.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY"
+);
+
+let currentUser="";
+
+/* LOGIN BUTTON */
+document.getElementById("loginBtn").onclick = function(){
+  let u = document.getElementById("username").value.trim();
+  let p = document.getElementById("password").value.trim();
+
+  if(!u || !p){
+    alert("Enter username and password");
+    return;
+  }
+
+  if(!USERS[u]){
+    alert("User not found: " + u);
+    return;
+  }
+if(USERS[u].pass !== p){
+    alert("Wrong password");
+    return;
+  }
+
+  currentUser = u;
+  document.getElementById("panel").style.display="block";
+  alert("Login success!");
+};
+/* CREATE INVITE */
+document.getElementById("createBtn").onclick = async function(){
+  let u = document.getElementById("inviteUser").value.trim();
+  if(!u) return alert("Enter new username");
+
+  const { error } = await supabase.from("invites").insert({
+    inviter: currentUser,
+    invite_username: u,
+    status: "pending"
+  });
+if(error){
+    document.getElementById("msg").innerText="Error: "+error.message;
+  }else{
+    document.getElementById("msg").innerText="Invite created. Waiting for admin activation.";
+    document.getElementById("inviteUser").value="";
+  }
+};
+</script>
+</body>
+  </html>
