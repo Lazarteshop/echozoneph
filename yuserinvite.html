@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -9,8 +7,7 @@
 <style>
 body{background:#0b0b0b;color:#fff;font-family:Arial;text-align:center}
 input,button{padding:10px;margin:5px;width:90%;max-width:300px}
-button{cursor:pointer}
-#panel{margin-top:20px;display:none}
+#panel{display:none;margin-top:20px}
 </style>
 </head>
 <body>
@@ -19,6 +16,7 @@ button{cursor:pointer}
 <input id="username" placeholder="Your username"><br>
 <input id="password" type="password" placeholder="Password"><br>
 <button id="loginBtn">Login</button>
+<div id="loginMsg"></div>
 
 <div id="panel">
   <h3>Create Invite Account</h3>
@@ -26,63 +24,58 @@ button{cursor:pointer}
   <button id="createBtn">Create Invite</button>
   <div id="msg"></div>
 </div>
-
 <script>
-/* USERS */
-const USERS={
- user1:{pass:"dipwd1234",role:"user"},
- risadelapate:{pass:"460613",role:"user"},
- user2:{pass:"dipwdabcd",role:"user"},
- John:{pass:"101017",role:"user"},
- Delf:{pass:"230738",role:"user"},
- jonardbelleza:{pass:"251935",role:"user"},
- Regine:{pass:"230293",role:"user"},
- Benggalleon041:{pass:"beng41",role:"user"},
- jaynegalleon:{pass:"jayne1",role:"user"},
- user3:{pass:"dipwdadmin123",role:"admin"}
-};
-/* SUPABASE */
 const supabase = window.supabase.createClient(
   "https://latimgzxirdlcetikufy.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY"
 );
 
-let currentUser="";
+let currentUser = "";
 
-/* LOGIN BUTTON */
-document.getElementById("loginBtn").onclick = function(){
-  let u = document.getElementById("username").value.trim();
-  let p = document.getElementById("password").value.trim();
+/* LOGIN */
+document.getElementById("loginBtn").onclick = async () => {
+  const u = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value.trim();
+  const msg = document.getElementById("loginMsg");
 
-  if(!u || !p){
-    alert("Enter username and password");
+if(!u || !p){
+    msg.innerText="Enter username and password";
     return;
   }
 
-  if(!USERS[u]){
-    alert("User not found: " + u);
+  const { data, error } = await supabase
+    .from("users")
+    .select("username,password")
+    .eq("username",u)
+    .single();
+
+  if(error || !data){
+    msg.innerText="User not found";
     return;
   }
-if(USERS[u].pass !== p){
-    alert("Wrong password");
+if(data.password !== p){
+    msg.innerText="Wrong password";
     return;
   }
 
   currentUser = u;
+  msg.innerText="Login success!";
   document.getElementById("panel").style.display="block";
-  alert("Login success!");
 };
+
 /* CREATE INVITE */
-document.getElementById("createBtn").onclick = async function(){
-  let u = document.getElementById("inviteUser").value.trim();
+document.getElementById("createBtn").onclick = async () => {
+  const u = document.getElementById("inviteUser").value.trim();
   if(!u) return alert("Enter new username");
 
-  const { error } = await supabase.from("invites").insert({
+const { error } = await supabase.from("invites").insert({
     inviter: currentUser,
     invite_username: u,
-    status: "pending"
+    status: "pending",
+    created_at: new Date()
   });
-if(error){
+
+  if(error){
     document.getElementById("msg").innerText="Error: "+error.message;
   }else{
     document.getElementById("msg").innerText="Invite created. Waiting for admin activation.";
@@ -91,4 +84,4 @@ if(error){
 };
 </script>
 </body>
-  </html>
+</html>
