@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>User Invite Panel</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+body{background:#0b0b0b;color:#fff;font-family:Arial;text-align:center}
+input,button{padding:10px;margin:5px;width:90%;max-width:300px}
+#panel{display:none;margin-top:20px}
+</style>
+</head>
+<body>
+ <h2>User Invite Panel</h2>
+
+<input id="username" placeholder="Your username"><br>
+<input id="password" type="password" placeholder="Password"><br>
+<button id="loginBtn">Login</button>
+<div id="loginMsg"></div>
+
+<div id="panel">
+  <h3>Create Invite Account</h3>
+  <input id="inviteUser" placeholder="New username"><br>
+  <button id="createBtn">Create Invite</button>
+  <div id="msg"></div>
+</div>
+ <script>
+const supabase = window.supabase.createClient(
+  "https://latimgzxirdlcetikufy.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY"
+);
+
+let currentUser = "";
+
+document.getElementById("loginBtn").onclick = async () => {
+  const u = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value.trim();
+  const msg = document.getElementById("loginMsg");
+
+  if(!u || !p){
+    msg.innerText = "Enter username and password";
+    return;
+  }
+const { data, error } = await supabase
+    .from("users")
+    .select("username,password")
+    .eq("username", u)
+    .single();
+
+  if(error || !data){
+    msg.innerText = "User not found";
+    return;
+  }
+
+  if(data.password !== p){
+    msg.innerText = "Wrong password";
+    return;
+  }
+
+currentUser = data.username;
+  msg.innerText = "Login success!";
+  document.getElementById("panel").style.display = "block";
+};
+
+document.getElementById("createBtn").onclick = async () => {
+  const u = document.getElementById("inviteUser").value.trim();
+  if(!u) return alert("Enter new username");
+
+  const { error } = await supabase.from("invites").insert({
+    inviter: currentUser,
+    invite_username: u,
+    status: "pending",
+    created_at: new Date()
+  });
+if(error){
+    document.getElementById("msg").innerText = "Error: " + error.message;
+  }else{
+    document.getElementById("msg").innerText = "Invite created. Waiting for admin activation.";
+    document.getElementById("inviteUser").value = "";
+  }
+};
+</script>
+</body>
+</html>
+
+
+
+
+
+ 
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
