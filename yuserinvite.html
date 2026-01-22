@@ -1,8 +1,5 @@
-
-
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>User Invite Panel</title>
@@ -10,21 +7,23 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
-body{
+body {
   background:#0b0b0b;
-  color:#fff;
-  font-family:Arial;
+  color:#ffffff;
+  font-family:Arial, sans-serif;
   text-align:center;
 }
-
-select,input,button{
+select, input, button {
   padding:12px;
   margin:8px;
   width:90%;
   max-width:320px;
   font-size:16px;
 }
-#panel{display:none;margin-top:20px}
+#panel {
+  display:none;
+  margin-top:20px;
+}
 </style>
 </head>
 
@@ -32,9 +31,7 @@ select,input,button{
 
 <h2>User Invite Panel</h2>
 
-<!-- ✅ DROPDOWN USERNAME -->
 <select id="userSelect">
-  
   <option value="">Select username</option>
 </select>
 
@@ -50,73 +47,85 @@ select,input,button{
   <div id="msg"></div>
 </div>
 
-<!-- ✅ SCRIPT SA PINAKA-ILALIM -->
 <script>
-/* ================= USERS (PASSWORD NASA SCRIPT LANG) ================= */
+/* USERS (PASSWORD NASA SCRIPT LANG) */
 const USERS = {
-  Benggalleon041:"beng41",
-  John:"101017",
-  Delf:"230738",
-  jonardbelleza:"251935",
-  jaynegalleon:"jayne1",
-  admin:"admin123"
+  Benggalleon041: "beng41",
+  John: "101017",
+  Delf: "230738",
+  jonardbelleza: "251935",
+  jaynegalleon: "jayne1",
+  admin: "admin123"
 };
 
-/* ================= LOAD DROPDOWN ================= */
+/* LOAD DROPDOWN */
 const userSelect = document.getElementById("userSelect");
-
-Object.keys(USERS).forEach(username=>{
+Object.keys(USERS).forEach(function(name){
   const opt = document.createElement("option");
-  opt.value = username;
-  opt.textContent = username;
+  opt.value = name;
+  opt.textContent = name;
   userSelect.appendChild(opt);
 });
 
-/* ================= SUPABASE (INVITES ONLY) ================= */
+/* SUPABASE (INVITES ONLY) */
 const supabase = window.supabase.createClient(
   "https://latimgzxirdlcetikufy.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY"
+  "PASTE_YOUR_ANON_KEY_HERE"
 );
 
 let currentUser = "";
 
-/* ================= LOGIN ================= */
-loginBtn.onclick = () => {
+/* LOGIN */
+document.getElementById("loginBtn").onclick = function(){
   const u = userSelect.value;
-  const p = password.value;
+  const p = document.getElementById("password").value;
 
   if(!u || !p){
-    loginMsg.innerText = "Select username and enter password";
+    document.getElementById("loginMsg").innerText =
+      "Select username and enter password";
     return;
   }
 
-  if(USERS[u] !== p){
-    loginMsg.innerText = "Wrong password";
+if(USERS[u] !== p){
+    document.getElementById("loginMsg").innerText =
+      "Wrong password";
     return;
   }
 
-currentUser = u;
-  loginMsg.innerText = "Login success";
-  panel.style.display = "block";
+  currentUser = u;
+  document.getElementById("loginMsg").innerText = "Login success";
+  document.getElementById("panel").style.display = "block";
 };
 
-/* ================= CREATE INVITE ================= */
-createBtn.onclick = async () => {
-  if(!inviteUser.value){
+/* CREATE INVITE */
+document.getElementById("createBtn").onclick = async function(){
+  const newUser = document.getElementById("inviteUser").value;
+  if(!newUser){
     alert("Enter new username");
     return;
   }
 
-const { error } = await supabase.from("invites").insert({
+  const res = await supabase.from("invites").insert({
     inviter: currentUser,
-    invite_username: inviteUser.value,
+    invite_username: newUser,
     status: "pending"
   });
 
-  msg.innerText = error ? error.message : "Invite created (waiting admin approval)";
-  inviteUser.value = "";
+document.getElementById("msg").innerText =
+    res.error ? res.error.message : "Invite created (waiting admin approval)";
+
+  document.getElementById("inviteUser").value = "";
 };
 </script>
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
