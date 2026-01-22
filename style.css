@@ -387,9 +387,9 @@ main {
     font-weight: bold;
 }
 .cloud-img{
-    order: 2;
+    order: 1;
     width: 100%;
-    height: auto;
+    height: 50%;
     display: flex;
     /* margin: auto; */
     justify-content: center;
