@@ -341,6 +341,7 @@ main {
 }
 .about-p{
     text-align: justify;
+font-size: 10px;
     text-indent: 50px;
     margin-top: 20px;
     font-weight: 100;
