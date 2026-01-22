@@ -5,164 +5,108 @@
 <title>User Invite Panel</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
 <style>
-body{
+   body{
   background:#0b0b0b;
   color:#fff;
   font-family:Arial;
-  text-align:center
+  text-align:center;
 }
-input,button{
-  padding:10px;
-  margin:5px;
+select,input,button{
+  padding:12px;
+  margin:8px;
   width:90%;
-  max-width:300px
+  max-width:320px;
+  font-size:16px;
 }
-#panel{
-  display:none;
-  margin-top:20px
-}
+#panel{display:none;margin-top:20px}
 </style>
 </head>
+    <body>
 
-<body>
-  <h2>User Invite Panel</h2>
+<h2>User Invite Panel</h2>
 
-<input id="username" placeholder="Username"><br>
-<input id="password" type="password" placeholder="Password"><br>
+<!-- ✅ DROPDOWN -->
+<select id="userSelect">
+  <option value="">Select username</option>
+</select>
+
+<input id="password" type="password" placeholder="Password">
 <button id="loginBtn">Login</button>
 
 <div id="loginMsg"></div>
-
-<hr>
-
-<div id="panel">
-  <h3>Create Invite Account</h3>
-  <input id="inviteUser" placeholder="New username"><br>
+   <div id="panel">
+  <h3>Create Invite</h3>
+  <input id="inviteUser" placeholder="New username">
   <button id="createBtn">Create Invite</button>
   <div id="msg"></div>
 </div>
- <script>
-/* =====================================
-   LOGIN USERS (SCRIPT LANG – WALANG DB)
-   ===================================== */
+
+<script>
+/* ================= USERS ================= */
 const USERS = {
-  user1:{pass:"dipwd1234"},
-  risadelapate:{pass:"460613"},
-  user2:{pass:"dipwdabcd"},
-  John:{pass:"101017"},
-  Delf:{pass:"230738"},
-  jonardbelleza:{pass:"251935"},
-  Regine:{pass:"230293"},
-  Benggalleon041:{pass:"beng41"},
-  jaynegalleon:{pass:"jayne1"},
-  admin:{pass:"dipwdadmin123"}
+  Benggalleon041:"beng41",
+  John:"101017",
+  Delf:"230738",
+  jonardbelleza:"251935",
+  jaynegalleon:"jayne1",
+  admin:"admin123"
 };
-/* =====================================
-   LOAD USER DROPDOWN (SAME AS MAIN)
-   ===================================== */
-const userSelect = document.getElementById("userSelect");
+/* LOAD DROPDOWN */
+const sel = document.getElementById("userSelect");
 Object.keys(USERS).forEach(u=>{
-  const opt = document.createElement("option");
-  opt.value = u;
-  opt.textContent = u;
-  userSelect.appendChild(opt);
+  const o=document.createElement("option");
+  o.value=u; o.text=u;
+  sel.appendChild(o);
 });
 
-/* =====================================
-   SUPABASE (INVITES LANG)
-   ===================================== */
+/* SUPABASE (INVITES ONLY) */
 const supabase = window.supabase.createClient(
   "https://latimgzxirdlcetikufy.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY"
+  "YOUR_ANON_KEY"
 );
+let currentUser="";
 
-let currentUser = "";
-
-/* =====================================
-   LOGIN
-   ===================================== */
-document.getElementById("loginBtn").onclick = () => {
-  const u = userSelect.value;
-  const p = document.getElementById("password").value.trim();
-  const msg = document.getElementById("loginMsg");
-
-  if(!p){
-    msg.innerText = "Enter password";
+/* LOGIN */
+loginBtn.onclick=()=>{
+  const u=sel.value;
+  const p=password.value;
+  if(!u||!p){
+    loginMsg.innerText="Select user & enter password";
     return;
   }
-if(USERS[u].pass !== p){
-    msg.innerText = "Wrong password";
+  if(USERS[u]!==p){
+    loginMsg.innerText="Wrong password";
     return;
   }
-
-  currentUser = u;
-  msg.innerText = "Login successful";
-  document.getElementById("panel").style.display = "block";
+currentUser=u;
+  loginMsg.innerText="Login success";
+  panel.style.display="block";
 };
 
-
-
-
-
-
-
-/* =====================================
-   CREATE INVITE (SAVE SA SUPABASE)
-   ===================================== */
-document.getElementById("createBtn").onclick = async () => {
-  const invite = document.getElementById("inviteUser").value.trim();
-  if(!invite){
-    alert("Enter new username");
-    return;
-  }
-
-  const { error } = await supabase
-    .from("invites")
-    .insert({
-      inviter: currentUser,
-      invite_username: invite,
-      status: "pending"
-    });
-if(error){
-    document.getElementById("msg").innerText = "Error: " + error.message;
-  }else{
-    document.getElementById("msg").innerText =
-      "Invite created. Waiting for admin activation.";
-    document.getElementById("inviteUser").value = "";
-  }
+/* CREATE INVITE */
+createBtn.onclick=async()=>{
+  if(!inviteUser.value) return alert("Enter username");
+  const {error}=await supabase.from("invites").insert({
+    inviter:currentUser,
+    invite_username:inviteUser.value,
+    status:"pending"
+  });
+  msg.innerText= error ? error.message : "Invite created";
+  inviteUser.value="";
 };
 </script>
-
-</body>
-</html>
-
+   </body>
+</html>     
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+     
+        
     
     
     
+   
+   
     
-    
-    
-    
-    
-    
-    
-
-
-
-
-
