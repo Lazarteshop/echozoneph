@@ -60,7 +60,7 @@ header {
     margin-left: 30px;
 }
 .mini-text-header{
-    font-size: 10px;
+    font-size: 12px;
     font-family: 'Rajdhani', sans-serif;
 }
 .header-h2{
@@ -68,7 +68,7 @@ header {
     font-family: 'Exo 2', sans-serif;
     font-weight: bold;
     /* color: white; */
-    font-size: 2.0em;
+    font-size: 2.5em;
 }
 .hiasan{
     width: 20%;
@@ -160,7 +160,7 @@ header {
 }
 .text {
     width: 100%;
-    font-size: 1.9em;
+    font-size: 2.0em;
     text-align: center;
     height: 20%;
     margin-bottom: 15%; 
@@ -233,7 +233,7 @@ ul{
     color: white;
     text-decoration: none;
     font-family:  'Sanchez', serif;
-    font-size: 1.3em;
+    font-size: 1.5em;
     width: 120%;
 }
 /* bagian untuk membuat hamburger menu awal*/
@@ -368,14 +368,14 @@ font-size: 10px;
 }
 .cloud-advantages{
     display: grid;
-    grid-template-columns: 2.5fr 2fr;
+    grid-template-columns: 1.5fr 2fr;
     gap: 20px;
     justify-content: center;
     padding: 50px 0;
 }
 .cloud-text{
     grid-column: 1 / 3;
-    margin-bottom: 30px;
+    margin-bottom: 50px;
 }
 .cloud-h1{
     border-bottom: 2px solid black;
@@ -423,7 +423,7 @@ font-size: 20px;
     counter-increment: ulang;
     /* padding: 10px 16px; */
     background: rgb(31, 31, 228);
-    font-size: 22.5px;
+    font-size: 20.5px;
     color: white;
     border-top-right-radius: 30px;
     border-bottom-right-radius: 30px;
