@@ -344,7 +344,7 @@ main {
 font-size: 10px;
     text-indent: 50px;
     margin-top: 20px;
-    font-weight: 100;
+    font-weight: 300;
 }
 .about-img{
     grid-row: 1 / 3;
