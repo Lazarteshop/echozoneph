@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>User Invite Panel</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
@@ -19,7 +20,10 @@ select,input,button{
   max-width:320px;
   font-size:16px;
 }
-#panel{display:none;margin-top:20px}
+#panel{
+  display:none;
+  margin-top:20px;
+}
 </style>
 </head>
 
@@ -27,89 +31,89 @@ select,input,button{
  <h2>User Invite Panel</h2>
 
 <select id="userSelect">
-  <option value="">Select username</option>
+  <option value="">Loading users...</option>
 </select>
 
 <input id="password" type="password" placeholder="Password">
 <button id="loginBtn">Login</button>
 
 <div id="loginMsg"></div>
-  
- <div id="panel">
+
+<div id="panel">
   <h3>Create Invite</h3>
   <input id="inviteUser" placeholder="New username">
   <button id="createBtn">Create Invite</button>
   <div id="msg"></div>
 </div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
 
-<script> 
-  /* USERS (LOCAL LOGIN) */
-const USERS = {
-  Benggalleon041: "beng41",
-  John: "101017",
-  Delf: "230738",
-  jonardbelleza: "251935",
-  jaynegalleon: "jayne1",
-  admin: "admin123"
-};
-const sel = document.getElementById("userSelect");
-const passwordInput = document.getElementById("password");
-const loginMsg = document.getElementById("loginMsg");
-const panel = document.getElementById("panel");
-const inviteUser = document.getElementById("inviteUser");
-const msg = document.getElementById("msg");
+  /* ✅ LOCAL USERS (PASSWORD NASA SCRIPT LANG) */
+  const USERS = {
+    Benggalleon041: "beng41",
+    John: "101017",
+    Delf: "230738",
+    jonardbelleza: "251935",
+    jaynegalleon: "jayne1",
+    admin: "admin123"
+  };
+* ✅ POPULATE DROPDOWN */
+  const sel = document.getElementById("userSelect");
+  sel.innerHTML = '<option value="">Select username</option>';
 
-Object.keys(USERS).forEach(u=>{
-  const o = document.createElement("option");
-  o.value = u;
-  o.textContent = u;
-  sel.appendChild(o);
-});
-
-/* SUPABASE (INVITES ONLY) */
-const supabase = window.supabase.createClient(
-  "https://latimgzxirdlcetikufy.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY"
-);
-
-let currentUser = "";
-
-/* LOGIN */
-document.getElementById("loginBtn").onclick = () => {
-  const u = sel.value;
-  const p = passwordInput.value;
-
-  if(!u || !p){
-    loginMsg.innerText = "Select user and enter password";
-    return;
-  }
-
-  if(USERS[u] !== p){
-    loginMsg.innerText = "Wrong password";
-    return;
-  }
-
-currentUser = u;
-  loginMsg.innerText = "Login success";
-  panel.style.display = "block";
-};
-
-/* CREATE INVITE */
-document.getElementById("createBtn").onclick = async () => {
-  if(!inviteUser.value){
-    alert("Enter username");
-    return;
-  }
-
-  const { error } = await supabase.from("invites").insert({
-    inviter: currentUser,
-    invite_username: inviteUser.value,
-    status: "pending"
+  Object.keys(USERS).forEach(username => {
+    const opt = document.createElement("option");
+    opt.value = username;
+    opt.textContent = username;
+    sel.appendChild(opt);
   });
 
-msg.innerText = error ? error.message : "Invite created";
-  inviteUser.value = "";
-};
+  /* SUPABASE (INVITES LANG) */
+  const supabase = window.supabase.createClient(
+    "https://latimgzxirdlcetikufy.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY"
+  );
+let currentUser = "";
+
+  /* LOGIN */
+  document.getElementById("loginBtn").onclick = () => {
+    const u = sel.value;
+    const p = document.getElementById("password").value;
+
+    if(!u || !p){
+      document.getElementById("loginMsg").innerText =
+        "Select username and enter password";
+      return;
+    }
+
+    if(USERS[u] !== p){
+      document.getElementById("loginMsg").innerText =
+        "Wrong password";
+      return;
+    }
+currentUser = u;
+    document.getElementById("loginMsg").innerText =
+      "Login success";
+    document.getElementById("panel").style.display = "block";
+  };
+
+  /* CREATE INVITE */
+  document.getElementById("createBtn").onclick = async () => {
+    const newUser = document.getElementById("inviteUser").value;
+    if(!newUser) return alert("Enter username");
+
+    const { error } = await supabase.from("invites").insert({
+      inviter: currentUser,
+      invite_username: newUser,
+      status: "pending"
+    });
+document.getElementById("msg").innerText =
+      error ? error.message : "Invite created";
+
+    document.getElementById("inviteUser").value = "";
+  };
+
+});
 </script>
 
 </body>
@@ -117,15 +121,19 @@ msg.innerText = error ? error.message : "Invite created";
 
 
 
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
