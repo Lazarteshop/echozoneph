@@ -374,7 +374,7 @@ main {
 }
 .cloud-text{
     grid-column: 1 / 3;
-    margin-bottom: 15px;
+    margin-bottom: 30px;
 }
 .cloud-h1{
     border-bottom: 2px solid black;
