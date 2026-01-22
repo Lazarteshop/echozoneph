@@ -1,5 +1,8 @@
+
+
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>User Invite Panel</title>
@@ -13,6 +16,7 @@ body{
   font-family:Arial;
   text-align:center;
 }
+
 select,input,button{
   padding:12px;
   margin:8px;
@@ -20,18 +24,18 @@ select,input,button{
   max-width:320px;
   font-size:16px;
 }
-#panel{
-  display:none;
-  margin-top:20px;
-}
+#panel{display:none;margin-top:20px}
 </style>
 </head>
 
 <body>
- <h2>User Invite Panel</h2>
 
+<h2>User Invite Panel</h2>
+
+<!-- ✅ DROPDOWN USERNAME -->
 <select id="userSelect">
-  <option value="">Loading users...</option>
+  
+  <option value="">Select username</option>
 </select>
 
 <input id="password" type="password" placeholder="Password">
@@ -45,95 +49,74 @@ select,input,button{
   <button id="createBtn">Create Invite</button>
   <div id="msg"></div>
 </div>
+
+<!-- ✅ SCRIPT SA PINAKA-ILALIM -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+/* ================= USERS (PASSWORD NASA SCRIPT LANG) ================= */
+const USERS = {
+  Benggalleon041:"beng41",
+  John:"101017",
+  Delf:"230738",
+  jonardbelleza:"251935",
+  jaynegalleon:"jayne1",
+  admin:"admin123"
+};
 
-  /* ✅ LOCAL USERS (PASSWORD NASA SCRIPT LANG) */
-  const USERS = {
-    Benggalleon041: "beng41",
-    John: "101017",
-    Delf: "230738",
-    jonardbelleza: "251935",
-    jaynegalleon: "jayne1",
-    admin: "admin123"
-  };
-* ✅ POPULATE DROPDOWN */
-  const sel = document.getElementById("userSelect");
-  sel.innerHTML = '<option value="">Select username</option>';
+/* ================= LOAD DROPDOWN ================= */
+const userSelect = document.getElementById("userSelect");
 
-  Object.keys(USERS).forEach(username => {
-    const opt = document.createElement("option");
-    opt.value = username;
-    opt.textContent = username;
-    sel.appendChild(opt);
-  });
+Object.keys(USERS).forEach(username=>{
+  const opt = document.createElement("option");
+  opt.value = username;
+  opt.textContent = username;
+  userSelect.appendChild(opt);
+});
 
-  /* SUPABASE (INVITES LANG) */
-  const supabase = window.supabase.createClient(
-    "https://latimgzxirdlcetikufy.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY"
-  );
+/* ================= SUPABASE (INVITES ONLY) ================= */
+const supabase = window.supabase.createClient(
+  "https://latimgzxirdlcetikufy.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY"
+);
+
 let currentUser = "";
 
-  /* LOGIN */
-  document.getElementById("loginBtn").onclick = () => {
-    const u = sel.value;
-    const p = document.getElementById("password").value;
+/* ================= LOGIN ================= */
+loginBtn.onclick = () => {
+  const u = userSelect.value;
+  const p = password.value;
 
-    if(!u || !p){
-      document.getElementById("loginMsg").innerText =
-        "Select username and enter password";
-      return;
-    }
+  if(!u || !p){
+    loginMsg.innerText = "Select username and enter password";
+    return;
+  }
 
-    if(USERS[u] !== p){
-      document.getElementById("loginMsg").innerText =
-        "Wrong password";
-      return;
-    }
+  if(USERS[u] !== p){
+    loginMsg.innerText = "Wrong password";
+    return;
+  }
+
 currentUser = u;
-    document.getElementById("loginMsg").innerText =
-      "Login success";
-    document.getElementById("panel").style.display = "block";
-  };
+  loginMsg.innerText = "Login success";
+  panel.style.display = "block";
+};
 
-  /* CREATE INVITE */
-  document.getElementById("createBtn").onclick = async () => {
-    const newUser = document.getElementById("inviteUser").value;
-    if(!newUser) return alert("Enter username");
+/* ================= CREATE INVITE ================= */
+createBtn.onclick = async () => {
+  if(!inviteUser.value){
+    alert("Enter new username");
+    return;
+  }
 
-    const { error } = await supabase.from("invites").insert({
-      inviter: currentUser,
-      invite_username: newUser,
-      status: "pending"
-    });
-document.getElementById("msg").innerText =
-      error ? error.message : "Invite created";
+const { error } = await supabase.from("invites").insert({
+    inviter: currentUser,
+    invite_username: inviteUser.value,
+    status: "pending"
+  });
 
-    document.getElementById("inviteUser").value = "";
-  };
-
-});
+  msg.innerText = error ? error.message : "Invite created (waiting admin approval)";
+  inviteUser.value = "";
+};
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
-
