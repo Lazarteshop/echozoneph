@@ -335,7 +335,7 @@ main {
 }
 .about-mini-text{
     color: #0252B2;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: bold;
     margin-top: 5px;
 }
@@ -343,7 +343,7 @@ main {
     text-align: justify;
     text-indent: 50px;
     margin-top: 20px;
-    font-weight: 600;
+    font-weight: 200;
 }
 .about-img{
     grid-row: 1 / 3;
