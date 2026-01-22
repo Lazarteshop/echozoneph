@@ -5,7 +5,6 @@
 <title>User Invite Panel</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-
 <style>
 body{
   background:#0b0b0b;
@@ -60,6 +59,17 @@ const USERS = {
   admin:{pass:"dipwdadmin123"}
 };
 /* =====================================
+   LOAD USER DROPDOWN (SAME AS MAIN)
+   ===================================== */
+const userSelect = document.getElementById("userSelect");
+Object.keys(USERS).forEach(u=>{
+  const opt = document.createElement("option");
+  opt.value = u;
+  opt.textContent = u;
+  userSelect.appendChild(opt);
+});
+
+/* =====================================
    SUPABASE (INVITES LANG)
    ===================================== */
 const supabase = window.supabase.createClient(
@@ -68,24 +78,20 @@ const supabase = window.supabase.createClient(
 );
 
 let currentUser = "";
+
 /* =====================================
-   LOGIN (SCRIPT PASSWORD LANG)
+   LOGIN
    ===================================== */
 document.getElementById("loginBtn").onclick = () => {
-  const u = document.getElementById("username").value.trim();
+  const u = userSelect.value;
   const p = document.getElementById("password").value.trim();
   const msg = document.getElementById("loginMsg");
 
-  if(!u || !p){
-    msg.innerText = "Enter username and password";
+  if(!p){
+    msg.innerText = "Enter password";
     return;
   }
-if(!USERS[u]){
-    msg.innerText = "User not found";
-    return;
-  }
-
-  if(USERS[u].pass !== p){
+if(USERS[u].pass !== p){
     msg.innerText = "Wrong password";
     return;
   }
@@ -94,6 +100,13 @@ if(!USERS[u]){
   msg.innerText = "Login successful";
   document.getElementById("panel").style.display = "block";
 };
+
+
+
+
+
+
+
 /* =====================================
    CREATE INVITE (SAVE SA SUPABASE)
    ===================================== */
