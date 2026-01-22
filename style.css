@@ -482,7 +482,7 @@ h1.project-h1{
     font-weight: bold;
 }
 .project-mini-text.kedu{
-    font-size: 12px;
+    font-size: 10px;
     padding-top: 10px;
 }
 .project-img{
@@ -507,7 +507,7 @@ h1.project-h1{
 .project-explanation{
     /* margin-top: 20px; */
     font-weight: 600;
-    text-indent: 50px;
+    text-indent: 20px;
     text-align: justify;
 }
 .project-explanation-2{
@@ -515,7 +515,7 @@ h1.project-h1{
 }
 .project-pc{
     color: #4978b3;
-    /* font-size: 1.5em; */
+    /* font-size: 1.3em; */
 }
 .penjelasan-span {
     margin-left: 30px;
