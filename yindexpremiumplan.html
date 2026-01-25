@@ -199,7 +199,7 @@ async function claimDailyBonus(){
  dailyBonus.textContent="Claimed";
  return;
 }
- let b=rand(0.1,1);
+ let b=rand(0.1,0.70);
  data.lastBonus=today();
  data.total+=b;
  data.earn.push({type:"Daily Bonus",amount:b,time:new Date().toLocaleString()});
@@ -242,7 +242,7 @@ function runTimer(t){
 
 /* REWARD */
 async function reward(){
- let r=(dailyVideos[videoIndex]===data.bonusVideo)?1.50:rand(0.5,3.00);
+ let r=(dailyVideos[videoIndex]===data.bonusVideo)?0.50:rand(0.5,1.00);
  data.total+=r;
  data.watchedToday.push(dailyVideos[videoIndex]);
  data.earn.push({type:"Video",amount:r,time:new Date().toLocaleString()});
