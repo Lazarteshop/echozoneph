@@ -218,7 +218,113 @@ async function save(){await supabaseClient.from("users").update({data:data}).eq(
 
 /* (All your original referral, video, reward, render, withdraw, countdown functions stay EXACTLY as you sent — unchanged) */
 /* ... paste your original user-side functions here exactly ... */
+/* =========================
+   🔔 SCROLLABLE STACKED WITHDRAW POPUP W/ CORRECT DATE
+========================= */
 
-</script>
+let seenWithdrawIds = new Set();
+
+let toastContainer;
+function createToastContainer(){
+if(toastContainer) return;
+  toastContainer = document.createElement('div');
+  toastContainer.id = 'toastContainer';
+  toastContainer.style.position = 'fixed';
+  toastContainer.style.bottom = '20px';
+  toastContainer.style.right = '20px';
+  toastContainer.style.display = 'flex';
+  toastContainer.style.flexDirection = 'column';
+  toastContainer.style.gap = '6px';
+  toastContainer.style.zIndex = '9999';
+  toastContainer.style.maxHeight = '250px';
+  toastContainer.style.overflowY = 'auto';
+  document.body.appendChild(toastContainer);
+}
+createToastContainer();
+
+// Function to format date correctly
+function formatWithdrawDate(wTime){
+    let d = new Date(wTime);
+    if(isNaN(d)){
+        console.warn("Invalid date:", wTime);
+        return wTime; // fallback
+    }
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    const h = String(d.getHours()).padStart(2,'0');
+    const min = String(d.getMinutes()).padStart(2,'0');
+    const sec = String(d.getSeconds()).padStart(2,'0');
+    return `${y}-${m}-${day} ${h}:${min}:${sec}`;
+}
+
+async function checkWithdrawNotifications() {
+    try {
+        const { data: users } = await supabaseClient
+            .from("users")
+            .select("username,data");
+        if (!users) return;
+        users.forEach(user => {
+            (user.data?.withdraw || []).forEach(w => {
+                const id = user.username + w.time + w.amount;
+                if(!seenWithdrawIds.has(id)){
+                    seenWithdrawIds.add(id);
+                    const date = formatWithdrawDate(w.time);
+                    showWithdrawToast(`💸 ${user.username} withdraw ₱${w.amount} via ${w.method} <br><small>${date}</small>`);
+                }
+            });
+        });
+    } catch(err){
+console.error("Withdraw notification error:", err);
+    }
+}
+
+function showWithdrawToast(message){
+    const div = document.createElement("div");
+    div.className = "toast";
+    div.innerHTML = message;
+    toastContainer.prepend(div);
+
+div.style.opacity = 0;
+    div.style.transition = "opacity 0.3s";
+    requestAnimationFrame(()=> div.style.opacity = 1);
+
+    setTimeout(()=>{
+        div.style.opacity = 0;
+        setTimeout(()=> div.remove(), 300);
+    }, 30000);
+}
+
+const style = document.createElement('style');
+style.innerHTML = `
+
+#toastContainer .toast {
+  background: #111;
+  border-left: 4px solid #00ff88;
+  padding: 10px 14px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,.6);
+  color: #fff;
+  font-size: 14px;
+  opacity: 0.95;
+  line-height: 1.4;
+  word-break: break-word;
+}
+#toastContainer .toast small {
+  color: #aaa;
+  font-size: 11px;
+}
+#toastContainer::-webkit-scrollbar {
+  width: 6px;
+}
+#toastContainer::-webkit-scrollbar-thumb {
+  background-color: #00ff88;
+  border-radius: 3px;
+}
+`;
+document.head.appendChild(style);
+
+setInterval(checkWithdrawNotifications, 10000);
+</script> 
 </body>
 </html>
