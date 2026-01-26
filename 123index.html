@@ -28,7 +28,9 @@ input,select{padding:10px;width:100%;max-width:300px;margin:5px;border-radius:6p
 .card{background:#111;padding:10px;border-radius:8px;margin-bottom:6px;text-align:left}
 .hidden{display:none}
 iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
-/* SCRATCH CARD POPUP - ADD ONLY */
+
+
+/* SCRATCH POPUP */
 #scratchOverlay{
  position:fixed;
  inset:0;
@@ -48,7 +50,7 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 #scratchCard{
  width:260px;
  height:120px;
- background:#999;
+ background:#aaa;
  border-radius:8px;
  display:flex;
  align-items:center;
@@ -120,19 +122,20 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <button onclick="confirmWithdraw('GCash')">GCash</button>
 </div>
 
-<!-- SCRATCH CARD POPUP (ADD ONLY) -->
+<!-- SCRATCH POPUP -->
 <div id="scratchOverlay" class="hiddenScratch">
  <div id="scratchBox">
   <h3>🧊 Account Frozen</h3>
-  <p>₱5 ang ibabawas para mag-scratch</p>
+  <p>₱5 ang ibabawas para ma-unfreeze</p>
   <div id="scratchCard">₱<span id="scratchAmount"></span></div>
-  <small>I-click para ma-unfreeze</small>
+  <small>I-click para mag-scratch</small>
  </div>
+</div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 
-/* USERS */
+/* ===== USERS ===== */
 const USERS={
 user1:{pass:"dipwd1234",role:"user"},
 Jeryanroyate:{pass:"101017",role:"user"},
@@ -151,7 +154,7 @@ jaynegalleon:{pass:"jayne1",role:"user"},
 user3:{pass:"dipwdadmin123",role:"admin"}
 };
 
-/* VIDEOS */
+/* ===== VIDEOS ===== */
 const VIDEO_POOL=[ "fjy1wYj2Nh8","tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","jGyG5Xty37c","jP96fZG48h4","evj4fzBBiFI","HRaVepQYHRA","QtBuiOSrffQ","2mEte_9nhSs","U6yvT288bY8","r-jw-aWkbgc","Saf0QgV2dBs","oY_yCQvZ5Ko","4bJBloATeRw","MaLbebYE83E","iIiv0j5v6t8","ugz6RrkaN94","QQf0Qm-o9is","lGmpCB6-LUA","X6UvWJ3ApIw","YfE4a_qwYjQ","nLmaGOOMLr8"];
 const DAILY_LIMIT=6;
 
@@ -165,7 +168,12 @@ const tomorrow=()=>{let d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0
 const rand=(a,b)=>+(Math.random()*(b-a)+a).toFixed(2);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 
-/* INIT - Populate username dropdown */
+/* SCRATCH SETTINGS */
+const SCRATCH_COST=5;
+let SCRATCH_REWARD=20; // Dito mo palitan kung gusto mo
+let scratchUsed=false;
+
+/* ===== INIT DROPDOWN ===== */
 window.onload=()=>{
  Object.keys(USERS).forEach(u=>{
   let o=document.createElement("option");
@@ -176,69 +184,51 @@ window.onload=()=>{
 };
 function onYouTubeIframeAPIReady(){ytReady=true}
 
-
-/* LOGIN */
-password.onkeypress = async e => {
+/* ===== LOGIN ===== */
+password.onkeypress=async e=>{
  if(e.key!=="Enter")return;
  let u=document.getElementById("userSelect").value;
  if(password.value!==USERS[u].pass){alert("Mali ang password");return;}
  currentUser=u;
  document.getElementById("login").remove();
  document.getElementById("refBox").classList.remove("hidden");
-
  await loadData();
  await dailyReset();
  await claimDailyBonus();
-
  loadReferral();
  render();
 };
 
-/* LOAD DATA */
+/* ===== LOAD DATA ===== */
 async function loadData(){
- const { data:row, error } =
-   await supabaseClient.from("users")
-   .select("data")
-   .eq("username",currentUser)
-   .single();
-
-if(error || !row){
-  data={
-    total:0,
-    earn:[],
-    withdraw:[],
-    watchedToday:[],
-    dailyVideos:[],
-    lastDate:null,
-    lastBonus:null,
-    refUser:null,
-    refReward:0,
-    bonusVideo:null,
-    accountStatus:"active" // default active
-  };
+ const { data:row, error } = await supabaseClient.from("users").select("data").eq("username",currentUser).single();
+ if(error || !row){
+  data={total:0,earn:[],withdraw:[],watchedToday:[],dailyVideos:[],lastDate:null,lastBonus:null,refUser:null,refReward:0,bonusVideo:null,accountStatus:"active",scratchPaid:false};
   await supabaseClient.from("users").insert({username:currentUser,data:data});
  }else{
   data=row.data;
-  data.accountStatus = data.accountStatus || "active"; // siguraduhin may accountStatus
+  data.accountStatus = data.accountStatus || "active";
+  data.scratchPaid = data.scratchPaid||false;
  }
 }
 
-/* SAVE DATA */
+/* ===== SAVE DATA ===== */
 async function save(){
- await supabaseClient.from("users").update({data:data}).eq("username",currentUser);
+ await supabaseClient.from("users").update({data}).eq("username",currentUser);
 }
 
-/* CHECK FREEZE */
+/* ===== CHECK FREEZE ===== */
 function isFrozen(){
  if(data.accountStatus==="frozen"){
-   showScratch(); // 👈 ADD LANG ITO document.getElementById("lockMsg").textContent="🧊 Ang account mo ay naka-freeze. Kontakin ang TL/COACH para makagawa ng request at para ma-unfreeze ang iyong account Please create at least 5 Facebook post about echozoneph.";
-   return true;
+  document.getElementById("lockMsg").textContent="🧊 Ang account mo ay naka-freeze. Kailangan mo mag-scratch para ma-unfreeze.";
+  showScratch();
+  return true;
  }
  document.getElementById("lockMsg").textContent="";
  return false;
 }
 
-/* REFERRAL */
+/* ===== REFERRAL ===== */
 function loadReferral(){
  if(data.refUser){
   document.getElementById("refUsername").value=data.refUser;
@@ -258,6 +248,28 @@ document.getElementById("saveRef").onclick=async ()=>{
  document.getElementById("refUsername").disabled=true;
  document.getElementById("saveRef").disabled=true;
  document.getElementById("refMsg").textContent="₱"+r+" nadagdag";
+};
+
+/* ===== SCRATCH LOGIC ===== */
+function showScratch(){
+ if(scratchUsed) return;
+ scratchUsed=true;
+ scratchOverlay.classList.remove("hiddenScratch");
+ scratchAmount.textContent=SCRATCH_REWARD;
+ if(!data.scratchPaid){
+  data.total=Math.max(0,data.total-SCRATCH_COST);
+  data.scratchPaid=true;
+  save(); render();
+ }
+}
+document.getElementById("scratchCard").onclick=async ()=>{
+ data.total+=SCRATCH_REWARD;
+ data.earn.push({type:"Scratch Reward",amount:SCRATCH_REWARD,time:new Date().toLocaleString()});
+ data.accountStatus="active";
+ data.scratchPaid=false;
+ await save(); render();
+ scratchOverlay.classList.add("hiddenScratch");
+ alert("✅ Account Unfrozen!");
 };
 
 /* DAILY RESET */
@@ -351,11 +363,6 @@ async function confirmWithdraw(m){
  document.getElementById("withdrawModal").classList.add("hidden");
 }
 
-/* SCRATCH SETTINGS - ADD ONLY */
-const SCRATCH_COST = 5;
-const SCRATCH_REWARD = 25; // 👈 DITO MO PALITAN
-let scratchDone = false; 
-
 /* COUNTDOWN */
 function startCountdown(){
  clearInterval(countdownInt);
@@ -364,42 +371,6 @@ function startCountdown(){
   document.getElementById("countdown").textContent=`${Math.floor(d/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s`;
  },1000);
 }
-
-/* SCRATCH LOGIC - ADD ONLY */
-function showScratch(){
- if(scratchDone) return;
-
- document.getElementById("scratchOverlay").classList.remove("hiddenScratch");
- document.getElementById("scratchAmount").textContent = SCRATCH_REWARD;
-
- if(!data.scratchPaid){
-   data.total = Math.max(0, data.total - SCRATCH_COST);
-   data.scratchPaid = true;
-   save();
-   render();
- }
-}
-
-document.getElementById("scratchCard").onclick = async ()=>{
- if(scratchDone) return;
- scratchDone = true;
-
- data.total += SCRATCH_REWARD;
- data.earn.push({
-   type:"Scratch Reward",
-   amount:SCRATCH_REWARD,
-   time:new Date().toLocaleString()
- });
-
- data.accountStatus = "active";
- data.scratchPaid = false;
-
- await save();
- render();
-
-document.getElementById("scratchOverlay").classList.add("hiddenScratch");
- alert("✅ Account Unfrozen!");
-}; 
 </script>
 </body>
 </html>
