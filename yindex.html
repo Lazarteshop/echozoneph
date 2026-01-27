@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="tl">
 <head>
@@ -31,9 +30,9 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </style>
 </head>
 <body>
+
 <div class="container">
 
-<!-- BALANCE -->
 <div class="box">
 💰 Balance: ₱<span id="balance">0.00</span>
 <div class="progress"><div id="withdrawProgress"></div></div>
@@ -44,7 +43,6 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <h2>🎬 Watch & Earn PH</h2>
 <h3>BASIC PLAN</h3>
 
-<!-- LOGIN -->
 <div id="login" class="box">
 <select id="userSelect"></select><br>
 <input id="password" type="password" placeholder="Ilagay ang password">
@@ -52,7 +50,6 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 
 <div id="lockMsg" class="lock"></div>
 
-<!-- REFERRAL -->
 <div id="refBox" class="box hidden">
 <h3>👥 Referrer Username</h3>
 <input id="refUsername" placeholder="Username ng nag-invite">
@@ -60,20 +57,17 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <div id="refMsg" class="green"></div>
 </div>
 
-<!-- VIDEO AREA -->
 <div id="playerArea"></div>
 <div class="progress"><div id="videoProgress"></div></div>
 <div id="timer"></div>
 <div id="earned" class="green"></div>
 
-<!-- DAILY BONUS -->
 <div class="box">
 🎁 Daily Bonus: <span id="dailyBonus" class="green"></span><br>
 🎬 Napanood ngayon: <span id="watchedCount">0</span>/6<br>
 ⏳ Susunod na reset sa: <span id="countdown"></span>
 </div>
 
-<!-- HISTORY -->
 <div class="box">
 <h3>📊 Kasaysayan ng Kita</h3>
 <div id="earnHistory"></div>
@@ -88,10 +82,29 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <button onclick="confirmWithdraw('GCash')">GCash</button>
 </div>
 
+</div>
+
+<!-- SCRATCH POPUP -->
+<div id="scratchPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#111;color:#fff;padding:20px;border-radius:12px;width:320px;text-align:center;">
+    <h3>🧊 Account Frozen</h3>
+<p>🎉 Your account is temporarily frozen, but guess what? May naghihintay na exciting scratch card for you! For only ₱15, you can win up to ₱30! After scratching, your account will be unfrozen. Don't miss out! #ScratchAndWin #ExcitingRewards. CLICK HERE👇</p>
+    <div id="scratchBox"
+      style="margin:15px auto;height:120px;background:#999;
+      display:flex;align-items:center;justify-content:center;
+      font-size:34px;font-weight:bold;color:#00ff88;cursor:pointer;border-radius:10px;">
+      ₱ ?
+    </div>
+
+    <p id="scratchMsg" class="green"></p>
+  </div>
+</div>
+
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
+const SCRATCH_REWARD = 0.1;
+let scratchUsed=false;
 
-/* USERS */
 const USERS={
 user1:{pass:"dipwd1234",role:"user"},
 Jeryanroyate:{pass:"101017",role:"user"},
@@ -110,116 +123,108 @@ jaynegalleon:{pass:"jayne1",role:"user"},
 user3:{pass:"dipwdadmin123",role:"admin"}
 };
 
-/* VIDEOS */
-const VIDEO_POOL=[ "fjy1wYj2Nh8","tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","jGyG5Xty37c","jP96fZG48h4","evj4fzBBiFI","HRaVepQYHRA","QtBuiOSrffQ","2mEte_9nhSs","U6yvT288bY8","r-jw-aWkbgc","Saf0QgV2dBs","oY_yCQvZ5Ko","4bJBloATeRw","MaLbebYE83E","iIiv0j5v6t8","ugz6RrkaN94","QQf0Qm-o9is","lGmpCB6-LUA","X6UvWJ3ApIw","YfE4a_qwYjQ","nLmaGOOMLr8"];
+const VIDEO_POOL=["fjy1wYj2Nh8","tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","jGyG5Xty37c","jP96fZG48h4","evj4fzBBiFI","HRaVepQYHRA","QtBuiOSrffQ","2mEte_9nhSs","U6yvT288bY8","r-jw-aWkbgc","Saf0QgV2dBs","oY_yCQvZ5Ko","4bJBloATeRw","MaLbebYE83E","iIiv0j5v6t8","ugz6RrkaN94","QQf0Qm-o9is","lGmpCB6-LUA","X6UvWJ3ApIw","YfE4a_qwYjQ","nLmaGOOMLr8"];
 const DAILY_LIMIT=6;
 
 let currentUser,data,player,ytReady=false;
 let dailyVideos=[],videoIndex=0;
 let timerInt,countdownInt;
 
-/* DATE HELPERS */
 const today=()=>{let d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const tomorrow=()=>{let d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0);return d};
 const rand=(a,b)=>+(Math.random()*(b-a)+a).toFixed(2);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 
-/* INIT - Populate username dropdown */
 window.onload=()=>{
  Object.keys(USERS).forEach(u=>{
   let o=document.createElement("option");
-  o.value=u;
-  o.textContent=u;
-  document.getElementById("userSelect").appendChild(o);
+  o.value=u;o.textContent=u;
+  userSelect.appendChild(o);
  });
 };
 function onYouTubeIframeAPIReady(){ytReady=true}
 
-
-/* LOGIN */
-password.onkeypress = async e => {
+password.onkeypress = async e=>{
  if(e.key!=="Enter")return;
- let u=document.getElementById("userSelect").value;
+ let u=userSelect.value;
  if(password.value!==USERS[u].pass){alert("Mali ang password");return;}
  currentUser=u;
- document.getElementById("login").remove();
- document.getElementById("refBox").classList.remove("hidden");
+ login.remove();
+ refBox.classList.remove("hidden");
 
  await loadData();
  await dailyReset();
  await claimDailyBonus();
-
  loadReferral();
  render();
+ checkFrozenScratch();
 };
 
-/* LOAD DATA */
 async function loadData(){
- const { data:row, error } =
-   await supabaseClient.from("users")
-   .select("data")
-   .eq("username",currentUser)
-   .single();
-
-if(error || !row){
-  data={
-    total:0,
-    earn:[],
-    withdraw:[],
-    watchedToday:[],
-    dailyVideos:[],
-    lastDate:null,
-    lastBonus:null,
-    refUser:null,
-    refReward:0,
-    bonusVideo:null,
-    accountStatus:"active" // default active
-  };
+ const { data:row }=await supabaseClient.from("users").select("data").eq("username",currentUser).single();
+ if(!row){
+  data={total:0,earn:[],withdraw:[],watchedToday:[],dailyVideos:[],lastDate:null,lastBonus:null,refUser:null,refReward:0,bonusVideo:null,accountStatus:"active"};
   await supabaseClient.from("users").insert({username:currentUser,data:data});
  }else{
   data=row.data;
-  data.accountStatus = data.accountStatus || "active"; // siguraduhin may accountStatus
+  data.accountStatus=data.accountStatus||"active";
  }
 }
+async function save(){await supabaseClient.from("users").update({data:data}).eq("username",currentUser);}
 
-/* SAVE DATA */
-async function save(){
- await supabaseClient.from("users").update({data:data}).eq("username",currentUser);
-}
-
-/* CHECK FREEZE */
 function isFrozen(){
  if(data.accountStatus==="frozen"){
-   document.getElementById("lockMsg").textContent="🧊 Ang account mo ay naka-freeze. Kontakin ang TL/COACH para makagawa ng request at para ma-unfreeze ang iyong account Please create at least 5 Facebook post about echozoneph.";
-   return true;
+  lockMsg.textContent="🧊 Ang account mo ay naka-freeze ba din ba? Solution: Refresh you account and back to login.";
+  return true;
  }
- document.getElementById("lockMsg").textContent="";
+ lockMsg.textContent="";
  return false;
 }
 
-/* REFERRAL */
-function loadReferral(){
- if(data.refUser){
-  document.getElementById("refUsername").value=data.refUser;
-  document.getElementById("refUsername").disabled=true;
-  document.getElementById("saveRef").disabled=true;
+function checkFrozenScratch(){
+ if(data.accountStatus==="frozen"){
+  scratchPopup.style.display="flex";
  }
 }
-document.getElementById("saveRef").onclick=async ()=>{
- if(data.refUser) return;
+
+scratchBox.onclick=async()=>{
+ if(scratchUsed)return;
+ scratchUsed=true;
+
+ data.total-=15;
+ if(data.total<0)data.total=0;
+ data.total+=SCRATCH_REWARD;
+ data.accountStatus="active";
+
+ data.earn.push({type:"Scratch Card",amount:SCRATCH_REWARD,time:new Date().toLocaleString()});
+
+ await save();
+ render();
+
+ scratchBox.textContent="₱"+SCRATCH_REWARD;
+ scratchMsg.textContent="✅ Account Unfrozen!";
+ setTimeout(()=>scratchPopup.style.display="none",1500);
+};
+
+function loadReferral(){
+ if(data.refUser){
+  refUsername.value=data.refUser;
+  refUsername.disabled=true;
+  saveRef.disabled=true;
+ }
+}
+saveRef.onclick=async()=>{
+ if(data.refUser)return;
  let r=rand(0.1,2);
- data.refUser=document.getElementById("refUsername").value;
+ data.refUser=refUsername.value;
  data.refReward=r;
  data.total+=r;
  data.earn.push({type:"Invite Reward",amount:r,time:new Date().toLocaleString()});
- await save();
- render();
- document.getElementById("refUsername").disabled=true;
- document.getElementById("saveRef").disabled=true;
- document.getElementById("refMsg").textContent="₱"+r+" nadagdag";
+ await save();render();
+ refUsername.disabled=true;saveRef.disabled=true;
+ refMsg.textContent="₱"+r+" nadagdag";
 };
 
-/* DAILY RESET */
 async function dailyReset(){
  if(data.lastDate!==today()){
   data.lastDate=today();
@@ -231,36 +236,31 @@ async function dailyReset(){
  }
  dailyVideos=data.dailyVideos||[];
  await save();
- if(dailyVideos.length>0){ loadVideo(); startCountdown(); }
+ if(dailyVideos.length>0){loadVideo();startCountdown();}
 }
 
-
-/* DAILY BONUS */
 async function claimDailyBonus(){
- if(isFrozen()) return;
- if(data.lastBonus===today()){ document.getElementById("dailyBonus").textContent="Claimed"; return; }
+ if(isFrozen())return;
+ if(data.lastBonus===today()){dailyBonus.textContent="Claimed";return;}
  let b=rand(0.01,0.10);
  data.lastBonus=today();
  data.total+=b;
  data.earn.push({type:"Daily Bonus",amount:b,time:new Date().toLocaleString()});
  await save();
- document.getElementById("dailyBonus").textContent="₱"+b;
+ dailyBonus.textContent="₱"+b;
 }
 
-/* VIDEO */
 function loadVideo(){
- if(isFrozen()) return;
- if(!dailyVideos || !dailyVideos[videoIndex]){ document.getElementById("lockMsg").textContent="🔒 Wala pang video ngayon"; return; }
+ if(isFrozen())return;
+ if(!dailyVideos[videoIndex]){lockMsg.textContent="🔒 Wala pang video ngayon";return;}
  if(!ytReady){setTimeout(loadVideo,500);return;}
- document.getElementById("watchedCount").textContent=data.watchedToday.length;
- if(data.watchedToday.length>=DAILY_LIMIT){ document.getElementById("lockMsg").textContent="🔒 Naabot na ang daily limit";return;}
- document.getElementById("playerArea").innerHTML="<div id='player'></div>";
+ watchedCount.textContent=data.watchedToday.length;
+ if(data.watchedToday.length>=DAILY_LIMIT){lockMsg.textContent="🔒 Naabot na ang daily limit";return;}
+ playerArea.innerHTML="<div id='player'></div>";
  player=new YT.Player("player",{videoId:dailyVideos[videoIndex],playerVars:{autoplay:1,controls:0},
-  events:{onReady:startTimer,onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)reward()}}
- });
+ events:{onReady:startTimer,onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)reward()}}});
 }
 
-/* TIMER */
 function startTimer(){
  let chk=setInterval(()=>{
   let d=player.getDuration();
@@ -271,53 +271,49 @@ function runTimer(t){
  let total=t;
  clearInterval(timerInt);
  timerInt=setInterval(()=>{
-  document.getElementById("timer").textContent=`⏱ ${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`;
-  document.getElementById("videoProgress").style.width=((total-t)/total*100)+"%";
+  timer.textContent=`⏱ ${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`;
+  videoProgress.style.width=((total-t)/total*100)+"%";
   t--; if(t<0)clearInterval(timerInt);
  },1000);
 }
 
-/* REWARD */
 async function reward(){
- if(isFrozen()) return;
+ if(isFrozen())return;
  let r=(dailyVideos[videoIndex]===data.bonusVideo)?0.50:rand(0.1,0.30);
  data.total+=r;
  data.watchedToday.push(dailyVideos[videoIndex]);
  data.earn.push({type:"Video",amount:r,time:new Date().toLocaleString()});
  videoIndex++;
- await save(); render();
- document.getElementById("earned").textContent="₱"+r+" nadagdag";
+ await save();render();
+ earned.textContent="₱"+r+" nadagdag";
  setTimeout(loadVideo,1500);
 }
 
-/* RENDER */
 function render(){
- document.getElementById("balance").textContent=data.total.toFixed(2);
- document.getElementById("withdrawBtn").disabled=data.total<50 || data.accountStatus==="frozen";
- document.getElementById("withdrawProgress").style.width=Math.min(data.total/50*100,100)+"%";
- document.getElementById("earnHistory").innerHTML=data.earn.map(e=>`<div class="card">${e.type}<br>₱${e.amount}<br>${e.time}</div>`).join("");
- document.getElementById("withdrawHistory").innerHTML=data.withdraw.map(w=>`<div class="card">${w.method} ₱${w.amount}<br>${w.time}</div>`).join("");
+ balance.textContent=data.total.toFixed(2);
+ withdrawBtn.disabled=data.total<50 || data.accountStatus==="frozen";
+ withdrawProgress.style.width=Math.min(data.total/50*100,100)+"%";
+ earnHistory.innerHTML=data.earn.map(e=>`<div class="card">${e.type}<br>₱${e.amount}<br>${e.time}</div>`).join("");
+ withdrawHistory.innerHTML=data.withdraw.map(w=>`<div class="card">${w.method} ₱${w.amount}<br>${w.time}</div>`).join("");
 }
 
-
-/* WITHDRAW */
-document.getElementById("withdrawBtn").onclick=()=>document.getElementById("withdrawModal").classList.remove("hidden");
+withdrawBtn.onclick=()=>withdrawModal.classList.remove("hidden");
 async function confirmWithdraw(m){
- if(isFrozen()) return;
+ if(isFrozen())return;
  data.withdraw.push({method:m,amount:data.total,time:new Date().toLocaleString()});
  data.total=0;
- await save(); render();
- document.getElementById("withdrawModal").classList.add("hidden");
+ await save();render();
+ withdrawModal.classList.add("hidden");
 }
 
-/* COUNTDOWN */
 function startCountdown(){
  clearInterval(countdownInt);
  countdownInt=setInterval(()=>{
   let d=tomorrow()-new Date();
-  document.getElementById("countdown").textContent=`${Math.floor(d/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s`;
+  countdown.textContent=`${Math.floor(d/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s`;
  },1000);
 }
 </script>
+
 </body>
 </html>
