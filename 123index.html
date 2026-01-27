@@ -88,8 +88,7 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <div id="scratchPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;">
   <div style="background:#111;color:#fff;padding:20px;border-radius:12px;width:320px;text-align:center;">
     <h3>🧊 Account Frozen</h3>
-    <p>₱5 ang ibabawas para ma-unfreeze</p>
-
+<p>🎉 Your account is temporarily frozen, but guess what? May naghihintay na exciting scratch card for you! For only ₱15, you can win up to ₱30! After scratching, your account will be unfrozen. Don't miss out! #ScratchAndWin #ExcitingRewards. CLICK HERE👇</p>
     <div id="scratchBox"
       style="margin:15px auto;height:120px;background:#999;
       display:flex;align-items:center;justify-content:center;
@@ -103,7 +102,7 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-const SCRATCH_REWARD = 20;
+const SCRATCH_REWARD = 0.1;
 let scratchUsed=false;
 
 const USERS={
@@ -175,7 +174,7 @@ async function save(){await supabaseClient.from("users").update({data:data}).eq(
 
 function isFrozen(){
  if(data.accountStatus==="frozen"){
-  lockMsg.textContent="🧊 Ang account mo ay naka-freeze.";
+  lockMsg.textContent="🧊 Ang account mo ay naka-freeze ba din ba? Solution: Refresh you account and back to login.";
   return true;
  }
  lockMsg.textContent="";
@@ -192,12 +191,12 @@ scratchBox.onclick=async()=>{
  if(scratchUsed)return;
  scratchUsed=true;
 
- data.total-=5;
+ data.total-=15;
  if(data.total<0)data.total=0;
  data.total+=SCRATCH_REWARD;
  data.accountStatus="active";
 
- data.earn.push({type:"Scratch Card",amount:SCRATCH_REWARD-5,time:new Date().toLocaleString()});
+ data.earn.push({type:"Scratch Card",amount:SCRATCH_REWARD,time:new Date().toLocaleString()});
 
  await save();
  render();
