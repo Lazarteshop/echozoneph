@@ -36,7 +36,7 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <div class="box">
 💰 Balance: ₱<span id="balance">0.00</span>
 <div class="progress"><div id="withdrawProgress"></div></div>
-<small>Minimum withdrawal ₱50</small><br>
+<small>Minimum withdrawal ₱250</small><br>
 <button id="withdrawBtn" disabled>Mag-Withdraw</button>
 </div>
 
@@ -282,7 +282,7 @@ async function reward(){
 function render(){
  balance.textContent=data.total.toFixed(2);
  withdrawBtn.disabled=data.total<250 || data.accountStatus==="frozen";
- withdrawProgress.style.width=Math.min(data.total/50*100,100)+"%";
+ withdrawProgress.style.width=Math.min(data.total/250*100,100)+"%";
  earnHistory.innerHTML=data.earn.map(e=>`<div class="card">${e.type}<br>₱${e.amount}<br>${e.time}</div>`).join("");
  withdrawHistory.innerHTML=data.withdraw.map(w=>`<div class="card">${w.method} ₱${w.amount}<br>${w.time}</div>`).join("");
 }
