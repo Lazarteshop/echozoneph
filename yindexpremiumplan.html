@@ -206,7 +206,7 @@ function loadReferral(){
 }
 saveRef.onclick=async()=>{
  if(data.refUser)return;
- let r=rand(0.1,2);
+ let r=rand(0.5,5);
  data.refUser=refUsername.value;
  data.refReward=r;
  data.total+=r;
