@@ -3,270 +3,159 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WATCH TO EARN – ULTRA LEVEL 3000 🚀 AUTO PROFILE FIX</title>
+<title>WATCH TO EARN – ULTRA LEVEL 3000 🚀</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-body{font-family:Arial;background:#020617;color:#fff;margin:0;text-align:center}
-.box{background:#0f172a;margin:15px;padding:15px;border-radius:12px}
-button,input,select{padding:10px;margin:5px;border-radius:8px;border:none}
-button{background:#22c55e;color:#fff;font-weight:bold}
-iframe{border-radius:12px}
-.hidden{display:none}
+body{margin:0;background:#020617;color:#fff;font-family:Arial;text-align:center}
+#app{display:none;padding:20px}
+button{padding:10px 15px;border:none;border-radius:8px;background:#22c55e;color:#000;font-weight:bold;margin:5px}
+input{padding:10px;border-radius:6px;border:none;margin:5px}
 .warn{color:#f87171;font-weight:bold}
-.disabled{opacity:.4;pointer-events:none}
 </style>
 </head>
 <body>
 
-<h2>WATCH TO EARN – ULTRA LEVEL 3000 🚀</h2>
+<h1>WATCH TO EARN – ULTRA LEVEL 3000 🚀</h1>
+<div id="status">Loading...</div>
 
-<div id="authBox" class="box">
-<h3>Login / Signup</h3>
+<div id="authBox" style="display:none">
 <input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+<input id="pass" type="password" placeholder="Password">
 <br>
-<button onclick="signUp()">SIGN UP</button>
-<button onclick="login()">LOGIN</button>
+<button onclick="signup()">Sign Up</button>
+<button onclick="login()">Login</button>
 </div>
 
-<div id="adminPanel" class="hidden">
-<div class="box">
-<h3>👑 ADMIN PANEL</h3>
-<input id="voucherCode" placeholder="Voucher Code">
-<select id="voucherPlan">
-<option value="basic">BASIC</option>
-<option value="premium">PREMIUM</option>
-<option value="vip">VIP</option>
-</select>
-<button onclick="createVoucher()">CREATE VOUCHER</button>
+<div id="app">
+<h2 id="roleTitle"></h2>
+<div id="adminPanel" style="display:none">
+<h3>ADMIN PANEL</h3>
 <p>Total Users: <span id="totalUsers">0</span></p>
 </div>
-</div>
 
-<div id="resellerPanel" class="hidden">
-<div class="box">
-<h3>🧾 SUB RESELLER DASHBOARD</h3>
+<div id="subPanel" style="display:none">
+<h3>SUB-RESELLER DASHBOARD</h3>
 <p>Voucher Balance: <span id="voucherBal">0</span></p>
-<select id="plan">
-<option value="trial">FREE TRIAL (0)</option>
-<option value="basic">BASIC (-2)</option>
-<option value="premium">PREMIUM (-4)</option>
-<option value="vip">VIP (-6)</option>
-</select>
-<button onclick="createUserAccount()">CREATE ACCOUNT</button>
-</div>
 </div>
 
-<div id="userPanel" class="hidden">
-<div class="box">
-<h3>👤 USER DASHBOARD</h3>
-<p id="expireWarn" class="warn"></p>
-Balance ₱<span id="balance">0</span><br>
-Watched Today <span id="watchCount">0</span>/6
+<div id="userPanel" style="display:none">
+<h3>USER DASHBOARD</h3>
+<p>Balance: ₱<span id="bal">0.00</span></p>
+<p>Watched Today: <span id="watchCount">0</span>/6</p>
+<button onclick="watchVideo()">Watch Random Video</button>
+<div id="videoBox"></div>
+<div id="expireWarn" class="warn"></div>
 </div>
 
-<div class="box">
-<button onclick="startVideo()">▶ START VIDEO</button><br>
-<iframe id="yt" width="320" height="190" allow="autoplay"></iframe>
-<p id="timer">Waiting...</p>
-</div>
-
-<div class="box">
-<button onclick="withdraw()">WITHDRAW</button>
-<p id="withdrawInfo"></p>
-</div>
-
-<div class="box">
-<h3>📜 EARN HISTORY</h3>
-<div id="earnHistory"></div>
-</div>
-
-<div class="box">
-<h3>💸 WITHDRAW HISTORY</h3>
-<div id="withdrawHistory"></div>
-</div>
+<button onclick="logout()">Logout</button>
 </div>
 
 <script>
-// ==== PALITAN MO ==== 
-const SUPABASE_URL = "https://nfusswkszrlehjsurhih.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mdXNzd2tzenJsZWhqc3VyaGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMwMDMsImV4cCI6MjA4NjIyOTAwM30.yz771wCi9i11ImPp52nlZm1swl3ZfUZ5DUbs6t_Xkbw";
-// ====================
+const supabase = window.supabase.createClient(
+"https://nfusswkszrlehjsurhih.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mdXNzd2tzenJsZWhqc3VyaGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMwMDMsImV4cCI6MjA4NjIyOTAwM30.yz771wCi9i11ImPp52nlZm1swl3ZfUZ5DUbs6t_Xkbw"
+);
 
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-let user=null;
-let role="user";
-let timer=null;
-let sec=20;
+let currentUser=null;
+let profile=null;
 
-const videos=[
-"https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1",
-"https://www.youtube.com/embed/ysz5S6PUM-U?enablejsapi=1",
-"https://www.youtube.com/embed/tgbNymZ7vqY?enablejsapi=1"
-];
-
-// 🔥 AUTO SESSION + AUTO PROFILE FIX
-sb.auth.getSession().then(async r=>{
-if(r.data.session){
-user=r.data.session.user;
-await ensureProfile();
-await loadRole();
+async function init(){
+const {data:{session}} = await supabase.auth.getSession();
+if(!session){
+ document.getElementById('status').innerText="Please login";
+ document.getElementById('authBox').style.display='block';
+ return;
 }
-});
+currentUser=session.user;
+await autoProfile();
+await loadDashboard();
+}
 
-// AUTO CREATE PROFILE IF MISSING
-async function ensureProfile(){
-const {data}=await sb.from("profiles").select("id").eq("id",user.id).single();
+async function autoProfile(){
+let {data} = await supabase.from('profiles').select('*').eq('id',currentUser.id).single();
 if(!data){
-await sb.from("profiles").insert({
-id:user.id,
-role:"user",
-balance:0,
-watch_today:0,
-voucher_balance:0
+await supabase.from('profiles').insert({
+ id:currentUser.id,
+ role:'user',
+ balance:0,
+ watch_today:0,
+ voucher_balance:0,
+ expire_at:new Date(Date.now()+3*86400000)
 });
+let res = await supabase.from('profiles').select('*').eq('id',currentUser.id).single();
+profile=res.data;
+}else{
+profile=data;
 }
 }
 
-async function signUp(){
-const {error}=await sb.auth.signUp({
-email:document.getElementById("email").value,
-password:document.getElementById("password").value
-});
-if(error)alert(error.message);else alert("Signup success");
+async function loadDashboard(){
+document.getElementById('status').style.display='none';
+document.getElementById('authBox').style.display='none';
+document.getElementById('app').style.display='block';
+
+let role=profile.role;
+document.getElementById('roleTitle').innerText="Role: "+role.toUpperCase();
+
+if(new Date(profile.expire_at) < new Date()){
+document.getElementById('expireWarn').innerText="ACCOUNT EXPIRED";
+return;
+}
+
+if(role==='admin'){
+document.getElementById('adminPanel').style.display='block';
+}
+if(role==='subreseller'){
+document.getElementById('subPanel').style.display='block';
+document.getElementById('voucherBal').innerText=profile.voucher_balance;
+}
+if(role==='user'){
+document.getElementById('userPanel').style.display='block';
+document.getElementById('bal').innerText=Number(profile.balance).toFixed(2);
+document.getElementById('watchCount').innerText=profile.watch_today;
+}
+}
+
+async function signup(){
+const email=document.getElementById('email').value;
+const pass=document.getElementById('pass').value;
+await supabase.auth.signUp({email,password:pass});
+alert('Signup success. Login now.');
 }
 
 async function login(){
-const {data,error}=await sb.auth.signInWithPassword({
-email:document.getElementById("email").value,
-password:document.getElementById("password").value
-});
-if(error)return alert(error.message);
-user=data.user;
-await ensureProfile();
-await loadRole();
-}
-
-async function loadRole(){
-document.getElementById("authBox").style.display="none";
-
-const {data}=await sb.from("profiles").select("*").eq("id",user.id).single();
-if(!data)return;
-role=data.role||"user";
-
-if(role==="admin"){
-document.getElementById("adminPanel").classList.remove("hidden");
-loadAdmin();
-}
-
-if(role==="reseller"){
-document.getElementById("resellerPanel").classList.remove("hidden");
-document.getElementById("voucherBal").innerText=data.voucher_balance||0;
-}
-
-if(role==="user"){
-document.getElementById("userPanel").classList.remove("hidden");
-document.getElementById("balance").innerText=data.balance||0;
-document.getElementById("watchCount").innerText=data.watch_today||0;
-checkExpiry(data.expire_at);
-loadHistory();
-updateWithdrawInfo(data.balance||0);
-}
-}
-
-async function createVoucher(){
-const code=document.getElementById("voucherCode").value;
-const plan=document.getElementById("voucherPlan").value;
-await sb.from("vouchers").insert({code,plan});
-alert("Voucher Created");
-}
-
-async function loadAdmin(){
-const {count}=await sb.from("profiles").select("*",{count:"exact",head:true});
-document.getElementById("totalUsers").innerText=count||0;
-}
-
-async function createUserAccount(){
-alert("Use Edge Function for secure reseller creation");
-}
-
-function randVideo(){return videos[Math.floor(Math.random()*videos.length)]}
-
-async function startVideo(){
-const {data}=await sb.from("profiles").select("watch_today").eq("id",user.id).single();
-if(data.watch_today>=6){alert("Daily limit reached");return}
-
-const src=randVideo()+"&autoplay=1&mute=1";
-document.getElementById("yt").src=src;
-sec=20;
-clearInterval(timer);
-
-timer=setInterval(async()=>{
-sec--;
-document.getElementById("timer").innerText="Watching "+sec;
-if(sec<=0){
-clearInterval(timer);
-await reward();
-document.getElementById("timer").innerText="Reward Granted";
-}
-},1000);
-}
-
-async function reward(){
-await sb.rpc("add_reward",{uid:user.id,amount:(Math.random()*0.9+0.1).toFixed(2)});
+const email=document.getElementById('email').value;
+const pass=document.getElementById('pass').value;
+await supabase.auth.signInWithPassword({email,password:pass});
 location.reload();
 }
 
-function updateWithdrawInfo(balance){
-let text="";
-if(balance>=200) text="Stage 3: Cash Withdrawal Activated";
-else if(balance>=150) text="Stage 2: Redeem Crabpaste Required";
-else if(balance>=50) text="Stage 1: ₱50 Cash Available";
-else text="Minimum ₱50 to withdraw";
-document.getElementById("withdrawInfo").innerText=text;
+async function logout(){
+await supabase.auth.signOut();
+location.reload();
 }
 
-async function withdraw(){
-const {data}=await sb.from("profiles").select("balance").eq("id",user.id).single();
-let bal=data.balance||0;
-
-if(bal>=200){
-await sb.from("withdrawals").insert({uid:user.id,amount:bal});
-alert("Cash Withdrawal Requested");
-}
-else if(bal>=150){
-alert("Redeem Crabpaste Product First");
-}
-else if(bal>=50){
-await sb.from("withdrawals").insert({uid:user.id,amount:50});
-alert("₱50 Cash Requested");
-}else{
-alert("Not enough balance");
-}
+function randomReward(){
+return (Math.random()*0.9+0.1).toFixed(2);
 }
 
-function checkExpiry(exp){
-if(!exp)return;
-const now=new Date();
-const ex=new Date(exp);
-if(now>ex){
-document.getElementById("expireWarn").innerText="ACCOUNT EXPIRED";
-document.getElementById("userPanel").classList.add("disabled");
-}
+async function watchVideo(){
+if(profile.watch_today>=6){alert('Daily limit reached');return;}
+const vids=["M7lc1UVf-VE","ysz5S6PUM-U","ScMzIvxBSi4"];
+const v=vids[Math.floor(Math.random()*vids.length)];
+document.getElementById('videoBox').innerHTML=`<iframe id="yt" width="300" height="200" src="https://www.youtube.com/embed/${v}?enablejsapi=1" allow="autoplay"></iframe>`;
+setTimeout(async()=>{
+let reward=randomReward();
+profile.balance+=Number(reward);
+profile.watch_today+=1;
+await supabase.from('profiles').update({balance:profile.balance,watch_today:profile.watch_today}).eq('id',currentUser.id);
+document.getElementById('bal').innerText=profile.balance.toFixed(2);
+document.getElementById('watchCount').innerText=profile.watch_today;
+alert('Reward ₱'+reward);
+},15000);
 }
 
-async function loadHistory(){
-const earn=await sb.from("earnings").select("amount,created_at").eq("uid",user.id).limit(10);
-const wd=await sb.from("withdrawals").select("amount,created_at").eq("uid",user.id).limit(10);
-
-let ehtml="";
-earn.data?.forEach(x=>ehtml+=`₱${x.amount} - ${x.created_at}<br>`);
-document.getElementById("earnHistory").innerHTML=ehtml;
-
-let whtml="";
-wd.data?.forEach(x=>whtml+=`₱${x.amount} - ${x.created_at}<br>`);
-document.getElementById("withdrawHistory").innerHTML=whtml;
-}
+init();
 </script>
 </body>
 </html>
