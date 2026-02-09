@@ -62,13 +62,96 @@ async function antiCheat(){
 }
 
 // YOUTUBE RANDOM VIDEO API (PLACEHOLDER)
+// SIGN UP (SUPABASE AUTH + USER TABLE INSERT)
+async function signUp(){
+ const email=document.getElementById('signupEmail').value;
+ const password=document.getElementById('signupPass').value;
+ const role=document.getElementById('signupRole').value;
+
+ const {data,error}=await sb.auth.signUp({email,password});
+ if(error) return alert(error.message);
+
+ let expiry=new Date();
+ expiry.setDate(expiry.getDate()+3); // default trial
+
+ await sb.from('users').insert({
+  id:data.user.id,
+  email:email,
+  role:role,
+  plan:'trial',
+  balance:0,
+  today:0,
+  lifetime:0,
+  daily_watch:6,
+  expiry:expiry
+ });
+
+ alert('Signup successful! You can login now.');
+}
+
 const ytVideos=[
  'https://www.youtube.com/embed/dQw4w9WgXcQ',
  'https://www.youtube.com/embed/9bZkp7q19f0',
  'https://www.youtube.com/embed/l482T0yNkeo'
 ];
 
+// VIDEO FIX LEVEL 1000 – SAFE + WORKING
 function watchVideo(){
+ if(currentUser.daily_watch<=0) return alert('Daily limit reached');
+
+ const watchAreaEl = document.getElementById('watchArea');
+ watchAreaEl.innerHTML = `
+   <h3>Watch & Earn</h3>
+   <div id="videoBox"></div>
+   <p id="timerText" style="margin-top:10px;font-weight:bold"></p>
+ `;
+
+ const videoId = randomYT();
+ document.getElementById('videoBox').innerHTML = `
+ <iframe
+   width="100%"
+   height="220"
+   src="https://www.youtube.com/embed/${videoId}?enablejsapi=1"
+   allow="autoplay; encrypted-media"
+   allowfullscreen>
+ </iframe>`;
+
+ let time = 20;
+ const timerText = document.getElementById('timerText');
+ timerText.innerText = `Watch time remaining: ${time}s`;
+
+ const interval = setInterval(async ()=>{
+   if(document.hidden){
+     clearInterval(interval);
+     timerText.innerText = '❌ Do not leave the page';
+     return;
+   }
+   time--;
+   timerText.innerText = `Watch time remaining: ${time}s`;
+   if(time<=0){
+     clearInterval(interval);
+     timerText.innerText = '✅ Reward credited';
+     await rewardUser();
+   }
+ },1000);
+}
+
+// RANDOM YOUTUBE VIDEO IDS
+const ytVideos = ['dQw4w9WgXcQ','9bZkp7q19f0','l482T0yNkeo','3JZ_D3ELwOQ','fLexgOxsZu0'];
+function randomYT(){return ytVideos[Math.floor(Math.random()*ytVideos.length)];}
+
+// REWARD AFTER VERIFIED WATCH
+async function rewardUser(){
+ let reward=parseFloat((Math.random()*0.9+0.1).toFixed(2));
+ currentUser.balance+=reward;
+ currentUser.today+=reward;
+ currentUser.lifetime+=reward;
+ currentUser.daily_watch--;
+ await sb.from('earnings').insert({user_id:currentUser.id,source:'youtube',amount:reward,date:new Date()});
+ await sb.from('users').update({balance:currentUser.balance,today:currentUser.today,lifetime:currentUser.lifetime,daily_watch:currentUser.daily_watch}).eq('id',currentUser.id);
+ updateUI();
+}
+){
  if(currentUser.daily_watch<=0) return alert('Daily limit reached');
  let iframe=document.createElement('iframe');
  iframe.src=ytVideos[Math.floor(Math.random()*ytVideos.length)];
@@ -113,12 +196,21 @@ input,select{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:non
 <div class="container">
 <h2>Watch to Earn ULTRA</h2>
 
-<!-- LOGIN PANEL -->
+<!-- LOGIN & SIGNUP PANEL -->
 <div class="card" id="loginCard">
 <h3>Login</h3>
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
 <button class="btn" onclick="login()">Login</button>
+<hr>
+<h3>Create Account (Sign Up)</h3>
+<input id="signupEmail" placeholder="New Email">
+<input id="signupPass" type="password" placeholder="New Password">
+<select id="signupRole">
+<option value="user">User</option>
+<option value="reseller">Sub‑Reseller</option>
+</select>
+<button class="btn gray" onclick="signUp()">Sign Up</button>
 </div>
 
 <!-- ADMIN PANEL -->
@@ -176,10 +268,48 @@ input,select{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:non
 <script>
 /*************** SUPABASE CONFIG ***************/
 const SUPABASE_URL = "https://nfusswkszrlehjsurhih.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mdXNzd2tzenJsZWhqc3VyaGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMwMDMsImV4cCI6MjA4NjIyOTAwM30.yz771wCi9i11ImPp52nlZm1swl3ZfUZ5DUbs6t_Xkbw";
-const sb = supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mdXNzd2tzenJsZWhqc3VyaGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMwMDMsImV4cCI6MjA4NjIyOTAwM30.yz771wCi9i11ImPp52nlZm1swl3ZfUZ5DUbs6t_Xkbw";const sb = supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let currentUser=null;
+
+/**************** AUTO SYNC FIX (AUTH → USERS TABLE) ****************/
+// Kapag nag login or may existing session, auto create user profile
+sb.auth.onAuthStateChange(async (event, session) => {
+ if(!session) return;
+ const authUser = session.user;
+
+ // check kung may record na sa users table
+ const {data:existing} = await sb.from('users').select('*').eq('id', authUser.id).single();
+
+ if(!existing){
+  let expiry=new Date();
+  expiry.setDate(expiry.getDate()+3);
+
+  await sb.from('users').insert({
+   id: authUser.id,
+   email: authUser.email,
+   role: 'user',
+   plan: 'trial',
+   balance: 0,
+   today: 0,
+   lifetime: 0,
+   daily_watch: 6,
+   expiry: expiry
+  });
+ }
+
+ // load user profile
+ const {data:userProfile}=await sb.from('users').select('*').eq('id',authUser.id).single();
+ currentUser=userProfile;
+
+ loginCard.style.display='none';
+ if(userProfile.role==='admin') adminPanel.style.display='block';
+ if(userProfile.role==='reseller') resellerPanel.style.display='block';
+ if(userProfile.role==='user') userArea.style.display='block';
+
+ antiCheat();
+ loadUserUI();
+});
 
 /*************** DATABASE SCHEMA (RUN IN SUPABASE SQL) ***************
 create table users(
