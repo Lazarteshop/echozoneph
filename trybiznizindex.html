@@ -77,7 +77,7 @@ button{font-weight:bold}
 <h3>Watch & Earn</h3>
 <div id="videoBox"></div>
 <p id="timerText"></p>
-<button class="btn" onclick="watchVideo()">Watch Video</button>
+<button class="btn" id="startWatchBtn">Start Video</button>
 <button class="btn gray" onclick="monetagBonus()">Monetag Bonus</button>
 </div>
 <div class="card">
@@ -97,8 +97,8 @@ button{font-weight:bold}
 
 </div>
 <script>
-const SUPABASE_URL = "https://nfusswkszrlehjsurhih.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mdXNzd2tzenJsZWhqc3VyaGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMwMDMsImV4cCI6MjA4NjIyOTAwM30.yz771wCi9i11ImPp52nlZm1swl3ZfUZ5DUbs6t_Xkbw";
+const supabaseUrl = "https://latimgzxirdlcetikufy.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let currentUser=null;
 
@@ -158,33 +158,34 @@ async function createUser(){
  alert('User Created'); }catch(e){alert(e);}
 }
 
-// WATCH-TO-EARN LEVEL 1000 FIX
+// WATCH-TO-EARN LEVEL 1000 FIX - Minimal Interaction + Reward Only After Watch
 const ytVideos=['dQw4w9WgXcQ','9bZkp7q19f0','l482T0yNkeo','3JZ_D3ELwOQ','fLexgOxsZu0'];
 function randomYT(){return ytVideos[Math.floor(Math.random()*ytVideos.length)];}
 
 async function watchVideo(){
  if(currentUser.daily_watch<=0) return alert('Daily limit reached');
- const watchAreaEl=document.getElementById('watchArea');
- watchAreaEl.innerHTML=`<h3>Watch & Earn</h3><div id='videoBox'></div><p id='timerText'></p><button class='btn' id='startWatchBtn'>Start Video</button><button class='btn gray' onclick='monetagBonus()'>Monetag Bonus</button>`;
  const videoId=randomYT();
- const startBtn=document.getElementById('startWatchBtn');
- startBtn.addEventListener('click',()=>{
-  document.getElementById('videoBox').innerHTML=`<iframe width='100%' height='220' src='https://www.youtube.com/embed/${videoId}' allow='autoplay; encrypted-media' allowfullscreen></iframe>`;
-  let time=20;
-  const timerText=document.getElementById('timerText');
+ const videoBox=document.getElementById('videoBox');
+ const timerText=document.getElementById('timerText');
+ videoBox.innerHTML=`<iframe width='100%' height='220' src='https://www.youtube.com/embed/${videoId}' allow='autoplay; encrypted-media' allowfullscreen></iframe>`;
+ let time=20;
+ timerText.innerText=`Watch time remaining: ${time}s`;
+ const interval=setInterval(async()=>{
+  if(document.hidden){ clearInterval(interval); timerText.innerText='❌ Do not leave the page'; return;}
+  time--;
   timerText.innerText=`Watch time remaining: ${time}s`;
-  const interval=setInterval(async()=>{
-   if(document.hidden){ clearInterval(interval); timerText.innerText='❌ Do not leave the page'; return;}
-   time--; timerText.innerText=`Watch time remaining: ${time}s`;
-   if(time<=0){ clearInterval(interval); timerText.innerText='✅ Reward credited'; await rewardUser();}
-  },1000);
-  startBtn.disabled=true;
- });
+  if(time<=0){
+   clearInterval(interval);
+   timerText.innerText='✅ Reward credited';
+   await rewardUser();
+  }
+ },1000);
+ currentUser.daily_watch--;
 }
 
 async function rewardUser(){
  let reward=parseFloat((Math.random()*0.9+0.1).toFixed(2));
- currentUser.balance+=reward; currentUser.today+=reward; currentUser.lifetime+=reward; currentUser.daily_watch--;
+ currentUser.balance+=reward; currentUser.today+=reward; currentUser.lifetime+=reward;
  await sb.from('earnings').insert({user_id:currentUser.id,source:'youtube',amount:reward,date:new Date()});
  await sb.from('users').update({balance:currentUser.balance,today:currentUser.today,lifetime:currentUser.lifetime,daily_watch:currentUser.daily_watch}).eq('id',currentUser.id);
  updateUI();
