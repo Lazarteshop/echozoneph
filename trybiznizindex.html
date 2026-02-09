@@ -1,232 +1,266 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Watch-to-Earn ULTRA LEVEL 1000</title>
-<meta name="monetag" content="YOUR_MONETAG_ID">
+<title>WATCH TO EARN ULTRA LEVEL 3000 FULL PRODUCTION</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-body{font-family:Arial,sans-serif;background:#0f172a;color:#fff;margin:0;padding:0}
-.container{max-width:500px;margin:auto;padding:15px}
-.card{background:#1e293b;padding:15px;border-radius:12px;margin-bottom:15px}
-input,select,button{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:none}
-button{font-weight:bold}
-.btn{background:#22c55e;color:#000;margin-top:8px}
-.btn.gray{background:#64748b;color:#fff}
-.btn.red{background:#ef4444;color:#fff}
-.warning{color:#facc15;font-weight:bold}
-.disabled{opacity:.5;pointer-events:none}
+body{font-family:Arial;background:#020617;color:#fff;margin:0;text-align:center}
+.box{background:#0f172a;margin:15px;padding:15px;border-radius:12px}
+button,input,select{padding:10px;margin:5px;border-radius:8px;border:none}
+button{background:#22c55e;color:#fff;font-weight:bold}
+iframe{border-radius:12px}
+.hidden{display:none}
+.warn{color:#f87171;font-weight:bold}
+.disabled{opacity:.4;pointer-events:none}
 </style>
 </head>
 <body>
-<div class="container">
-<h2>Watch-to-Earn ULTRA LEVEL 1000</h2>
 
-<!-- LOGIN & SIGNUP -->
-<div class="card" id="loginCard">
-<h3>Login</h3>
+<h2>WATCH TO EARN – ULTRA LEVEL 3000 🚀</h2>
+
+<!-- AUTH -->
+<div id="authBox" class="box">
+<h3>Login / Signup</h3>
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
-<button class="btn" onclick="login()">Login</button>
-<hr>
-<h3>Sign Up</h3>
-<input id="signupEmail" placeholder="New Email">
-<input id="signupPass" type="password" placeholder="New Password">
-<select id="signupRole">
-<option value="user">User</option>
-<option value="reseller">Sub-Reseller</option>
-</select>
-<button class="btn gray" onclick="signUp()">Sign Up</button>
+<br>
+<button onclick="signUp()">SIGN UP</button>
+<button onclick="login()">LOGIN</button>
 </div>
 
 <!-- ADMIN PANEL -->
-<div class="card" id="adminPanel" style="display:none">
-<h3>Admin Panel</h3>
-<button class="btn" onclick="createVoucher('basic')">Add Basic Voucher</button>
-<button class="btn" onclick="createVoucher('premium')">Add Premium Voucher</button>
-<button class="btn" onclick="createVoucher('vip')">Add VIP Voucher</button>
-<button class="btn gray" onclick="adminMonitor()">View Users/Earnings</button>
-</div>
-
-<!-- SUB-RESELLER PANEL -->
-<div class="card" id="resellerPanel" style="display:none">
-<h3>Sub-Reseller Dashboard</h3>
-<p>Voucher Balance: <span id="voucherBalance">0</span></p>
-<select id="plan">
-<option value="trial">Free Trial</option>
-<option value="basic">Basic</option>
-<option value="premium">Premium</option>
+<div id="adminPanel" class="hidden">
+<div class="box">
+<h3>👑 ADMIN PANEL</h3>
+<input id="voucherCode" placeholder="Voucher Code">
+<select id="voucherPlan">
+<option value="basic">BASIC</option>
+<option value="premium">PREMIUM</option>
 <option value="vip">VIP</option>
 </select>
-<input id="newUserEmail" placeholder="User Email">
-<input id="newUserPass" placeholder="User Password">
-<button class="btn" onclick="createUser()">Create Account</button>
-</div>
-
-<!-- USER DASHBOARD -->
-<div class="card" id="userArea" style="display:none">
-<div id="accountStatus" class="card"></div>
-<div class="card">
-<h3>Balance</h3>
-<p id="balance">₱0.00</p>
-<p>Today: <span id="today">0</span></p>
-<p>Lifetime: <span id="lifetime">0</span></p>
-</div>
-<div class="card" id="watchArea">
-<h3>Watch & Earn</h3>
-<div id="videoBox"></div>
-<p id="timerText"></p>
-<button class="btn" id="startWatchBtn">Start Video</button>
-<button class="btn gray" onclick="monetagBonus()">Monetag Bonus</button>
-</div>
-<div class="card">
-<h3>Withdraw</h3>
-<button class="btn" id="cashBtn" onclick="withdrawCash()">Cash</button>
-<button class="btn gray" id="productBtn" onclick="redeemProduct()">Redeem Product</button>
-</div>
-<div class="card">
-<h3>Earnings History</h3>
-<ul id="earningsHistory"></ul>
-</div>
-<div class="card">
-<h3>Withdrawal History</h3>
-<ul id="withdrawHistory"></ul>
+<button onclick="createVoucher()">CREATE VOUCHER</button>
+<p>Total Users: <span id="totalUsers">0</span></p>
 </div>
 </div>
 
+<!-- RESELLER PANEL -->
+<div id="resellerPanel" class="hidden">
+<div class="box">
+<h3>🧾 SUB RESELLER DASHBOARD</h3>
+<p>Voucher Balance: <span id="voucherBal">0</span></p>
+<select id="plan">
+<option value="trial">FREE TRIAL (0)</option>
+<option value="basic">BASIC (-2)</option>
+<option value="premium">PREMIUM (-4)</option>
+<option value="vip">VIP (-6)</option>
+</select>
+<button onclick="createUserAccount()">CREATE ACCOUNT</button>
 </div>
+</div>
+
+<!-- USER PANEL -->
+<div id="userPanel" class="hidden">
+<div class="box">
+<h3>👤 USER DASHBOARD</h3>
+<p id="expireWarn" class="warn"></p>
+Balance ₱<span id="balance">0</span><br>
+Watched Today <span id="watchCount">0</span>/6
+</div>
+
+<div class="box">
+<button onclick="startVideo()">▶ START VIDEO</button><br>
+<iframe id="yt" width="320" height="190" allow="autoplay"></iframe>
+<p id="timer">Waiting...</p>
+</div>
+
+<div class="box">
+<button onclick="withdraw()">WITHDRAW</button>
+<p id="withdrawInfo"></p>
+</div>
+
+<div class="box">
+<h3>📜 EARN HISTORY</h3>
+<div id="earnHistory"></div>
+</div>
+
+<div class="box">
+<h3>💸 WITHDRAW HISTORY</h3>
+<div id="withdrawHistory"></div>
+</div>
+</div>
+
 <script>
-const supabaseUrl = "https://latimgzxirdlcetikufy.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY";
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-let currentUser=null;
+// ==== PALITAN MO ==== 
+const SUPABASE_URL = "https://nfusswkszrlehjsurhih.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mdXNzd2tzenJsZWhqc3VyaGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMwMDMsImV4cCI6MjA4NjIyOTAwM30.yz771wCi9i11ImPp52nlZm1swl3ZfUZ5DUbs6t_Xkbw";
+// ====================
 
-// AUTO SYNC AUTH → USERS TABLE
-sb.auth.onAuthStateChange(async(event,session)=>{
- if(!session) return;
- const authUser=session.user;
- const {data:existing}=await sb.from('users').select('*').eq('id',authUser.id).single();
- if(!existing){
-  let expiry=new Date(); expiry.setDate(expiry.getDate()+3);
-  await sb.from('users').insert({id:authUser.id,email:authUser.email,role:'user',plan:'trial',balance:0,today:0,lifetime:0,daily_watch:6,expiry:expiry});
- }
- const {data:userProfile}=await sb.from('users').select('*').eq('id',authUser.id).single();
- currentUser=userProfile;
- loginCard.style.display='none';
- if(userProfile.role==='admin') adminPanel.style.display='block';
- if(userProfile.role==='reseller') resellerPanel.style.display='block';
- if(userProfile.role==='user') userArea.style.display='block';
- antiCheat();
- loadUserUI();
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let user=null;
+let role="user";
+let timer=null;
+let sec=20;
+
+const videos=[
+"https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1",
+"https://www.youtube.com/embed/ysz5S6PUM-U?enablejsapi=1",
+"https://www.youtube.com/embed/tgbNymZ7vqY?enablejsapi=1"
+];
+
+// AUTO LOGIN SESSION
+sb.auth.getSession().then(async r=>{
+if(r.data.session){
+user=r.data.session.user;
+await loadRole();
+}
 });
 
 async function signUp(){
- const email=document.getElementById('signupEmail').value;
- const password=document.getElementById('signupPass').value;
- const role=document.getElementById('signupRole').value;
- const {data,error}=await sb.auth.signUp({email,password});
- if(error) return alert(error.message);
- let expiry=new Date(); expiry.setDate(expiry.getDate()+3);
- await sb.from('users').insert({id:data.user.id,email,role,plan:'trial',balance:0,today:0,lifetime:0,daily_watch:6,expiry:expiry});
- alert('Signup successful!');
+const {error}=await sb.auth.signUp({
+email:document.getElementById("email").value,
+password:document.getElementById("password").value
+});
+if(error)alert(error.message);else alert("Signup success");
 }
 
 async function login(){
- const email=document.getElementById('email').value;
- const password=document.getElementById('password').value;
- const {data,error}=await sb.auth.signInWithPassword({email,password});
- if(error) return alert(error.message);
+const {data,error}=await sb.auth.signInWithPassword({
+email:document.getElementById("email").value,
+password:document.getElementById("password").value
+});
+if(error)return alert(error.message);
+user=data.user;
+await loadRole();
 }
 
-// ADMIN FUNCTIONS
-async function createVoucher(type){ alert(type+' voucher created'); }
-async function adminMonitor(){ const {data}=await sb.from('users').select('email,balance,lifetime'); console.table(data); }
+async function loadRole(){
+document.getElementById("authBox").style.display="none";
 
-// RESELLER FUNCTIONS
-async function deductVoucher(resellerId,cost){ const {data}=await sb.from('resellers').select('voucher_balance').eq('id',resellerId).single(); if(data.voucher_balance<cost) throw 'Not enough vouchers'; await sb.from('resellers').update({voucher_balance:data.voucher_balance-cost}).eq('id',resellerId); }
-async function createUser(){
- let plan=document.getElementById('plan').value;
- let email=document.getElementById('newUserEmail').value;
- let password=document.getElementById('newUserPass').value;
- let cost={trial:0,basic:2,premium:4,vip:6}[plan];
- let validity={trial:3,basic:30,premium:30,vip:30}[plan];
- try{ if(cost>0) await deductVoucher(currentUser.id,cost);
- const {data}=await sb.auth.signUp({email,password});
- let expiry=new Date(); expiry.setDate(expiry.getDate()+validity);
- await sb.from('users').insert({id:data.user.id,email,role:'user',plan,expiry});
- alert('User Created'); }catch(e){alert(e);}
+const {data}=await sb.from("profiles").select("*").eq("id",user.id).single();
+if(!data)return;
+role=data.role||"user";
+
+if(role==="admin"){
+document.getElementById("adminPanel").classList.remove("hidden");
+loadAdmin();
 }
 
-// WATCH-TO-EARN LEVEL 1000 FIX - Minimal Interaction + Reward Only After Watch
-const ytVideos=['dQw4w9WgXcQ','9bZkp7q19f0','l482T0yNkeo','3JZ_D3ELwOQ','fLexgOxsZu0'];
-function randomYT(){return ytVideos[Math.floor(Math.random()*ytVideos.length)];}
-
-async function watchVideo(){
- if(currentUser.daily_watch<=0) return alert('Daily limit reached');
- const videoId=randomYT();
- const videoBox=document.getElementById('videoBox');
- const timerText=document.getElementById('timerText');
- videoBox.innerHTML=`<iframe width='100%' height='220' src='https://www.youtube.com/embed/${videoId}' allow='autoplay; encrypted-media' allowfullscreen></iframe>`;
- let time=20;
- timerText.innerText=`Watch time remaining: ${time}s`;
- const interval=setInterval(async()=>{
-  if(document.hidden){ clearInterval(interval); timerText.innerText='❌ Do not leave the page'; return;}
-  time--;
-  timerText.innerText=`Watch time remaining: ${time}s`;
-  if(time<=0){
-   clearInterval(interval);
-   timerText.innerText='✅ Reward credited';
-   await rewardUser();
-  }
- },1000);
- currentUser.daily_watch--;
+if(role==="reseller"){
+document.getElementById("resellerPanel").classList.remove("hidden");
+document.getElementById("voucherBal").innerText=data.voucher_balance||0;
 }
 
-async function rewardUser(){
- let reward=parseFloat((Math.random()*0.9+0.1).toFixed(2));
- currentUser.balance+=reward; currentUser.today+=reward; currentUser.lifetime+=reward;
- await sb.from('earnings').insert({user_id:currentUser.id,source:'youtube',amount:reward,date:new Date()});
- await sb.from('users').update({balance:currentUser.balance,today:currentUser.today,lifetime:currentUser.lifetime,daily_watch:currentUser.daily_watch}).eq('id',currentUser.id);
- updateUI();
+if(role==="user"){
+document.getElementById("userPanel").classList.remove("hidden");
+document.getElementById("balance").innerText=data.balance||0;
+document.getElementById("watchCount").innerText=data.watch_today||0;
+checkExpiry(data.expire_at);
+loadHistory();
+updateWithdrawInfo(data.balance||0);
+}
 }
 
-function monetagBonus(){currentUser.daily_watch++; updateUI();}
-
-// WITHDRAW
-async function withdrawCash(){await sb.from('withdrawals').insert({user_id:currentUser.id,type:'cash',amount:currentUser.balance,status:'pending',date:new Date()}); currentUser.balance=0; updateUI();}
-async function redeemProduct(){await sb.from('withdrawals').insert({user_id:currentUser.id,type:'product',amount:150,status:'claimed',date:new Date()}); currentUser.balance-=150; updateUI();}
-
-// USER DASHBOARD
-function updateUI(){
- balance.innerText='₱'+Number(currentUser.balance||0).toFixed(2);
- today.innerText=currentUser.today||0;
- lifetime.innerText=currentUser.lifetime||0;
- if(currentUser.balance>=50 && currentUser.balance<150){cashBtn.classList.remove('disabled');productBtn.classList.add('disabled');}
- else if(currentUser.balance>=150 && currentUser.balance<200){cashBtn.classList.add('disabled');productBtn.classList.remove('disabled');}
- else if(currentUser.balance>=200){cashBtn.classList.remove('disabled');productBtn.classList.remove('disabled');}
- else{cashBtn.classList.add('disabled');productBtn.classList.add('disabled');}
- checkExpiry();
-}
-function checkExpiry(){
- if(new Date()>new Date(currentUser.expiry)){accountStatus.innerHTML='<span class="warning">⚠ ACCOUNT EXPIRED</span>'; watchArea.classList.add('disabled');}
- else{accountStatus.innerHTML='Active until '+new Date(currentUser.expiry).toDateString();}
+// ADMIN CREATE VOUCHER
+async function createVoucher(){
+const code=document.getElementById("voucherCode").value;
+const plan=document.getElementById("voucherPlan").value;
+await sb.from("vouchers").insert({code,plan});
+alert("Voucher Created");
 }
 
-// ANTI-CHEAT
-async function antiCheat(){
- let device=navigator.userAgent;
- let ip='PH';
- await sb.from('users').update({device_id:device,ip}).eq('id',currentUser.id);
+async function loadAdmin(){
+const {count}=await sb.from("profiles").select("*",{count:"exact",head:true});
+document.getElementById("totalUsers").innerText=count||0;
 }
 
-// RESET DAILY WATCH
-setInterval(async()=>{
- let now=new Date();
- if(now.getHours()==0 && now.getMinutes()==0){
-  await sb.from('users').update({daily_watch:6,today:0}).eq('id',currentUser.id);
- }
-},60000);
+// RESELLER CREATE USER (ULTRA 3000 BACKEND READY)
+async function createUserAccount(){
+alert("Use Supabase Edge Function for secure account creation + voucher deduction");
+}
+
+// VIDEO WATCH SYSTEM
+function randVideo(){return videos[Math.floor(Math.random()*videos.length)]}
+
+async function startVideo(){
+const {data}=await sb.from("profiles").select("watch_today").eq("id",user.id).single();
+if(data.watch_today>=6){alert("Daily limit reached");return}
+
+const src=randVideo()+"&autoplay=1&mute=1";
+document.getElementById("yt").src=src;
+sec=20;
+clearInterval(timer);
+
+timer=setInterval(async()=>{
+sec--;
+document.getElementById("timer").innerText="Watching "+sec;
+if(sec<=0){
+clearInterval(timer);
+await reward();
+document.getElementById("timer").innerText="Reward Granted";
+}
+},1000);
+}
+
+async function reward(){
+await sb.rpc("add_reward",{uid:user.id,amount:(Math.random()*0.9+0.1).toFixed(2)});
+location.reload();
+}
+
+// WITHDRAWAL 3 STAGE SYSTEM
+function updateWithdrawInfo(balance){
+let text="";
+if(balance>=200) text="Stage 3: Cash Withdrawal Activated";
+else if(balance>=150) text="Stage 2: Redeem Crabpaste Required";
+else if(balance>=50) text="Stage 1: ₱50 Cash Available";
+else text="Minimum ₱50 to withdraw";
+document.getElementById("withdrawInfo").innerText=text;
+}
+
+async function withdraw(){
+const {data}=await sb.from("profiles").select("balance").eq("id",user.id).single();
+let bal=data.balance||0;
+
+if(bal>=200){
+await sb.from("withdrawals").insert({uid:user.id,amount:bal});
+alert("Cash Withdrawal Requested");
+}
+else if(bal>=150){
+alert("Redeem Crabpaste Product First");
+}
+else if(bal>=50){
+await sb.from("withdrawals").insert({uid:user.id,amount:50});
+alert("₱50 Cash Requested");
+}else{
+alert("Not enough balance");
+}
+}
+
+// ACCOUNT EXPIRY
+function checkExpiry(exp){
+if(!exp)return;
+const now=new Date();
+const ex=new Date(exp);
+if(now>ex){
+document.getElementById("expireWarn").innerText="ACCOUNT EXPIRED";
+document.getElementById("userPanel").classList.add("disabled");
+}
+}
+
+// HISTORY LOAD
+async function loadHistory(){
+const earn=await sb.from("earnings").select("amount,created_at").eq("uid",user.id).limit(10);
+const wd=await sb.from("withdrawals").select("amount,created_at").eq("uid",user.id).limit(10);
+
+let ehtml="";
+earn.data?.forEach(x=>ehtml+=`₱${x.amount} - ${x.created_at}<br>`);
+document.getElementById("earnHistory").innerHTML=ehtml;
+
+let whtml="";
+wd.data?.forEach(x=>whtml+=`₱${x.amount} - ${x.created_at}<br>`);
+document.getElementById("withdrawHistory").innerHTML=whtml;
+}
 </script>
 </body>
 </html>
