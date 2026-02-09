@@ -5,18 +5,26 @@
 <title>Watch & Earn PH – Production Business System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<!-- Monetag verification -->
 <meta name="monetag" content="f6cd6220dde78c27df43aa4d5f91b623">
+
 <!-- SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 const supabaseUrl = "https://latimgzxirdlcetikufy.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY";const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY";
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 </script>
 
 <!-- MONETAG POPUNDER -->
-<script>(function(s){s.dataset.zone='10587611',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+<script>
+(function(s){
+  s.dataset.zone='10587611';
+  s.src='https://al5sm.com/tag.min.js';
+})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
+</script>
 
-<!-- UI STYLE -->
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0b0b0b;color:#fff}
@@ -39,11 +47,9 @@ iframe{width:100%;max-width:850px;height:460px;border-radius:12px}
 <body>
 <div class="container">
 
-<!-- HEADER -->
 <h2>🎬 Watch & Earn PH</h2>
 <h4 id="planLabel">BASIC PLAN</h4>
 
-<!-- BALANCE -->
 <div class="box">
 💰 Balance: ₱<span id="balance">0.00</span>
 <div class="progress"><div id="withdrawProgress"></div></div>
@@ -51,7 +57,6 @@ iframe{width:100%;max-width:850px;height:460px;border-radius:12px}
 <button id="withdrawBtn" disabled>Withdraw</button>
 </div>
 
-<!-- LOGIN -->
 <div id="loginBox" class="box">
 <select id="userSelect"></select><br>
 <input id="password" type="password" placeholder="Password">
@@ -59,7 +64,6 @@ iframe{width:100%;max-width:850px;height:460px;border-radius:12px}
 
 <div id="statusMsg" class="red"></div>
 
-<!-- VIP UPGRADE -->
 <div id="vipBox" class="box hidden">
 <h3>⭐ VIP MEMBERSHIP</h3>
 <p>✔ No ads<br>✔ Double rewards<br>✔ 12 videos/day</p>
@@ -67,15 +71,12 @@ iframe{width:100%;max-width:850px;height:460px;border-radius:12px}
 <div id="vipMsg" class="green"></div>
 </div>
 
-<!-- ADS -->
 <div id="adsBox" class="box">
 📢 Sponsored Ad Required (Basic Users)
 <button onclick="watchAd()">Watch Ad</button>
 <div id="adStatus"></div>
-<!-- MONETAG BANNER -->
 <div style="margin-top:10px">
 <script async src="https://nap5k.com/tag.min.js"></script>
-</div>
 </div>
 </div>
 
@@ -85,31 +86,23 @@ iframe{width:100%;max-width:850px;height:460px;border-radius:12px}
 <div id="timer"></div>
 <div id="earned" class="green"></div>
 
-<!-- DAILY -->
 <div class="box">
 🎬 Watched Today: <span id="watchedCount">0</span>/<span id="dailyLimit">6</span><br>
 ⏳ Reset In: <span id="countdown"></span>
 </div>
 
-<!-- HISTORY -->
 <div class="box"><h3>📊 Earnings History</h3><div id="earnHistory"></div></div>
 <div class="box"><h3>📤 Withdraw History</h3><div id="withdrawHistory"></div></div>
 
-<!-- ADMIN PANEL -->
 <div id="adminPanel" class="box hidden">
 <h3>🛠 Admin Panel</h3>
-<div>Total Users: <span id="adminUsers">0</span></div>
-<div>Total Payouts: ₱<span id="adminPayout">0</span></div>
-<div>Total Earnings: ₱<span id="adminEarn">0</span></div>
 <button class="admin" onclick="freezeUser()">Freeze User</button>
 </div>
 
 </div>
 
-<!-- YOUTUBE -->
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-/* CONFIG */
 const USERS={
  admin:{pass:"admin123",role:"admin"},
  Jeryanroyate:{pass:"101017",role:"user"}
@@ -117,19 +110,17 @@ const USERS={
 const VIDEO_POOL=["fjy1wYj2Nh8","tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","jGyG5Xty37c","U6yvT288bY8","X6UvWJ3ApIw"];
 const MIN_WITHDRAW=50;
 
-/* STATE */
 let currentUser,data,player,ytReady=false;
 let dailyVideos=[],videoIndex=0,adWatched=false;
 let countdownInt;
 
-/* HELPERS */
 const today=()=>new Date().toDateString();
 const tomorrow=()=>{let d=new Date();d.setHours(24,0,0,0);return d};
 const rand=(a,b)=>+(Math.random()*(b-a)+a).toFixed(2);
 
 window.onload=()=>{
  Object.keys(USERS).forEach(u=>{
-  let o=document.createElement("option");
+  const o=document.createElement("option");
   o.value=u;o.textContent=u;
   userSelect.appendChild(o);
  });
@@ -138,7 +129,7 @@ function onYouTubeIframeAPIReady(){ytReady=true}
 
 password.onkeypress=async e=>{
  if(e.key!=="Enter")return;
- let u=userSelect.value;
+ const u=userSelect.value;
  if(password.value!==USERS[u].pass)return alert("Wrong password");
  currentUser=u;
  loginBox.remove();
@@ -177,13 +168,13 @@ function requestVIP(){
 }
 
 function watchAd(){
- if(typeof show_MONETAG_ZONE === "function"){
-   show_MONETAG_ZONE().then(()=>{
-     adWatched = true;
-     adStatus.textContent = "✅ Ad completed";
+ if(typeof window.show_10587611 === "function"){
+   window.show_10587611().then(()=>{
+     adWatched=true;
+     adStatus.textContent="✅ Ad completed";
    });
  }else{
-   alert("Ad not ready, please try again");
+   alert("Ad not ready, try again");
  }
 }
 
@@ -206,11 +197,15 @@ function loadVideo(){
  statusMsg.textContent="";
  adWatched=false;
  playerArea.innerHTML="<div id='player'></div>";
- player=new YT.Player("player",{videoId:dailyVideos[videoIndex],playerVars:{autoplay:1,controls:0},events:{onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)reward()}}});
+ player=new YT.Player("player",{
+  videoId:dailyVideos[videoIndex],
+  playerVars:{autoplay:1,controls:0},
+  events:{onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)reward()}}
+ });
 }
 
 async function reward(){
- let r=data.plan==="vip"?rand(0.4,0.9):rand(0.05,0.2);
+ const r=data.plan==="vip"?rand(0.4,0.9):rand(0.05,0.2);
  data.total+=r;
  data.watchedToday.push(dailyVideos[videoIndex]);
  data.earn.push({type:"Video",amount:r,time:new Date().toLocaleString()});
@@ -240,7 +235,7 @@ function render(){
 function startCountdown(){
  clearInterval(countdownInt);
  countdownInt=setInterval(()=>{
-  let d=tomorrow()-new Date();
+  const d=tomorrow()-new Date();
   countdown.textContent=`${Math.floor(d/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s`;
  },1000);
 }
@@ -253,4 +248,3 @@ function freezeUser(){
 </script>
 </body>
 </html>
->
