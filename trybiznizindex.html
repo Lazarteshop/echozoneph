@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WATCH TO EARN ULTRA LEVEL 3000 FULL PRODUCTION</title>
+<title>WATCH TO EARN – ULTRA LEVEL 3000 🚀 AUTO PROFILE FIX</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 body{font-family:Arial;background:#020617;color:#fff;margin:0;text-align:center}
@@ -20,7 +20,6 @@ iframe{border-radius:12px}
 
 <h2>WATCH TO EARN – ULTRA LEVEL 3000 🚀</h2>
 
-<!-- AUTH -->
 <div id="authBox" class="box">
 <h3>Login / Signup</h3>
 <input id="email" placeholder="Email">
@@ -30,7 +29,6 @@ iframe{border-radius:12px}
 <button onclick="login()">LOGIN</button>
 </div>
 
-<!-- ADMIN PANEL -->
 <div id="adminPanel" class="hidden">
 <div class="box">
 <h3>👑 ADMIN PANEL</h3>
@@ -45,7 +43,6 @@ iframe{border-radius:12px}
 </div>
 </div>
 
-<!-- RESELLER PANEL -->
 <div id="resellerPanel" class="hidden">
 <div class="box">
 <h3>🧾 SUB RESELLER DASHBOARD</h3>
@@ -60,7 +57,6 @@ iframe{border-radius:12px}
 </div>
 </div>
 
-<!-- USER PANEL -->
 <div id="userPanel" class="hidden">
 <div class="box">
 <h3>👤 USER DASHBOARD</h3>
@@ -95,7 +91,6 @@ Watched Today <span id="watchCount">0</span>/6
 // ==== PALITAN MO ==== 
 const SUPABASE_URL = "https://nfusswkszrlehjsurhih.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mdXNzd2tzenJsZWhqc3VyaGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMwMDMsImV4cCI6MjA4NjIyOTAwM30.yz771wCi9i11ImPp52nlZm1swl3ZfUZ5DUbs6t_Xkbw";
-
 // ====================
 
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -110,13 +105,28 @@ const videos=[
 "https://www.youtube.com/embed/tgbNymZ7vqY?enablejsapi=1"
 ];
 
-// AUTO LOGIN SESSION
+// 🔥 AUTO SESSION + AUTO PROFILE FIX
 sb.auth.getSession().then(async r=>{
 if(r.data.session){
 user=r.data.session.user;
+await ensureProfile();
 await loadRole();
 }
 });
+
+// AUTO CREATE PROFILE IF MISSING
+async function ensureProfile(){
+const {data}=await sb.from("profiles").select("id").eq("id",user.id).single();
+if(!data){
+await sb.from("profiles").insert({
+id:user.id,
+role:"user",
+balance:0,
+watch_today:0,
+voucher_balance:0
+});
+}
+}
 
 async function signUp(){
 const {error}=await sb.auth.signUp({
@@ -133,6 +143,7 @@ password:document.getElementById("password").value
 });
 if(error)return alert(error.message);
 user=data.user;
+await ensureProfile();
 await loadRole();
 }
 
@@ -163,7 +174,6 @@ updateWithdrawInfo(data.balance||0);
 }
 }
 
-// ADMIN CREATE VOUCHER
 async function createVoucher(){
 const code=document.getElementById("voucherCode").value;
 const plan=document.getElementById("voucherPlan").value;
@@ -176,12 +186,10 @@ const {count}=await sb.from("profiles").select("*",{count:"exact",head:true});
 document.getElementById("totalUsers").innerText=count||0;
 }
 
-// RESELLER CREATE USER (ULTRA 3000 BACKEND READY)
 async function createUserAccount(){
-alert("Use Supabase Edge Function for secure account creation + voucher deduction");
+alert("Use Edge Function for secure reseller creation");
 }
 
-// VIDEO WATCH SYSTEM
 function randVideo(){return videos[Math.floor(Math.random()*videos.length)]}
 
 async function startVideo(){
@@ -209,7 +217,6 @@ await sb.rpc("add_reward",{uid:user.id,amount:(Math.random()*0.9+0.1).toFixed(2)
 location.reload();
 }
 
-// WITHDRAWAL 3 STAGE SYSTEM
 function updateWithdrawInfo(balance){
 let text="";
 if(balance>=200) text="Stage 3: Cash Withdrawal Activated";
@@ -238,7 +245,6 @@ alert("Not enough balance");
 }
 }
 
-// ACCOUNT EXPIRY
 function checkExpiry(exp){
 if(!exp)return;
 const now=new Date();
@@ -249,7 +255,6 @@ document.getElementById("userPanel").classList.add("disabled");
 }
 }
 
-// HISTORY LOAD
 async function loadHistory(){
 const earn=await sb.from("earnings").select("amount,created_at").eq("uid",user.id).limit(10);
 const wd=await sb.from("withdrawals").select("amount,created_at").eq("uid",user.id).limit(10);
