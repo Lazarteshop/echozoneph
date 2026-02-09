@@ -109,9 +109,7 @@ sb.auth.onAuthStateChange(async(event,session)=>{
  const {data:existing}=await sb.from('users').select('*').eq('id',authUser.id).single();
  if(!existing){
   let expiry=new Date(); expiry.setDate(expiry.getDate()+3);
-  await sb.from('users').insert({
-   id:authUser.id,email:authUser.email,role:'user',plan:'trial',balance:0,today:0,lifetime:0,daily_watch:6,expiry:expiry
-  });
+  await sb.from('users').insert({id:authUser.id,email:authUser.email,role:'user',plan:'trial',balance:0,today:0,lifetime:0,daily_watch:6,expiry:expiry});
  }
  const {data:userProfile}=await sb.from('users').select('*').eq('id',authUser.id).single();
  currentUser=userProfile;
@@ -130,7 +128,7 @@ async function signUp(){
  const {data,error}=await sb.auth.signUp({email,password});
  if(error) return alert(error.message);
  let expiry=new Date(); expiry.setDate(expiry.getDate()+3);
- await sb.from('users').insert({id:data.user.id,email:email,role:role,plan:'trial',balance:0,today:0,lifetime:0,daily_watch:6,expiry:expiry});
+ await sb.from('users').insert({id:data.user.id,email,role,plan:'trial',balance:0,today:0,lifetime:0,daily_watch:6,expiry:expiry});
  alert('Signup successful!');
 }
 
@@ -160,24 +158,30 @@ async function createUser(){
  alert('User Created'); }catch(e){alert(e);}
 }
 
-// WATCH-TO-EARN
+// WATCH-TO-EARN LEVEL 1000 FIX
 const ytVideos=['dQw4w9WgXcQ','9bZkp7q19f0','l482T0yNkeo','3JZ_D3ELwOQ','fLexgOxsZu0'];
 function randomYT(){return ytVideos[Math.floor(Math.random()*ytVideos.length)];}
+
 async function watchVideo(){
  if(currentUser.daily_watch<=0) return alert('Daily limit reached');
  const watchAreaEl=document.getElementById('watchArea');
- watchAreaEl.innerHTML=`<h3>Watch & Earn</h3><div id='videoBox'></div><p id='timerText'></p><button class='btn' onclick='watchVideo()'>Watch Video</button><button class='btn gray' onclick='monetagBonus()'>Monetag Bonus</button>`;
+ watchAreaEl.innerHTML=`<h3>Watch & Earn</h3><div id='videoBox'></div><p id='timerText'></p><button class='btn' id='startWatchBtn'>Start Video</button><button class='btn gray' onclick='monetagBonus()'>Monetag Bonus</button>`;
  const videoId=randomYT();
- document.getElementById('videoBox').innerHTML=`<iframe width='100%' height='220' src='https://www.youtube.com/embed/${videoId}?enablejsapi=1' allow='autoplay; encrypted-media' allowfullscreen></iframe>`;
- let time=20;
- const timerText=document.getElementById('timerText');
- timerText.innerText=`Watch time remaining: ${time}s`;
- const interval=setInterval(async()=>{
-  if(document.hidden){ clearInterval(interval); timerText.innerText='❌ Do not leave the page'; return;}
-  time--; timerText.innerText=`Watch time remaining: ${time}s`;
-  if(time<=0){ clearInterval(interval); timerText.innerText='✅ Reward credited'; await rewardUser();}
- },1000);
+ const startBtn=document.getElementById('startWatchBtn');
+ startBtn.addEventListener('click',()=>{
+  document.getElementById('videoBox').innerHTML=`<iframe width='100%' height='220' src='https://www.youtube.com/embed/${videoId}' allow='autoplay; encrypted-media' allowfullscreen></iframe>`;
+  let time=20;
+  const timerText=document.getElementById('timerText');
+  timerText.innerText=`Watch time remaining: ${time}s`;
+  const interval=setInterval(async()=>{
+   if(document.hidden){ clearInterval(interval); timerText.innerText='❌ Do not leave the page'; return;}
+   time--; timerText.innerText=`Watch time remaining: ${time}s`;
+   if(time<=0){ clearInterval(interval); timerText.innerText='✅ Reward credited'; await rewardUser();}
+  },1000);
+  startBtn.disabled=true;
+ });
 }
+
 async function rewardUser(){
  let reward=parseFloat((Math.random()*0.9+0.1).toFixed(2));
  currentUser.balance+=reward; currentUser.today+=reward; currentUser.lifetime+=reward; currentUser.daily_watch--;
@@ -185,6 +189,7 @@ async function rewardUser(){
  await sb.from('users').update({balance:currentUser.balance,today:currentUser.today,lifetime:currentUser.lifetime,daily_watch:currentUser.daily_watch}).eq('id',currentUser.id);
  updateUI();
 }
+
 function monetagBonus(){currentUser.daily_watch++; updateUI();}
 
 // WITHDRAW
@@ -196,7 +201,6 @@ function updateUI(){
  balance.innerText='₱'+Number(currentUser.balance||0).toFixed(2);
  today.innerText=currentUser.today||0;
  lifetime.innerText=currentUser.lifetime||0;
- remaining.innerText=currentUser.daily_watch||0;
  if(currentUser.balance>=50 && currentUser.balance<150){cashBtn.classList.remove('disabled');productBtn.classList.add('disabled');}
  else if(currentUser.balance>=150 && currentUser.balance<200){cashBtn.classList.add('disabled');productBtn.classList.remove('disabled');}
  else if(currentUser.balance>=200){cashBtn.classList.remove('disabled');productBtn.classList.remove('disabled');}
