@@ -1,214 +1,41 @@
 <!DOCTYPE html>
-<html lang="tl">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Watch to Earn ULTRA – Production Version</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- MONETAG -->
+<title>Watch-to-Earn ULTRA LEVEL 1000</title>
 <meta name="monetag" content="YOUR_MONETAG_ID">
-
-<!-- SUPABASE -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-/********************* ULTRA LEVEL 999 UPGRADE *********************/
-
-// SUPABASE AUTH LOGIN
-async function login(){
- const email=document.getElementById('email').value;
- const password=document.getElementById('password').value;
- const {data,error}=await sb.auth.signInWithPassword({email,password});
- if(error) return alert(error.message);
- const {data:user}=await sb.from('users').select('*').eq('email',email).single();
- currentUser=user;
- loginCard.style.display='none';
- if(user.role==='admin') adminPanel.style.display='block';
- if(user.role==='reseller') resellerPanel.style.display='block';
- if(user.role==='user') userArea.style.display='block';
- antiCheat();
- loadUserUI();
-}
-
-// AUTO VOUCHER DEDUCTION
-async function deductVoucher(resellerId,cost){
- const {data}=await sb.from('resellers').select('voucher_balance').eq('id',resellerId).single();
- if(data.voucher_balance<cost) throw 'Not enough vouchers';
- await sb.from('resellers').update({voucher_balance:data.voucher_balance-cost}).eq('id',resellerId);
-}
-
-// CREATE USER WITH VOUCHER LOGIC
-async function createUser(){
- let plan=planSelect.value;
- let email=newUserEmail.value;
- let password=newUserPass.value;
- let cost={trial:0,basic:2,premium:4,vip:6}[plan];
- let validity={trial:3,basic:30,premium:30,vip:30}[plan];
- try{
-  if(cost>0) await deductVoucher(currentUser.id,cost);
-  const {data}=await sb.auth.signUp({email,password});
-  let expiry=new Date(); expiry.setDate(expiry.getDate()+validity);
-  await sb.from('users').insert({id:data.user.id,email,role:'user',plan,expiry});
-  alert('Account created successfully');
- }catch(e){alert(e)}
-}
-
-// ADVANCED ANTI-CHEAT (IP + DEVICE)
-async function antiCheat(){
- let device=navigator.userAgent;
- let ip='PH';
- if(currentUser.device_id && currentUser.device_id!==device){
-  alert('Multiple device detected');
- }
- await sb.from('users').update({device_id:device,ip}).eq('id',currentUser.id);
-}
-
-// YOUTUBE RANDOM VIDEO API (PLACEHOLDER)
-// SIGN UP (SUPABASE AUTH + USER TABLE INSERT)
-async function signUp(){
- const email=document.getElementById('signupEmail').value;
- const password=document.getElementById('signupPass').value;
- const role=document.getElementById('signupRole').value;
-
- const {data,error}=await sb.auth.signUp({email,password});
- if(error) return alert(error.message);
-
- let expiry=new Date();
- expiry.setDate(expiry.getDate()+3); // default trial
-
- await sb.from('users').insert({
-  id:data.user.id,
-  email:email,
-  role:role,
-  plan:'trial',
-  balance:0,
-  today:0,
-  lifetime:0,
-  daily_watch:6,
-  expiry:expiry
- });
-
- alert('Signup successful! You can login now.');
-}
-
-const ytVideos=[
- 'https://www.youtube.com/embed/dQw4w9WgXcQ',
- 'https://www.youtube.com/embed/9bZkp7q19f0',
- 'https://www.youtube.com/embed/l482T0yNkeo'
-];
-
-// VIDEO FIX LEVEL 1000 – SAFE + WORKING
-function watchVideo(){
- if(currentUser.daily_watch<=0) return alert('Daily limit reached');
-
- const watchAreaEl = document.getElementById('watchArea');
- watchAreaEl.innerHTML = `
-   <h3>Watch & Earn</h3>
-   <div id="videoBox"></div>
-   <p id="timerText" style="margin-top:10px;font-weight:bold"></p>
- `;
-
- const videoId = randomYT();
- document.getElementById('videoBox').innerHTML = `
- <iframe
-   width="100%"
-   height="220"
-   src="https://www.youtube.com/embed/${videoId}?enablejsapi=1"
-   allow="autoplay; encrypted-media"
-   allowfullscreen>
- </iframe>`;
-
- let time = 20;
- const timerText = document.getElementById('timerText');
- timerText.innerText = `Watch time remaining: ${time}s`;
-
- const interval = setInterval(async ()=>{
-   if(document.hidden){
-     clearInterval(interval);
-     timerText.innerText = '❌ Do not leave the page';
-     return;
-   }
-   time--;
-   timerText.innerText = `Watch time remaining: ${time}s`;
-   if(time<=0){
-     clearInterval(interval);
-     timerText.innerText = '✅ Reward credited';
-     await rewardUser();
-   }
- },1000);
-}
-
-// RANDOM YOUTUBE VIDEO IDS
-const ytVideos = ['dQw4w9WgXcQ','9bZkp7q19f0','l482T0yNkeo','3JZ_D3ELwOQ','fLexgOxsZu0'];
-function randomYT(){return ytVideos[Math.floor(Math.random()*ytVideos.length)];}
-
-// REWARD AFTER VERIFIED WATCH
-async function rewardUser(){
- let reward=parseFloat((Math.random()*0.9+0.1).toFixed(2));
- currentUser.balance+=reward;
- currentUser.today+=reward;
- currentUser.lifetime+=reward;
- currentUser.daily_watch--;
- await sb.from('earnings').insert({user_id:currentUser.id,source:'youtube',amount:reward,date:new Date()});
- await sb.from('users').update({balance:currentUser.balance,today:currentUser.today,lifetime:currentUser.lifetime,daily_watch:currentUser.daily_watch}).eq('id',currentUser.id);
- updateUI();
-}
-){
- if(currentUser.daily_watch<=0) return alert('Daily limit reached');
- let iframe=document.createElement('iframe');
- iframe.src=ytVideos[Math.floor(Math.random()*ytVideos.length)];
- iframe.width='100%'; iframe.height='200';
- watchArea.appendChild(iframe);
- setTimeout(()=>rewardUser(),15000);
-}
-
-async function rewardUser(){
- let reward=parseFloat((Math.random()*0.9+0.1).toFixed(2));
- currentUser.balance+=reward;
- currentUser.today+=reward;
- currentUser.lifetime+=reward;
- currentUser.daily_watch--;
- await sb.from('earnings').insert({user_id:currentUser.id,source:'youtube',amount:reward,date:new Date()});
- await sb.from('users').update({balance:currentUser.balance,today:currentUser.today,lifetime:currentUser.lifetime,daily_watch:currentUser.daily_watch}).eq('id',currentUser.id);
- updateUI();
-}
-
-// ADMIN LIVE MONITOR
-async function adminMonitor(){
- const {data}=await sb.from('users').select('email,balance,lifetime');
- console.table(data);
-}
-
-</script>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-body{font-family:Arial;background:#020617;color:#fff;margin:0}
-.container{padding:15px;max-width:500px;margin:auto}
-.card{background:#0f172a;border-radius:12px;padding:15px;margin-bottom:15px}
-.btn{background:#22c55e;color:#000;padding:10px;border:none;border-radius:8px;width:100%;margin-top:8px;font-weight:bold}
-.btn.gray{background:#64748b}
-.btn.red{background:#ef4444}
-.disabled{opacity:.5;pointer-events:none}
-input,select{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:none}
+body{font-family:Arial,sans-serif;background:#0f172a;color:#fff;margin:0;padding:0}
+.container{max-width:500px;margin:auto;padding:15px}
+.card{background:#1e293b;padding:15px;border-radius:12px;margin-bottom:15px}
+input,select,button{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:none}
+button{font-weight:bold}
+.btn{background:#22c55e;color:#000;margin-top:8px}
+.btn.gray{background:#64748b;color:#fff}
+.btn.red{background:#ef4444;color:#fff}
 .warning{color:#facc15;font-weight:bold}
+.disabled{opacity:.5;pointer-events:none}
 </style>
 </head>
 <body>
-
 <div class="container">
-<h2>Watch to Earn ULTRA</h2>
+<h2>Watch-to-Earn ULTRA LEVEL 1000</h2>
 
-<!-- LOGIN & SIGNUP PANEL -->
+<!-- LOGIN & SIGNUP -->
 <div class="card" id="loginCard">
 <h3>Login</h3>
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
 <button class="btn" onclick="login()">Login</button>
 <hr>
-<h3>Create Account (Sign Up)</h3>
+<h3>Sign Up</h3>
 <input id="signupEmail" placeholder="New Email">
 <input id="signupPass" type="password" placeholder="New Password">
 <select id="signupRole">
 <option value="user">User</option>
-<option value="reseller">Sub‑Reseller</option>
+<option value="reseller">Sub-Reseller</option>
 </select>
 <button class="btn gray" onclick="signUp()">Sign Up</button>
 </div>
@@ -219,11 +46,12 @@ input,select{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:non
 <button class="btn" onclick="createVoucher('basic')">Add Basic Voucher</button>
 <button class="btn" onclick="createVoucher('premium')">Add Premium Voucher</button>
 <button class="btn" onclick="createVoucher('vip')">Add VIP Voucher</button>
+<button class="btn gray" onclick="adminMonitor()">View Users/Earnings</button>
 </div>
 
-<!-- SUB RESELLER DASHBOARD -->
+<!-- SUB-RESELLER PANEL -->
 <div class="card" id="resellerPanel" style="display:none">
-<h3>Sub‑Reseller Dashboard</h3>
+<h3>Sub-Reseller Dashboard</h3>
 <p>Voucher Balance: <span id="voucherBalance">0</span></p>
 <select id="plan">
 <option value="trial">Free Trial</option>
@@ -237,214 +65,163 @@ input,select{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:non
 </div>
 
 <!-- USER DASHBOARD -->
-<div id="userArea" style="display:none">
-<div class="card" id="accountStatus"></div>
-
+<div class="card" id="userArea" style="display:none">
+<div id="accountStatus" class="card"></div>
 <div class="card">
 <h3>Balance</h3>
 <p id="balance">₱0.00</p>
 <p>Today: <span id="today">0</span></p>
 <p>Lifetime: <span id="lifetime">0</span></p>
 </div>
-
 <div class="card" id="watchArea">
 <h3>Watch & Earn</h3>
-<p>Remaining: <span id="remaining">0</span></p>
+<div id="videoBox"></div>
+<p id="timerText"></p>
 <button class="btn" onclick="watchVideo()">Watch Video</button>
 <button class="btn gray" onclick="monetagBonus()">Monetag Bonus</button>
 </div>
-
 <div class="card">
 <h3>Withdraw</h3>
 <button class="btn" id="cashBtn" onclick="withdrawCash()">Cash</button>
-<button class="btn gray" id="productBtn" onclick="redeemProduct()">Crabpaste</button>
+<button class="btn gray" id="productBtn" onclick="redeemProduct()">Redeem Product</button>
+</div>
+<div class="card">
+<h3>Earnings History</h3>
+<ul id="earningsHistory"></ul>
+</div>
+<div class="card">
+<h3>Withdrawal History</h3>
+<ul id="withdrawHistory"></ul>
+</div>
 </div>
 
-<div class="card"><h3>Earnings History</h3><ul id="earningsHistory"></ul></div>
-<div class="card"><h3>Withdrawal History</h3><ul id="withdrawHistory"></ul></div>
 </div>
-</div>
-
 <script>
-/*************** SUPABASE CONFIG ***************/
 const SUPABASE_URL = "https://nfusswkszrlehjsurhih.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mdXNzd2tzenJsZWhqc3VyaGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMwMDMsImV4cCI6MjA4NjIyOTAwM30.yz771wCi9i11ImPp52nlZm1swl3ZfUZ5DUbs6t_Xkbw";const sb = supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mdXNzd2tzenJsZWhqc3VyaGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMwMDMsImV4cCI6MjA4NjIyOTAwM30.yz771wCi9i11ImPp52nlZm1swl3ZfUZ5DUbs6t_Xkbw";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let currentUser=null;
 
-/**************** AUTO SYNC FIX (AUTH → USERS TABLE) ****************/
-// Kapag nag login or may existing session, auto create user profile
-sb.auth.onAuthStateChange(async (event, session) => {
+// AUTO SYNC AUTH → USERS TABLE
+sb.auth.onAuthStateChange(async(event,session)=>{
  if(!session) return;
- const authUser = session.user;
-
- // check kung may record na sa users table
- const {data:existing} = await sb.from('users').select('*').eq('id', authUser.id).single();
-
+ const authUser=session.user;
+ const {data:existing}=await sb.from('users').select('*').eq('id',authUser.id).single();
  if(!existing){
-  let expiry=new Date();
-  expiry.setDate(expiry.getDate()+3);
-
+  let expiry=new Date(); expiry.setDate(expiry.getDate()+3);
   await sb.from('users').insert({
-   id: authUser.id,
-   email: authUser.email,
-   role: 'user',
-   plan: 'trial',
-   balance: 0,
-   today: 0,
-   lifetime: 0,
-   daily_watch: 6,
-   expiry: expiry
+   id:authUser.id,email:authUser.email,role:'user',plan:'trial',balance:0,today:0,lifetime:0,daily_watch:6,expiry:expiry
   });
  }
-
- // load user profile
  const {data:userProfile}=await sb.from('users').select('*').eq('id',authUser.id).single();
  currentUser=userProfile;
-
  loginCard.style.display='none';
  if(userProfile.role==='admin') adminPanel.style.display='block';
  if(userProfile.role==='reseller') resellerPanel.style.display='block';
  if(userProfile.role==='user') userArea.style.display='block';
-
  antiCheat();
  loadUserUI();
 });
 
-/*************** DATABASE SCHEMA (RUN IN SUPABASE SQL) ***************
-create table users(
- id uuid primary key default uuid_generate_v4(),
- email text,
- role text,
- plan text,
- balance numeric default 0,
- today numeric default 0,
- lifetime numeric default 0,
- daily_watch int default 6,
- expiry timestamptz,
- device_id text,
- ip text
-);
-
-create table resellers(id uuid,email text,voucher_balance int default 0);
-create table earnings(id uuid,user_id uuid,source text,amount numeric,date timestamptz);
-create table withdrawals(id uuid,user_id uuid,type text,amount numeric,status text,date timestamptz);
-*********************************************************************/
+async function signUp(){
+ const email=document.getElementById('signupEmail').value;
+ const password=document.getElementById('signupPass').value;
+ const role=document.getElementById('signupRole').value;
+ const {data,error}=await sb.auth.signUp({email,password});
+ if(error) return alert(error.message);
+ let expiry=new Date(); expiry.setDate(expiry.getDate()+3);
+ await sb.from('users').insert({id:data.user.id,email:email,role:role,plan:'trial',balance:0,today:0,lifetime:0,daily_watch:6,expiry:expiry});
+ alert('Signup successful!');
+}
 
 async function login(){
  const email=document.getElementById('email').value;
- const {data}=await sb.from('users').select('*').eq('email',email).single();
- if(!data) return alert('User not found');
- currentUser=data;
- document.getElementById('loginCard').style.display='none';
-
- if(data.role==='admin') adminPanel.style.display='block';
- if(data.role==='reseller') resellerPanel.style.display='block';
- if(data.role==='user') userArea.style.display='block';
-
- loadUserUI();
+ const password=document.getElementById('password').value;
+ const {data,error}=await sb.auth.signInWithPassword({email,password});
+ if(error) return alert(error.message);
 }
 
-/*************** ADMIN ***************/
-async function createVoucher(type){
- alert(type+' voucher created (logic via backend)');
-}
+// ADMIN FUNCTIONS
+async function createVoucher(type){ alert(type+' voucher created'); }
+async function adminMonitor(){ const {data}=await sb.from('users').select('email,balance,lifetime'); console.table(data); }
 
-/*************** RESELLER ***************/
+// RESELLER FUNCTIONS
+async function deductVoucher(resellerId,cost){ const {data}=await sb.from('resellers').select('voucher_balance').eq('id',resellerId).single(); if(data.voucher_balance<cost) throw 'Not enough vouchers'; await sb.from('resellers').update({voucher_balance:data.voucher_balance-cost}).eq('id',resellerId); }
 async function createUser(){
  let plan=document.getElementById('plan').value;
  let email=document.getElementById('newUserEmail').value;
- let pass=document.getElementById('newUserPass').value;
-
+ let password=document.getElementById('newUserPass').value;
  let cost={trial:0,basic:2,premium:4,vip:6}[plan];
  let validity={trial:3,basic:30,premium:30,vip:30}[plan];
-
- let expiry=new Date();
- expiry.setDate(expiry.getDate()+validity);
-
- await sb.from('users').insert({email:email,role:'user',plan:plan,expiry:expiry});
- alert('User Created');
+ try{ if(cost>0) await deductVoucher(currentUser.id,cost);
+ const {data}=await sb.auth.signUp({email,password});
+ let expiry=new Date(); expiry.setDate(expiry.getDate()+validity);
+ await sb.from('users').insert({id:data.user.id,email,role:'user',plan,expiry});
+ alert('User Created'); }catch(e){alert(e);}
 }
 
-/*************** USER UI ***************/
-function loadUserUI(){
- if(!currentUser) return;
+// WATCH-TO-EARN
+const ytVideos=['dQw4w9WgXcQ','9bZkp7q19f0','l482T0yNkeo','3JZ_D3ELwOQ','fLexgOxsZu0'];
+function randomYT(){return ytVideos[Math.floor(Math.random()*ytVideos.length)];}
+async function watchVideo(){
+ if(currentUser.daily_watch<=0) return alert('Daily limit reached');
+ const watchAreaEl=document.getElementById('watchArea');
+ watchAreaEl.innerHTML=`<h3>Watch & Earn</h3><div id='videoBox'></div><p id='timerText'></p><button class='btn' onclick='watchVideo()'>Watch Video</button><button class='btn gray' onclick='monetagBonus()'>Monetag Bonus</button>`;
+ const videoId=randomYT();
+ document.getElementById('videoBox').innerHTML=`<iframe width='100%' height='220' src='https://www.youtube.com/embed/${videoId}?enablejsapi=1' allow='autoplay; encrypted-media' allowfullscreen></iframe>`;
+ let time=20;
+ const timerText=document.getElementById('timerText');
+ timerText.innerText=`Watch time remaining: ${time}s`;
+ const interval=setInterval(async()=>{
+  if(document.hidden){ clearInterval(interval); timerText.innerText='❌ Do not leave the page'; return;}
+  time--; timerText.innerText=`Watch time remaining: ${time}s`;
+  if(time<=0){ clearInterval(interval); timerText.innerText='✅ Reward credited'; await rewardUser();}
+ },1000);
+}
+async function rewardUser(){
+ let reward=parseFloat((Math.random()*0.9+0.1).toFixed(2));
+ currentUser.balance+=reward; currentUser.today+=reward; currentUser.lifetime+=reward; currentUser.daily_watch--;
+ await sb.from('earnings').insert({user_id:currentUser.id,source:'youtube',amount:reward,date:new Date()});
+ await sb.from('users').update({balance:currentUser.balance,today:currentUser.today,lifetime:currentUser.lifetime,daily_watch:currentUser.daily_watch}).eq('id',currentUser.id);
  updateUI();
- checkExpiry();
 }
+function monetagBonus(){currentUser.daily_watch++; updateUI();}
 
+// WITHDRAW
+async function withdrawCash(){await sb.from('withdrawals').insert({user_id:currentUser.id,type:'cash',amount:currentUser.balance,status:'pending',date:new Date()}); currentUser.balance=0; updateUI();}
+async function redeemProduct(){await sb.from('withdrawals').insert({user_id:currentUser.id,type:'product',amount:150,status:'claimed',date:new Date()}); currentUser.balance-=150; updateUI();}
+
+// USER DASHBOARD
 function updateUI(){
  balance.innerText='₱'+Number(currentUser.balance||0).toFixed(2);
  today.innerText=currentUser.today||0;
  lifetime.innerText=currentUser.lifetime||0;
  remaining.innerText=currentUser.daily_watch||0;
-
  if(currentUser.balance>=50 && currentUser.balance<150){cashBtn.classList.remove('disabled');productBtn.classList.add('disabled');}
  else if(currentUser.balance>=150 && currentUser.balance<200){cashBtn.classList.add('disabled');productBtn.classList.remove('disabled');}
  else if(currentUser.balance>=200){cashBtn.classList.remove('disabled');productBtn.classList.remove('disabled');}
  else{cashBtn.classList.add('disabled');productBtn.classList.add('disabled');}
+ checkExpiry();
 }
-
 function checkExpiry(){
- if(new Date()>new Date(currentUser.expiry)){
- accountStatus.innerHTML='<span class="warning">⚠ ACCOUNT EXPIRED</span>';
- watchArea.classList.add('disabled');
- }
- else{
- accountStatus.innerHTML='Active until '+new Date(currentUser.expiry).toDateString();
- }
+ if(new Date()>new Date(currentUser.expiry)){accountStatus.innerHTML='<span class="warning">⚠ ACCOUNT EXPIRED</span>'; watchArea.classList.add('disabled');}
+ else{accountStatus.innerHTML='Active until '+new Date(currentUser.expiry).toDateString();}
 }
 
-/*************** WATCH SYSTEM + ANTI CHEAT ***************/
-async function watchVideo(){
- if(currentUser.daily_watch<=0) return alert('Daily limit reached');
-
- let reward=(Math.random()*0.9+0.1).toFixed(2);
- reward=parseFloat(reward);
-
- currentUser.balance+=reward;
- currentUser.today+=reward;
- currentUser.lifetime+=reward;
- currentUser.daily_watch--;
-
- await sb.from('earnings').insert({user_id:currentUser.id,source:'youtube',amount:reward,date:new Date()});
- await sb.from('users').update({balance:currentUser.balance,today:currentUser.today,lifetime:currentUser.lifetime,daily_watch:currentUser.daily_watch}).eq('id',currentUser.id);
-
- logEarning('YouTube',reward);
- updateUI();
-}
-
-function monetagBonus(){currentUser.daily_watch++;updateUI();}
-
-async function withdrawCash(){
- await sb.from('withdrawals').insert({user_id:currentUser.id,type:'cash',amount:currentUser.balance,status:'pending',date:new Date()});
- currentUser.balance=0;
- updateUI();
-}
-
-async function redeemProduct(){
- await sb.from('withdrawals').insert({user_id:currentUser.id,type:'product',amount:150,status:'claimed',date:new Date()});
- currentUser.balance-=150;
- updateUI();
-}
-
-function logEarning(src,amt){let li=document.createElement('li');li.innerText=new Date().toLocaleString()+" - "+src+" ₱"+amt;earningsHistory.appendChild(li);}
-
-/*************** ANTI CHEAT DEVICE/IP ***************/
+// ANTI-CHEAT
 async function antiCheat(){
  let device=navigator.userAgent;
- await sb.from('users').update({device_id:device}).eq('id',currentUser.id);
+ let ip='PH';
+ await sb.from('users').update({device_id:device,ip}).eq('id',currentUser.id);
 }
 
-/*************** AUTO RESET DAILY WATCH ***************/
+// RESET DAILY WATCH
 setInterval(async()=>{
  let now=new Date();
  if(now.getHours()==0 && now.getMinutes()==0){
   await sb.from('users').update({daily_watch:6,today:0}).eq('id',currentUser.id);
  }
 },60000);
-
 </script>
-
 </body>
 </html>
