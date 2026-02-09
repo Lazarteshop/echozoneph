@@ -2,117 +2,101 @@
 <html lang="tl">
 <head>
 <meta charset="UTF-8">
-<title>Watch & Earn PH – Production Business System</title>
+<title>Watch & Earn PH – Business Version</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-<!-- Monetag verification -->
-<meta name="monetag" content="f6cd6220dde78c27df43aa4d5f91b623">
-
-<!-- SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 const supabaseUrl = "https://latimgzxirdlcetikufy.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY";
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-</script>
-
-<!-- MONETAG POPUNDER -->
-<script>
-(function(s){
-  s.dataset.zone='10587611';
-  s.src='https://al5sm.com/tag.min.js';
-})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY";const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 </script>
 
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0b0b0b;color:#fff}
-.container{max-width:1000px;margin:auto;padding:20px;text-align:center}
-.box{background:#111;padding:15px;border-radius:12px;margin-bottom:15px}
-button{padding:10px 15px;border:none;border-radius:8px;cursor:pointer;font-weight:bold}
-button:disabled{background:#555;cursor:not-allowed}
-input,select{padding:10px;width:100%;max-width:320px;margin:5px;border-radius:8px;border:none}
+body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff}
+.container{max-width:900px;margin:auto;padding:20px;text-align:center}
+.box{background:#111;padding:15px;border-radius:10px;margin-bottom:15px}
 .green{color:#00ff88}
-.red{color:#ff6666}
+.lock{color:#ff6666}
+button{padding:10px 15px;border:none;border-radius:6px;cursor:pointer}
+button:disabled{background:#555;cursor:not-allowed}
+input,select{padding:10px;width:100%;max-width:300px;margin:5px;border-radius:6px;border:none}
 .progress{width:100%;height:12px;background:#333;border-radius:10px;overflow:hidden}
 .progress div{height:100%;background:#00ff88;width:0}
-.card{background:#0f0f0f;padding:10px;border-radius:10px;margin-bottom:6px;text-align:left;font-size:14px}
+.card{background:#111;padding:10px;border-radius:8px;margin-bottom:6px;text-align:left}
 .hidden{display:none}
-.vip{background:linear-gradient(45deg,#ffd700,#ffae00);color:#000}
-.admin{background:#ff4444}
-iframe{width:100%;max-width:850px;height:460px;border-radius:12px}
+iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
+.vip{background:#ffd700;color:#000;font-weight:bold}
 </style>
 </head>
 <body>
 <div class="container">
 
-<h2>🎬 Watch & Earn PH</h2>
-<h4 id="planLabel">BASIC PLAN</h4>
-
+<!-- BALANCE -->
 <div class="box">
 💰 Balance: ₱<span id="balance">0.00</span>
 <div class="progress"><div id="withdrawProgress"></div></div>
 <small>Minimum withdrawal ₱50</small><br>
-<button id="withdrawBtn" disabled>Withdraw</button>
+<button id="withdrawBtn" disabled>Mag-Withdraw</button>
 </div>
 
-<div id="loginBox" class="box">
+<h2>🎬 Watch & Earn PH</h2>
+<h3 id="planLabel">BASIC PLAN</h3>
+
+<!-- LOGIN -->
+<div id="login" class="box">
 <select id="userSelect"></select><br>
 <input id="password" type="password" placeholder="Password">
 </div>
 
-<div id="statusMsg" class="red"></div>
+<div id="lockMsg" class="lock"></div>
 
+<!-- VIP UPGRADE -->
 <div id="vipBox" class="box hidden">
-<h3>⭐ VIP MEMBERSHIP</h3>
-<p>✔ No ads<br>✔ Double rewards<br>✔ 12 videos/day</p>
-<button class="vip" onclick="requestVIP()">Upgrade VIP ₱99 / 30 days</button>
+<h3>⭐ VIP UPGRADE</h3>
+<p>✔ Mas mataas na kita<br>✔ Mas maraming videos<br>✔ Walang freeze</p>
+<button class="vip" onclick="requestVIP()">Upgrade to VIP (₱99)</button>
 <div id="vipMsg" class="green"></div>
 </div>
 
+<!-- ADS NOTICE -->
 <div id="adsBox" class="box">
-📢 Sponsored Ad Required (Basic Users)
+📢 Kailangan panoorin ang ad bago makuha ang reward
 <button onclick="watchAd()">Watch Ad</button>
 <div id="adStatus"></div>
-<div style="margin-top:10px">
-<script async src="https://nap5k.com/tag.min.js"></script>
-</div>
 </div>
 
-<!-- VIDEO -->
+<!-- VIDEO AREA -->
 <div id="playerArea"></div>
 <div class="progress"><div id="videoProgress"></div></div>
 <div id="timer"></div>
 <div id="earned" class="green"></div>
 
+<!-- DAILY INFO -->
 <div class="box">
-🎬 Watched Today: <span id="watchedCount">0</span>/<span id="dailyLimit">6</span><br>
-⏳ Reset In: <span id="countdown"></span>
+🎬 Napanood ngayon: <span id="watchedCount">0</span>/<span id="dailyLimit">6</span><br>
+⏳ Reset sa: <span id="countdown"></span>
 </div>
 
-<div class="box"><h3>📊 Earnings History</h3><div id="earnHistory"></div></div>
-<div class="box"><h3>📤 Withdraw History</h3><div id="withdrawHistory"></div></div>
-
-<div id="adminPanel" class="box hidden">
-<h3>🛠 Admin Panel</h3>
-<button class="admin" onclick="freezeUser()">Freeze User</button>
-</div>
-
+<!-- HISTORY -->
+<div class="box">
+<h3>📊 Earnings History</h3>
+<div id="earnHistory"></div>
 </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
+/* USERS */
 const USERS={
- admin:{pass:"admin123",role:"admin"},
- Jeryanroyate:{pass:"101017",role:"user"}
+ Jeryanroyate:{pass:"101017",role:"user"},
+ admin:{pass:"admin123",role:"admin"}
 };
-const VIDEO_POOL=["fjy1wYj2Nh8","tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","jGyG5Xty37c","U6yvT288bY8","X6UvWJ3ApIw"];
-const MIN_WITHDRAW=50;
+
+/* VIDEOS */
+const VIDEO_POOL=["fjy1wYj2Nh8","tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","jGyG5Xty37c"];
 
 let currentUser,data,player,ytReady=false;
-let dailyVideos=[],videoIndex=0,adWatched=false;
-let countdownInt;
+let dailyVideos=[],videoIndex=0;
+let adWatched=false;
 
 const today=()=>new Date().toDateString();
 const tomorrow=()=>{let d=new Date();d.setHours(24,0,0,0);return d};
@@ -120,7 +104,7 @@ const rand=(a,b)=>+(Math.random()*(b-a)+a).toFixed(2);
 
 window.onload=()=>{
  Object.keys(USERS).forEach(u=>{
-  const o=document.createElement("option");
+  let o=document.createElement("option");
   o.value=u;o.textContent=u;
   userSelect.appendChild(o);
  });
@@ -129,53 +113,44 @@ function onYouTubeIframeAPIReady(){ytReady=true}
 
 password.onkeypress=async e=>{
  if(e.key!=="Enter")return;
- const u=userSelect.value;
- if(password.value!==USERS[u].pass)return alert("Wrong password");
+ let u=userSelect.value;
+ if(password.value!==USERS[u].pass)return alert("Mali password");
  currentUser=u;
- loginBox.remove();
+ login.remove();
  await loadData();
  setupPlan();
  dailyReset();
  render();
- if(USERS[u].role==="admin")adminPanel.classList.remove("hidden");
 };
 
 async function loadData(){
- const {data:row}=await supabase.from("users").select("data").eq("username",currentUser).single();
+ const {data:row}=await supabaseClient.from("users").select("data").eq("username",currentUser).single();
  if(!row){
-  data={total:0,earn:[],withdraw:[],plan:"basic",lastDate:null,watchedToday:[],status:"active"};
-  await supabase.from("users").insert({username:currentUser,data});
+  data={total:0,earn:[],plan:"basic",lastDate:null,watchedToday:[],adsRevenue:0};
+  await supabaseClient.from("users").insert({username:currentUser,data});
  }else data=row.data;
 }
-async function save(){await supabase.from("users").update({data}).eq("username",currentUser)}
+async function save(){await supabaseClient.from("users").update({data}).eq("username",currentUser)}
 
 function setupPlan(){
  if(data.plan==="vip"){
   planLabel.textContent="VIP PLAN";
   dailyLimit.textContent=12;
   vipBox.classList.add("hidden");
-  adsBox.classList.add("hidden");
  }else{
   planLabel.textContent="BASIC PLAN";
   dailyLimit.textContent=6;
   vipBox.classList.remove("hidden");
-  adsBox.classList.remove("hidden");
  }
 }
 
 function requestVIP(){
- vipMsg.textContent="Send GCash payment and contact admin";
+ vipMsg.textContent="I-message ang admin pagkatapos magbayad sa GCash";
 }
 
 function watchAd(){
- if(typeof window.show_10587611 === "function"){
-   window.show_10587611().then(()=>{
-     adWatched=true;
-     adStatus.textContent="✅ Ad completed";
-   });
- }else{
-   alert("Ad not ready, try again");
- }
+ adWatched=true;
+ adStatus.textContent="✅ Ad watched";
 }
 
 function dailyReset(){
@@ -185,16 +160,17 @@ function dailyReset(){
   videoIndex=0;
   dailyVideos=VIDEO_POOL.slice(0,data.plan==="vip"?12:6);
  }
- startCountdown();
  loadVideo();
 }
 
 function loadVideo(){
- if(data.status==="frozen"){statusMsg.textContent="Account Frozen";return}
  if(!ytReady)return setTimeout(loadVideo,500);
  if(data.watchedToday.length>=dailyVideos.length)return;
- if(data.plan==="basic" && !adWatched){statusMsg.textContent="Watch ad first";return}
- statusMsg.textContent="";
+ if(!adWatched && data.plan==="basic"){
+  lockMsg.textContent="🔒 Kailangan muna ng ad";
+  return;
+ }
+ lockMsg.textContent="";
  adWatched=false;
  playerArea.innerHTML="<div id='player'></div>";
  player=new YT.Player("player",{
@@ -205,7 +181,7 @@ function loadVideo(){
 }
 
 async function reward(){
- const r=data.plan==="vip"?rand(0.4,0.9):rand(0.05,0.2);
+ let r=data.plan==="vip"?rand(0.3,0.8):rand(0.05,0.2);
  data.total+=r;
  data.watchedToday.push(dailyVideos[videoIndex]);
  data.earn.push({type:"Video",amount:r,time:new Date().toLocaleString()});
@@ -215,36 +191,14 @@ async function reward(){
  loadVideo();
 }
 
-withdrawBtn.onclick=async ()=>{
- if(data.total<MIN_WITHDRAW)return;
- data.withdraw.push({amount:data.total,time:new Date().toLocaleString()});
- data.total=0;
- await save();
- render();
-}
-
 function render(){
  balance.textContent=data.total.toFixed(2);
- withdrawBtn.disabled=data.total<MIN_WITHDRAW;
- withdrawProgress.style.width=Math.min(data.total/MIN_WITHDRAW*100,100)+"%";
+ withdrawBtn.disabled=data.total<50;
+ withdrawProgress.style.width=Math.min(data.total/50*100,100)+"%";
  watchedCount.textContent=data.watchedToday.length;
  earnHistory.innerHTML=data.earn.map(e=>`<div class='card'>${e.type} ₱${e.amount}<br>${e.time}</div>`).join("");
- withdrawHistory.innerHTML=data.withdraw.map(w=>`<div class='card'>₱${w.amount}<br>${w.time}</div>`).join("");
-}
-
-function startCountdown(){
- clearInterval(countdownInt);
- countdownInt=setInterval(()=>{
-  const d=tomorrow()-new Date();
-  countdown.textContent=`${Math.floor(d/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s`;
- },1000);
-}
-
-function freezeUser(){
- data.status="frozen";
- save();
- alert("User frozen");
 }
 </script>
+</div>
 </body>
 </html>
