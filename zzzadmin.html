@@ -27,29 +27,26 @@
 
 <header>
   <h1>Admin Panel</h1>
-  <button class="btn-danger" onclick="logout()">Logout</button>
+  <button class="btn-danger" id="logoutBtn" style="display:none">Logout</button>
 </header>
 
-<!-- LOGIN FORM -->
 <div id="loginBox" class="login">
   <h3>Admin Login</h3>
   <input id="email" placeholder="Email" />
   <br><br>
   <input id="password" type="password" placeholder="Password" />
   <br><br>
-  <button class="btn" onclick="adminLogin()">Login</button>
+  <button class="btn" id="loginBtn">Login</button>
   <p id="loginMsg"></p>
 </div>
 
-<!-- MAIN APP -->
 <div class="container hidden" id="app">
-
   <div class="card">
     <h3>Create Reseller Account</h3>
     <div class="grid">
       <input id="r_email" placeholder="Reseller Email" />
       <input id="r_pass" placeholder="Reseller Password" />
-      <button class="btn" onclick="createReseller()">Create Reseller</button>
+      <button class="btn" id="createResellerBtn">Create Reseller</button>
     </div>
   </div>
 
@@ -58,153 +55,123 @@
     <div class="grid">
       <input id="v_reseller" placeholder="Reseller Email" />
       <input id="v_amount" type="number" placeholder="Voucher Amount" />
-      <button class="btn" onclick="addVoucher()">Add Voucher</button>
+      <button class="btn" id="addVoucherBtn">Add Voucher</button>
     </div>
   </div>
 
-  <div class="card">
-    <h3>All Users</h3>
-    <table id="usersTable"></table>
-  </div>
-
-  <div class="card">
-    <h3>Withdrawal Requests</h3>
-    <table id="withdrawalsTable"></table>
-  </div>
-
-  <div class="card">
-    <h3>Redemption Requests</h3>
-    <table id="redemptionsTable"></table>
-  </div>
-
+  <div class="card"><h3>All Users</h3><table id="usersTable"></table></div>
+  <div class="card"><h3>Withdrawal Requests</h3><table id="withdrawalsTable"></table></div>
+  <div class="card"><h3>Redemption Requests</h3><table id="redemptionsTable"></table></div>
 </div>
 
 <script>
-const SUPABASE_URL = https://igcxaojbmldsaedbnfks.supabase.co";
+const SUPABASE_URL = "https://igcxaojbmldsaedbnfks.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnY3hhb2pibWxkc2FlZGJuZmtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTU0ODgsImV4cCI6MjA4NjIzMTQ4OH0.zpu-JHl6PvpThZxDF7zgeSdBEdmQJpsX2xhd6EQpRhQ";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Ensure DOM loaded before binding
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('loginBtn').addEventListener('click', adminLogin);
+  document.getElementById('createResellerBtn').addEventListener('click', createReseller);
+  document.getElementById('addVoucherBtn').addEventListener('click', addVoucher);
+  document.getElementById('logoutBtn').addEventListener('click', logout);
+});
+
+function showApp(){
+  document.getElementById('loginBox').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('logoutBtn').style.display = 'inline-block';
+}
+
 async function adminLogin(){
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  loginMsg.innerText = 'Logging in...';
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const msg = document.getElementById('loginMsg');
+  msg.innerText = 'Logging in...';
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if(error){ loginMsg.innerText = error.message; return; }
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
 
-  const { data: me } = await supabase
-    .from('users')
-    .select('*')
-    .eq('auth_id', data.user.id)
-    .single();
+    const { data: me, error: e2 } = await supabase
+      .from('users')
+      .select('*')
+      .eq('auth_id', data.user.id)
+      .single();
+    if (e2) throw e2;
 
-  if(!me || me.role !== 'admin'){
-    loginMsg.innerText = 'Not an admin account';
-    await supabase.auth.signOut();
-    return;
+    if (!me || me.role !== 'admin') throw new Error('Not an admin account');
+
+    msg.innerText = 'Success!';
+    showApp();
+    loadAll();
+  } catch (err) {
+    msg.innerText = err.message;
   }
-
-  loginBox.classList.add('hidden');
-  app.classList.remove('hidden');
-
-  loadAll();
 }
 
 async function createReseller(){
-  const email = r_email.value;
-  const password = r_pass.value;
+  const email = document.getElementById('r_email').value.trim();
+  const pass = document.getElementById('r_pass').value.trim();
 
-  const { data: signUp, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.admin.createUser({
+    email: email,
+    password: pass,
+    email_confirm: true
+  });
+
   if(error){ alert(error.message); return; }
 
   await supabase.from('users').insert({
-    email,
-    role:'reseller',
-    auth_id: signUp.user.id
-  });
-
-  await supabase.from('resellers').insert({
-    id: signUp.user.id,
-    voucher_balance: 0
+    email: email,
+    role: 'reseller',
+    auth_id: data.user.id
   });
 
   alert('Reseller created');
-  loadUsers();
 }
 
 async function addVoucher(){
-  const email = v_reseller.value;
-  const amount = parseInt(v_amount.value);
+  const email = document.getElementById('v_reseller').value.trim();
+  const amount = parseInt(document.getElementById('v_amount').value);
 
-  const { data: reseller } = await supabase
+  const { data: user } = await supabase
     .from('users')
     .select('*')
     .eq('email', email)
     .single();
 
-  const { data: wallet } = await supabase
-    .from('resellers')
-    .select('*')
-    .eq('id', reseller.auth_id)
-    .single();
+  if(!user){ alert('Reseller not found'); return; }
 
-  await supabase
-    .from('resellers')
-    .update({ voucher_balance: wallet.voucher_balance + amount })
-    .eq('id', reseller.auth_id);
+  await supabase.from('vouchers_log').insert({
+    reseller_id: user.id,
+    amount: amount
+  });
 
   alert('Voucher added');
 }
 
-async function loadUsers(){
-  const { data } = await supabase.from('users').select('*');
-  let html = '<tr><th>Email</th><th>Role</th><th>Plan</th><th>Balance</th><th>Expiry</th></tr>';
-  data.forEach(u=>{
-    html += `<tr>
-      <td>${u.email}</td>
-      <td>${u.role}</td>
-      <td>${u.plan||''}</td>
-      <td>${u.balance||0}</td>
-      <td>${u.expiry_date||''}</td>
-    </tr>`;
-  });
-  usersTable.innerHTML = html;
+async function loadAll(){
+  const { data: users } = await supabase.from('users').select('*');
+  renderTable('usersTable', users);
+
+  const { data: w } = await supabase.from('withdrawals').select('*');
+  renderTable('withdrawalsTable', w);
+
+  const { data: r } = await supabase.from('redemptions').select('*');
+  renderTable('redemptionsTable', r);
 }
 
-async function loadWithdrawals(){
-  const { data } = await supabase.from('withdrawals').select('*');
-  let html = '<tr><th>User</th><th>GCash</th><th>Amount</th><th>Stage</th><th>Status</th></tr>';
-  data.forEach(w=>{
-    html += `<tr>
-      <td>${w.user_id}</td>
-      <td>${w.gcash}</td>
-      <td>${w.amount}</td>
-      <td>${w.stage}</td>
-      <td>${w.status}</td>
-    </tr>`;
-  });
-  withdrawalsTable.innerHTML = html;
-}
+function renderTable(id, rows){
+  const table = document.getElementById(id);
+  if(!rows || rows.length===0){ table.innerHTML = '<tr><td>No data</td></tr>'; return; }
 
-async function loadRedemptions(){
-  const { data } = await supabase.from('redemptions').select('*');
-  let html = '<tr><th>User</th><th>Address</th><th>Mobile</th><th>Product</th><th>Status</th></tr>';
-  data.forEach(r=>{
-    html += `<tr>
-      <td>${r.user_id}</td>
-      <td>${r.address}</td>
-      <td>${r.mobile}</td>
-      <td>${r.product}</td>
-      <td>${r.status}</td>
-    </tr>`;
+  const headers = Object.keys(rows[0]);
+  let html = '<tr>' + headers.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+  rows.forEach(r=>{
+    html += '<tr>' + headers.map(h=>`<td>${r[h]}</td>`).join('') + '</tr>';
   });
-  redemptionsTable.innerHTML = html;
-}
-
-function loadAll(){
-  loadUsers();
-  loadWithdrawals();
-  loadRedemptions();
+  table.innerHTML = html;
 }
 
 async function logout(){
