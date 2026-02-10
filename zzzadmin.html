@@ -1,193 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Admin Panel</title>
-
-<!-- ✅ Supabase UMD (WORKS in Netlify / plain HTML) -->
-<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-
-<style>
-body{font-family:Arial,Helvetica,sans-serif;background:#0f172a;color:#e2e8f0;margin:0}
-header{background:#111827;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
-h1{margin:0;font-size:20px}
-button{padding:8px 12px;border:0;border-radius:6px;cursor:pointer}
-.btn{background:#2563eb;color:#fff}
-.btn-danger{background:#dc2626;color:#fff}
-.container{padding:20px;display:grid;gap:20px}
-.card{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:16px}
-input{padding:8px;border-radius:6px;border:1px solid #334155;background:#0b1220;color:#e2e8f0;width:100%}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border:1px solid #1f2937;padding:8px;text-align:left;font-size:13px}
-th{background:#0b1220}
-.hidden{display:none}
-.login{max-width:400px;margin:80px auto;background:#111827;padding:20px;border-radius:10px;border:1px solid #1f2937}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Watch To Earn</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#0f172a;color:#e2e8f0;margin:0}
+    .container{max-width:900px;margin:auto;padding:20px}
+    .card{background:#1e293b;padding:16px;border-radius:10px;margin-bottom:16px}
+    input,select,button{padding:10px;margin:6px 0;width:100%;border-radius:6px;border:none}
+    button{background:#38bdf8;color:#0f172a;font-weight:bold;cursor:pointer}
+    .hidden{display:none}
+  </style>
 </head>
 <body>
+<div class="container">
+  <h1>Watch To Earn</h1>
 
-<header>
-<h1>Admin Panel</h1>
-<button class="btn-danger hidden" id="logoutBtn">Logout</button>
-</header>
+  <!-- REGISTER -->
+  <div class="card" id="registerCard">
+    <h2>Register</h2>
+    <input id="regEmail" placeholder="Email" />
+    <input id="regPass" type="password" placeholder="Password" />
+    <button onclick="register()">Register</button>
+    <p>May account na? <a href="#" onclick="showLogin()">Login</a></p>
+  </div>
 
-<div id="loginBox" class="login">
-<h3>Admin Login</h3>
-<input id="email" placeholder="Email" />
-<br><br>
-<input id="password" type="password" placeholder="Password" />
-<br><br>
-<button class="btn" id="loginBtn">Login</button>
-<p id="loginMsg"></p>
-</div>
+  <!-- LOGIN -->
+  <div class="card hidden" id="loginCard">
+    <h2>Login</h2>
+    <input id="logEmail" placeholder="Email" />
+    <input id="logPass" type="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+    <p>Walang account? <a href="#" onclick="showRegister()">Register</a></p>
+  </div>
 
-<div class="container hidden" id="app">
-
-<div class="card">
-<h3>Create Reseller</h3>
-<input id="r_email" placeholder="Reseller Email" />
-<br><br>
-<input id="r_pass" placeholder="Reseller Password" />
-<br><br>
-<button class="btn" id="createResellerBtn">Create Reseller</button>
-</div>
-
-<div class="card">
-<h3>Add Voucher</h3>
-<input id="v_email" placeholder="Reseller Email" />
-<br><br>
-<input id="v_amount" type="number" placeholder="Voucher Amount" />
-<br><br>
-<button class="btn" id="addVoucherBtn">Add Voucher</button>
-</div>
-
-<div class="card"><h3>Users</h3><table id="usersTable"></table></div>
-<div class="card"><h3>Withdrawals</h3><table id="withdrawalsTable"></table></div>
-<div class="card"><h3>Redemptions</h3><table id="redemptionsTable"></table></div>
-
+  <!-- DASHBOARD (after login) -->
+  <div class="card hidden" id="dashboard">
+    <h2>Dashboard</h2>
+    <p>Email: <span id="dEmail"></span></p>
+    <p>Role: <span id="dRole"></span></p>
+    <button onclick="logout()">Logout</button>
+  </div>
 </div>
 
 <script>
+// 🔴 PALITAN MO ITO NG SA SUPABASE MO
+const supabase = window.supabase.createClient(
+  "https://kooljgoiiiufpgkqmtvm.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtvb2xqZ29paWl1ZnBna3FtdHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODgxNDUsImV4cCI6MjA4NjI2NDE0NX0.CaHD6NWsUBT_8vRdIMX2DOnVpzc30FKmNJ0It_4Kthc"
+);
 
-const SUPABASE_URL = "https://nfusswkszrlehjsurhih.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mdXNzd2tzenJsZWhqc3VyaGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMwMDMsImV4cCI6MjA4NjIyOTAwM30.yz771wCi9i11ImPp52nlZm1swl3ZfUZ5DUbs6t_Xkbw";
-
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const loginBtn = document.getElementById('loginBtn');
-const logoutBtn = document.getElementById('logoutBtn');
-
-loginBtn.onclick = adminLogin;
-logoutBtn.onclick = logout;
-
-document.getElementById('createResellerBtn').onclick = createReseller;
-document.getElementById('addVoucherBtn').onclick = addVoucher;
-
-function showApp(){
-  document.getElementById('loginBox').classList.add('hidden');
-  document.getElementById('app').classList.remove('hidden');
-  logoutBtn.classList.remove('hidden');
+function showLogin(){
+  registerCard.classList.add('hidden');
+  loginCard.classList.remove('hidden');
 }
 
-async function adminLogin(){
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  const msg = document.getElementById('loginMsg');
+function showRegister(){
+  loginCard.classList.add('hidden');
+  registerCard.classList.remove('hidden');
+}
 
-  msg.innerText = "Logging in...";
+async function register(){
+  const email = regEmail.value;
+  const password = regPass.value;
 
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email,
-    password
-  });
+  const { data, error } = await supabase.auth.signUp({ email, password });
+  if(error) return alert(error.message);
 
-  if(error){
-    msg.innerText = error.message;
-    return;
-  }
+  alert('Registered! Pwede ka na mag login.');
+  showLogin();
+}
 
-  const { data: me } = await supabaseClient
-    .from('users')
+async function login(){
+  const email = logEmail.value;
+  const password = logPass.value;
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if(error) return alert(error.message);
+
+  loadProfile(data.user);
+}
+
+async function loadProfile(user){
+  registerCard.classList.add('hidden');
+  loginCard.classList.add('hidden');
+  dashboard.classList.remove('hidden');
+
+  dEmail.innerText = user.email;
+
+  const { data } = await supabase
+    .from('profiles')
     .select('*')
-    .eq('auth_id', data.user.id)
+    .eq('id', user.id)
     .single();
 
-  if(!me || me.role !== 'admin'){
-    msg.innerText = "Not admin";
-    return;
+  if(!data){
+    // create profile first time
+    await supabase.from('profiles').insert({
+      id: user.id,
+      email: user.email,
+      role: 'user'
+    });
+    dRole.innerText = 'user';
+  }else{
+    dRole.innerText = data.role;
   }
-
-  msg.innerText = "Login success";
-  showApp();
-  loadTables();
-}
-
-async function createReseller(){
-  const email = document.getElementById('r_email').value;
-  const pass = document.getElementById('r_pass').value;
-
-  const { data, error } = await supabaseClient.auth.signUp({ email, password: pass });
-
-  if(error){ alert(error.message); return; }
-
-  await supabaseClient.from('users').insert({
-    email,
-    role:'reseller',
-    auth_id: data.user.id
-  });
-
-  alert('Reseller created');
-}
-
-async function addVoucher(){
-  const email = document.getElementById('v_email').value;
-  const amount = parseInt(document.getElementById('v_amount').value);
-
-  const { data:user } = await supabaseClient
-    .from('users')
-    .select('*')
-    .eq('email', email)
-    .single();
-
-  if(!user){ alert('Reseller not found'); return; }
-
-  await supabaseClient.from('vouchers_log').insert({
-    reseller_id:user.id,
-    amount
-  });
-
-  alert('Voucher added');
-}
-
-async function loadTables(){
-  render('usersTable', await supabaseClient.from('users').select('*'));
-  render('withdrawalsTable', await supabaseClient.from('withdrawals').select('*'));
-  render('redemptionsTable', await supabaseClient.from('redemptions').select('*'));
-}
-
-function render(id, result){
-  const rows = result.data;
-  const table = document.getElementById(id);
-
-  if(!rows || rows.length===0){ table.innerHTML='<tr><td>No data</td></tr>'; return; }
-
-  const headers = Object.keys(rows[0]);
-  let html = '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
-
-  rows.forEach(r=>{
-    html += '<tr>'+headers.map(h=>`<td>${r[h]}</td>`).join('')+'</tr>';
-  });
-
-  table.innerHTML = html;
 }
 
 async function logout(){
-  await supabaseClient.auth.signOut();
+  await supabase.auth.signOut();
   location.reload();
 }
-
 </script>
-
 </body>
 </html>
