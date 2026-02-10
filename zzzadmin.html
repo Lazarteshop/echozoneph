@@ -1,132 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Panel</title>
-  <style>
-    body{font-family:Arial,Helvetica,sans-serif;background:#0f172a;color:#e2e8f0;margin:0}
-    header{background:#111827;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
-    h1{margin:0;font-size:20px}
-    button{padding:8px 12px;border:0;border-radius:6px;cursor:pointer}
-    .btn{background:#2563eb;color:#fff}
-    .btn-danger{background:#dc2626;color:#fff}
-    .container{padding:20px;display:grid;gap:20px}
-    .card{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:16px}
-    input{padding:8px;border-radius:6px;border:1px solid #334155;background:#0b1220;color:#e2e8f0;width:100%}
-    table{width:100%;border-collapse:collapse;margin-top:10px}
-    th,td{border:1px solid #1f2937;padding:8px;text-align:left;font-size:13px}
-    th{background:#0b1220}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
-    .hidden{display:none}
-    .login{max-width:400px;margin:80px auto;background:#111827;padding:20px;border-radius:10px;border:1px solid #1f2937}
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin Panel</title>
+
+<!-- ✅ Supabase UMD (WORKS in Netlify / plain HTML) -->
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<style>
+body{font-family:Arial,Helvetica,sans-serif;background:#0f172a;color:#e2e8f0;margin:0}
+header{background:#111827;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+h1{margin:0;font-size:20px}
+button{padding:8px 12px;border:0;border-radius:6px;cursor:pointer}
+.btn{background:#2563eb;color:#fff}
+.btn-danger{background:#dc2626;color:#fff}
+.container{padding:20px;display:grid;gap:20px}
+.card{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:16px}
+input{padding:8px;border-radius:6px;border:1px solid #334155;background:#0b1220;color:#e2e8f0;width:100%}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #1f2937;padding:8px;text-align:left;font-size:13px}
+th{background:#0b1220}
+.hidden{display:none}
+.login{max-width:400px;margin:80px auto;background:#111827;padding:20px;border-radius:10px;border:1px solid #1f2937}
+</style>
 </head>
 <body>
 
 <header>
-  <h1>Admin Panel</h1>
-  <button class="btn-danger" id="logoutBtn" style="display:none">Logout</button>
+<h1>Admin Panel</h1>
+<button class="btn-danger hidden" id="logoutBtn">Logout</button>
 </header>
 
 <div id="loginBox" class="login">
-  <h3>Admin Login</h3>
-  <input id="email" placeholder="Email" />
-  <br><br>
-  <input id="password" type="password" placeholder="Password" />
-  <br><br>
-  <button class="btn" id="loginBtn">Login</button>
-  <p id="loginMsg"></p>
+<h3>Admin Login</h3>
+<input id="email" placeholder="Email" />
+<br><br>
+<input id="password" type="password" placeholder="Password" />
+<br><br>
+<button class="btn" id="loginBtn">Login</button>
+<p id="loginMsg"></p>
 </div>
 
 <div class="container hidden" id="app">
-  <div class="card">
-    <h3>Create Reseller Account</h3>
-    <div class="grid">
-      <input id="r_email" placeholder="Reseller Email" />
-      <input id="r_pass" placeholder="Reseller Password" />
-      <button class="btn" id="createResellerBtn">Create Reseller</button>
-    </div>
-  </div>
 
-  <div class="card">
-    <h3>Add Voucher To Reseller</h3>
-    <div class="grid">
-      <input id="v_reseller" placeholder="Reseller Email" />
-      <input id="v_amount" type="number" placeholder="Voucher Amount" />
-      <button class="btn" id="addVoucherBtn">Add Voucher</button>
-    </div>
-  </div>
-
-  <div class="card"><h3>All Users</h3><table id="usersTable"></table></div>
-  <div class="card"><h3>Withdrawal Requests</h3><table id="withdrawalsTable"></table></div>
-  <div class="card"><h3>Redemption Requests</h3><table id="redemptionsTable"></table></div>
+<div class="card">
+<h3>Create Reseller</h3>
+<input id="r_email" placeholder="Reseller Email" />
+<br><br>
+<input id="r_pass" placeholder="Reseller Password" />
+<br><br>
+<button class="btn" id="createResellerBtn">Create Reseller</button>
 </div>
 
-<script type="module">
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+<div class="card">
+<h3>Add Voucher</h3>
+<input id="v_email" placeholder="Reseller Email" />
+<br><br>
+<input id="v_amount" type="number" placeholder="Voucher Amount" />
+<br><br>
+<button class="btn" id="addVoucherBtn">Add Voucher</button>
+</div>
+
+<div class="card"><h3>Users</h3><table id="usersTable"></table></div>
+<div class="card"><h3>Withdrawals</h3><table id="withdrawalsTable"></table></div>
+<div class="card"><h3>Redemptions</h3><table id="redemptionsTable"></table></div>
+
+</div>
+
+<script>
 
 const SUPABASE_URL = "https://nfusswkszrlehjsurhih.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mdXNzd2tzenJsZWhqc3VyaGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMwMDMsImV4cCI6MjA4NjIyOTAwM30.yz771wCi9i11ImPp52nlZm1swl3ZfUZ5DUbs6t_Xkbw";
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
-const createResellerBtn = document.getElementById('createResellerBtn');
-const addVoucherBtn = document.getElementById('addVoucherBtn');
 
-loginBtn.addEventListener('click', adminLogin);
-logoutBtn.addEventListener('click', logout);
-createResellerBtn.addEventListener('click', createReseller);
-addVoucherBtn.addEventListener('click', addVoucher);
+loginBtn.onclick = adminLogin;
+logoutBtn.onclick = logout;
+
+document.getElementById('createResellerBtn').onclick = createReseller;
+document.getElementById('addVoucherBtn').onclick = addVoucher;
 
 function showApp(){
   document.getElementById('loginBox').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
-  logoutBtn.style.display = 'inline-block';
+  logoutBtn.classList.remove('hidden');
 }
 
 async function adminLogin(){
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value.trim();
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
   const msg = document.getElementById('loginMsg');
-  msg.innerText = 'Logging in...';
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  msg.innerText = "Logging in...";
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
 
   if(error){
     msg.innerText = error.message;
     return;
   }
 
-  const { data: me } = await supabase
+  const { data: me } = await supabaseClient
     .from('users')
     .select('*')
     .eq('auth_id', data.user.id)
     .single();
 
   if(!me || me.role !== 'admin'){
-    msg.innerText = 'Not an admin account';
+    msg.innerText = "Not admin";
     return;
   }
 
-  msg.innerText = 'Login success';
+  msg.innerText = "Login success";
   showApp();
-  loadAll();
+  loadTables();
 }
 
 async function createReseller(){
-  const email = document.getElementById('r_email').value.trim();
-  const pass = document.getElementById('r_pass').value.trim();
+  const email = document.getElementById('r_email').value;
+  const pass = document.getElementById('r_pass').value;
 
-  const { data, error } = await supabase.auth.signUp({ email, password: pass });
+  const { data, error } = await supabaseClient.auth.signUp({ email, password: pass });
 
   if(error){ alert(error.message); return; }
 
-  await supabase.from('users').insert({
-    email: email,
-    role: 'reseller',
+  await supabaseClient.from('users').insert({
+    email,
+    role:'reseller',
     auth_id: data.user.id
   });
 
@@ -134,10 +141,10 @@ async function createReseller(){
 }
 
 async function addVoucher(){
-  const email = document.getElementById('v_reseller').value.trim();
+  const email = document.getElementById('v_email').value;
   const amount = parseInt(document.getElementById('v_amount').value);
 
-  const { data: user } = await supabase
+  const { data:user } = await supabaseClient
     .from('users')
     .select('*')
     .eq('email', email)
@@ -145,41 +152,41 @@ async function addVoucher(){
 
   if(!user){ alert('Reseller not found'); return; }
 
-  await supabase.from('vouchers_log').insert({
-    reseller_id: user.id,
-    amount: amount
+  await supabaseClient.from('vouchers_log').insert({
+    reseller_id:user.id,
+    amount
   });
 
   alert('Voucher added');
 }
 
-async function loadAll(){
-  const { data: users } = await supabase.from('users').select('*');
-  renderTable('usersTable', users);
-
-  const { data: w } = await supabase.from('withdrawals').select('*');
-  renderTable('withdrawalsTable', w);
-
-  const { data: r } = await supabase.from('redemptions').select('*');
-  renderTable('redemptionsTable', r);
+async function loadTables(){
+  render('usersTable', await supabaseClient.from('users').select('*'));
+  render('withdrawalsTable', await supabaseClient.from('withdrawals').select('*'));
+  render('redemptionsTable', await supabaseClient.from('redemptions').select('*'));
 }
 
-function renderTable(id, rows){
+function render(id, result){
+  const rows = result.data;
   const table = document.getElementById(id);
-  if(!rows || rows.length===0){ table.innerHTML = '<tr><td>No data</td></tr>'; return; }
+
+  if(!rows || rows.length===0){ table.innerHTML='<tr><td>No data</td></tr>'; return; }
 
   const headers = Object.keys(rows[0]);
-  let html = '<tr>' + headers.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+  let html = '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+
   rows.forEach(r=>{
-    html += '<tr>' + headers.map(h=>`<td>${r[h]}</td>`).join('') + '</tr>';
+    html += '<tr>'+headers.map(h=>`<td>${r[h]}</td>`).join('')+'</tr>';
   });
+
   table.innerHTML = html;
 }
 
 async function logout(){
-  await supabase.auth.signOut();
+  await supabaseClient.auth.signOut();
   location.reload();
 }
+
 </script>
 
 </body>
