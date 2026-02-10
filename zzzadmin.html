@@ -19,8 +19,8 @@
     th,td{border:1px solid #1f2937;padding:8px;text-align:left;font-size:13px}
     th{background:#0b1220}
     .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
-    .muted{opacity:.7;font-size:12px}
     .hidden{display:none}
+    .login{max-width:400px;margin:80px auto;background:#111827;padding:20px;border-radius:10px;border:1px solid #1f2937}
   </style>
 </head>
 <body>
@@ -30,6 +30,18 @@
   <button class="btn-danger" onclick="logout()">Logout</button>
 </header>
 
+<!-- LOGIN FORM -->
+<div id="loginBox" class="login">
+  <h3>Admin Login</h3>
+  <input id="email" placeholder="Email" />
+  <br><br>
+  <input id="password" type="password" placeholder="Password" />
+  <br><br>
+  <button class="btn" onclick="adminLogin()">Login</button>
+  <p id="loginMsg"></p>
+</div>
+
+<!-- MAIN APP -->
 <div class="container hidden" id="app">
 
   <div class="card">
@@ -39,7 +51,6 @@
       <input id="r_pass" placeholder="Reseller Password" />
       <button class="btn" onclick="createReseller()">Create Reseller</button>
     </div>
-    <p class="muted">Creates Auth user + users table + reseller wallet.</p>
   </div>
 
   <div class="card">
@@ -69,21 +80,17 @@
 </div>
 
 <script>
-const SUPABASE_URL = "https://igcxaojbmldsaedbnfks.supabase.co";
+const SUPABASE_URL = https://igcxaojbmldsaedbnfks.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnY3hhb2pibWxkc2FlZGJuZmtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTU0ODgsImV4cCI6MjA4NjIzMTQ4OH0.zpu-JHl6PvpThZxDF7zgeSdBEdmQJpsX2xhd6EQpRhQ";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let adminSession = null;
-
-// ===== AUTH LOGIN =====
 async function adminLogin(){
-  const email = prompt('Admin Email');
-  const password = prompt('Admin Password');
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  loginMsg.innerText = 'Logging in...';
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if(error){ alert(error.message); return adminLogin(); }
-
-  adminSession = data.session;
+  if(error){ loginMsg.innerText = error.message; return; }
 
   const { data: me } = await supabase
     .from('users')
@@ -92,79 +99,63 @@ async function adminLogin(){
     .single();
 
   if(!me || me.role !== 'admin'){
-    alert('Not admin');
+    loginMsg.innerText = 'Not an admin account';
     await supabase.auth.signOut();
-    return adminLogin();
+    return;
   }
 
-  document.getElementById('app').classList.remove('hidden');
+  loginBox.classList.add('hidden');
+  app.classList.remove('hidden');
+
   loadAll();
 }
 
-// ===== CREATE RESELLER =====
 async function createReseller(){
-  try{
-    const email = r_email.value;
-    const password = r_pass.value;
+  const email = r_email.value;
+  const password = r_pass.value;
 
-    // create auth user
-    const { data: signUp, error: e1 } = await supabase.auth.signUp({ email, password });
-    if(e1) throw e1;
+  const { data: signUp, error } = await supabase.auth.signUp({ email, password });
+  if(error){ alert(error.message); return; }
 
-    // insert to users table
-    await supabase.from('users').insert({
-      email,
-      role:'reseller',
-      auth_id: signUp.user.id
-    });
+  await supabase.from('users').insert({
+    email,
+    role:'reseller',
+    auth_id: signUp.user.id
+  });
 
-    // create wallet
-    await supabase.from('resellers').insert({
-      id: signUp.user.id,
-      voucher_balance: 0
-    });
+  await supabase.from('resellers').insert({
+    id: signUp.user.id,
+    voucher_balance: 0
+  });
 
-    alert('Reseller created');
-    loadUsers();
-  }catch(err){ alert(err.message); }
+  alert('Reseller created');
+  loadUsers();
 }
 
-// ===== ADD VOUCHER =====
 async function addVoucher(){
-  try{
-    const email = v_reseller.value;
-    const amount = parseInt(v_amount.value);
+  const email = v_reseller.value;
+  const amount = parseInt(v_amount.value);
 
-    const { data: reseller } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single();
+  const { data: reseller } = await supabase
+    .from('users')
+    .select('*')
+    .eq('email', email)
+    .single();
 
-    const { data: wallet } = await supabase
-      .from('resellers')
-      .select('*')
-      .eq('id', reseller.auth_id)
-      .single();
+  const { data: wallet } = await supabase
+    .from('resellers')
+    .select('*')
+    .eq('id', reseller.auth_id)
+    .single();
 
-    await supabase
-      .from('resellers')
-      .update({ voucher_balance: wallet.voucher_balance + amount })
-      .eq('id', reseller.auth_id);
+  await supabase
+    .from('resellers')
+    .update({ voucher_balance: wallet.voucher_balance + amount })
+    .eq('id', reseller.auth_id);
 
-    const { data: me } = await supabase.auth.getUser();
-
-    await supabase.from('vouchers_log').insert({
-      reseller_id: reseller.auth_id,
-      added_by: me.user.id,
-      amount
-    });
-
-    alert('Voucher added');
-  }catch(err){ alert(err.message); }
+  alert('Voucher added');
 }
 
-// ===== LOADERS =====
 async function loadUsers(){
   const { data } = await supabase.from('users').select('*');
   let html = '<tr><th>Email</th><th>Role</th><th>Plan</th><th>Balance</th><th>Expiry</th></tr>';
@@ -220,8 +211,7 @@ async function logout(){
   await supabase.auth.signOut();
   location.reload();
 }
-
-adminLogin();
 </script>
 
 </body>
+</html>
