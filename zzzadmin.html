@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Panel</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body{font-family:Arial,Helvetica,sans-serif;background:#0f172a;color:#e2e8f0;margin:0}
     header{background:#111827;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
@@ -64,23 +63,28 @@
   <div class="card"><h3>Redemption Requests</h3><table id="redemptionsTable"></table></div>
 </div>
 
-<script>
-const SUPABASE_URL = "https://igcxaojbmldsaedbnfks.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnY3hhb2pibWxkc2FlZGJuZmtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTU0ODgsImV4cCI6MjA4NjIzMTQ4OH0.zpu-JHl6PvpThZxDF7zgeSdBEdmQJpsX2xhd6EQpRhQ";
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Ensure DOM loaded before binding
-window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('loginBtn').addEventListener('click', adminLogin);
-  document.getElementById('createResellerBtn').addEventListener('click', createReseller);
-  document.getElementById('addVoucherBtn').addEventListener('click', addVoucher);
-  document.getElementById('logoutBtn').addEventListener('click', logout);
-});
+const SUPABASE_URL = "https://nfusswkszrlehjsurhih.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mdXNzd2tzenJsZWhqc3VyaGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMwMDMsImV4cCI6MjA4NjIyOTAwM30.yz771wCi9i11ImPp52nlZm1swl3ZfUZ5DUbs6t_Xkbw";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const createResellerBtn = document.getElementById('createResellerBtn');
+const addVoucherBtn = document.getElementById('addVoucherBtn');
+
+loginBtn.addEventListener('click', adminLogin);
+logoutBtn.addEventListener('click', logout);
+createResellerBtn.addEventListener('click', createReseller);
+addVoucherBtn.addEventListener('click', addVoucher);
 
 function showApp(){
   document.getElementById('loginBox').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
-  document.getElementById('logoutBtn').style.display = 'inline-block';
+  logoutBtn.style.display = 'inline-block';
 }
 
 async function adminLogin(){
@@ -89,36 +93,34 @@ async function adminLogin(){
   const msg = document.getElementById('loginMsg');
   msg.innerText = 'Logging in...';
 
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    const { data: me, error: e2 } = await supabase
-      .from('users')
-      .select('*')
-      .eq('auth_id', data.user.id)
-      .single();
-    if (e2) throw e2;
-
-    if (!me || me.role !== 'admin') throw new Error('Not an admin account');
-
-    msg.innerText = 'Success!';
-    showApp();
-    loadAll();
-  } catch (err) {
-    msg.innerText = err.message;
+  if(error){
+    msg.innerText = error.message;
+    return;
   }
+
+  const { data: me } = await supabase
+    .from('users')
+    .select('*')
+    .eq('auth_id', data.user.id)
+    .single();
+
+  if(!me || me.role !== 'admin'){
+    msg.innerText = 'Not an admin account';
+    return;
+  }
+
+  msg.innerText = 'Login success';
+  showApp();
+  loadAll();
 }
 
 async function createReseller(){
   const email = document.getElementById('r_email').value.trim();
   const pass = document.getElementById('r_pass').value.trim();
 
-  const { data, error } = await supabase.auth.admin.createUser({
-    email: email,
-    password: pass,
-    email_confirm: true
-  });
+  const { data, error } = await supabase.auth.signUp({ email, password: pass });
 
   if(error){ alert(error.message); return; }
 
