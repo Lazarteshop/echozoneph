@@ -14,100 +14,124 @@
     .btn-danger{background:#dc2626;color:#fff}
     .container{padding:20px;display:grid;gap:20px}
     .card{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:16px}
-    input,select{padding:8px;border-radius:6px;border:1px solid #334155;background:#0b1220;color:#e2e8f0;width:100%}
+    input{padding:8px;border-radius:6px;border:1px solid #334155;background:#0b1220;color:#e2e8f0;width:100%}
     table{width:100%;border-collapse:collapse;margin-top:10px}
     th,td{border:1px solid #1f2937;padding:8px;text-align:left;font-size:13px}
     th{background:#0b1220}
     .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
     .muted{opacity:.7;font-size:12px}
+    .hidden{display:none}
   </style>
 </head>
 <body>
-  <header>
-    <h1>Admin Panel</h1>
-    <button class="btn-danger" onclick="logout()">Logout</button>
-  </header>
 
-  <div class="container">
+<header>
+  <h1>Admin Panel</h1>
+  <button class="btn-danger" onclick="logout()">Logout</button>
+</header>
 
-    <div class="card">
-      <h3>Create Reseller Account</h3>
-      <div class="grid">
-        <input id="r_email" placeholder="Email" />
-        <input id="r_pass" placeholder="Password" />
-        <button class="btn" onclick="createReseller()">Create Reseller</button>
-      </div>
-      <p class="muted">Note: This creates a reseller user and reseller wallet.</p>
+<div class="container hidden" id="app">
+
+  <div class="card">
+    <h3>Create Reseller Account</h3>
+    <div class="grid">
+      <input id="r_email" placeholder="Reseller Email" />
+      <input id="r_pass" placeholder="Reseller Password" />
+      <button class="btn" onclick="createReseller()">Create Reseller</button>
     </div>
-
-    <div class="card">
-      <h3>Add Voucher To Reseller</h3>
-      <div class="grid">
-        <input id="v_reseller" placeholder="Reseller Email" />
-        <input id="v_amount" type="number" placeholder="Voucher Amount" />
-        <button class="btn" onclick="addVoucher()">Add Voucher</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>All Users</h3>
-      <table id="usersTable"></table>
-    </div>
-
-    <div class="card">
-      <h3>Withdrawal Requests</h3>
-      <table id="withdrawalsTable"></table>
-    </div>
-
-    <div class="card">
-      <h3>Redemption Requests</h3>
-      <table id="redemptionsTable"></table>
-    </div>
-
+    <p class="muted">Creates Auth user + users table + reseller wallet.</p>
   </div>
 
+  <div class="card">
+    <h3>Add Voucher To Reseller</h3>
+    <div class="grid">
+      <input id="v_reseller" placeholder="Reseller Email" />
+      <input id="v_amount" type="number" placeholder="Voucher Amount" />
+      <button class="btn" onclick="addVoucher()">Add Voucher</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>All Users</h3>
+    <table id="usersTable"></table>
+  </div>
+
+  <div class="card">
+    <h3>Withdrawal Requests</h3>
+    <table id="withdrawalsTable"></table>
+  </div>
+
+  <div class="card">
+    <h3>Redemption Requests</h3>
+    <table id="redemptionsTable"></table>
+  </div>
+
+</div>
+
 <script>
- const SUPABASE_URL = "https://igcxaojbmldsaedbnfks.supabase.co";
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnY3hhb2pibWxkc2FlZGJuZmtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTU0ODgsImV4cCI6MjA4NjIzMTQ4OH0.zpu-JHl6PvpThZxDF7zgeSdBEdmQJpsX2xhd6EQpRhQ";
-  
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL = "https://igcxaojbmldsaedbnfks.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnY3hhb2pibWxkc2FlZGJuZmtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTU0ODgsImV4cCI6MjA4NjIzMTQ4OH0.zpu-JHl6PvpThZxDF7zgeSdBEdmQJpsX2xhd6EQpRhQ";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  async function checkAdmin(){
-    const email = prompt('Admin Email');
-    const password = prompt('Admin Password');
+let adminSession = null;
 
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .eq('password', password)
-      .eq('role', 'admin')
-      .single();
+// ===== AUTH LOGIN =====
+async function adminLogin(){
+  const email = prompt('Admin Email');
+  const password = prompt('Admin Password');
 
-    if(error || !data){
-      alert('Not admin');
-      location.reload();
-    }
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if(error){ alert(error.message); return adminLogin(); }
+
+  adminSession = data.session;
+
+  const { data: me } = await supabase
+    .from('users')
+    .select('*')
+    .eq('auth_id', data.user.id)
+    .single();
+
+  if(!me || me.role !== 'admin'){
+    alert('Not admin');
+    await supabase.auth.signOut();
+    return adminLogin();
   }
 
-  async function createReseller(){
+  document.getElementById('app').classList.remove('hidden');
+  loadAll();
+}
+
+// ===== CREATE RESELLER =====
+async function createReseller(){
+  try{
     const email = r_email.value;
     const password = r_pass.value;
 
-    const { data, error } = await supabase
-      .from('users')
-      .insert({ email, password, role:'reseller' })
-      .select()
-      .single();
+    // create auth user
+    const { data: signUp, error: e1 } = await supabase.auth.signUp({ email, password });
+    if(e1) throw e1;
 
-    if(error){ alert(error.message); return; }
+    // insert to users table
+    await supabase.from('users').insert({
+      email,
+      role:'reseller',
+      auth_id: signUp.user.id
+    });
 
-    await supabase.from('resellers').insert({ id: data.id, voucher_balance: 0 });
+    // create wallet
+    await supabase.from('resellers').insert({
+      id: signUp.user.id,
+      voucher_balance: 0
+    });
+
     alert('Reseller created');
     loadUsers();
-  }
+  }catch(err){ alert(err.message); }
+}
 
-  async function addVoucher(){
+// ===== ADD VOUCHER =====
+async function addVoucher(){
+  try{
     const email = v_reseller.value;
     const amount = parseInt(v_amount.value);
 
@@ -117,79 +141,87 @@
       .eq('email', email)
       .single();
 
-    if(!reseller){ alert('Reseller not found'); return; }
-
     const { data: wallet } = await supabase
       .from('resellers')
       .select('*')
-      .eq('id', reseller.id)
+      .eq('id', reseller.auth_id)
       .single();
 
     await supabase
       .from('resellers')
       .update({ voucher_balance: wallet.voucher_balance + amount })
-      .eq('id', reseller.id);
+      .eq('id', reseller.auth_id);
+
+    const { data: me } = await supabase.auth.getUser();
 
     await supabase.from('vouchers_log').insert({
-      reseller_id: reseller.id,
-      added_by: reseller.id,
+      reseller_id: reseller.auth_id,
+      added_by: me.user.id,
       amount
     });
 
     alert('Voucher added');
-  }
+  }catch(err){ alert(err.message); }
+}
 
-  async function loadUsers(){
-    const { data } = await supabase.from('users').select('*');
-    let html = '<tr><th>Email</th><th>Role</th><th>Plan</th><th>Balance</th><th>Expiry</th></tr>';
-    data.forEach(u=>{
-      html += `<tr>
-        <td>${u.email}</td>
-        <td>${u.role}</td>
-        <td>${u.plan||''}</td>
-        <td>${u.balance}</td>
-        <td>${u.expiry_date||''}</td>
-      </tr>`;
-    });
-    usersTable.innerHTML = html;
-  }
+// ===== LOADERS =====
+async function loadUsers(){
+  const { data } = await supabase.from('users').select('*');
+  let html = '<tr><th>Email</th><th>Role</th><th>Plan</th><th>Balance</th><th>Expiry</th></tr>';
+  data.forEach(u=>{
+    html += `<tr>
+      <td>${u.email}</td>
+      <td>${u.role}</td>
+      <td>${u.plan||''}</td>
+      <td>${u.balance||0}</td>
+      <td>${u.expiry_date||''}</td>
+    </tr>`;
+  });
+  usersTable.innerHTML = html;
+}
 
-  async function loadWithdrawals(){
-    const { data } = await supabase.from('withdrawals').select('*');
-    let html = '<tr><th>User</th><th>GCash</th><th>Amount</th><th>Stage</th><th>Status</th></tr>';
-    data.forEach(w=>{
-      html += `<tr>
-        <td>${w.user_id}</td>
-        <td>${w.gcash}</td>
-        <td>${w.amount}</td>
-        <td>${w.stage}</td>
-        <td>${w.status}</td>
-      </tr>`;
-    });
-    withdrawalsTable.innerHTML = html;
-  }
+async function loadWithdrawals(){
+  const { data } = await supabase.from('withdrawals').select('*');
+  let html = '<tr><th>User</th><th>GCash</th><th>Amount</th><th>Stage</th><th>Status</th></tr>';
+  data.forEach(w=>{
+    html += `<tr>
+      <td>${w.user_id}</td>
+      <td>${w.gcash}</td>
+      <td>${w.amount}</td>
+      <td>${w.stage}</td>
+      <td>${w.status}</td>
+    </tr>`;
+  });
+  withdrawalsTable.innerHTML = html;
+}
 
-  async function loadRedemptions(){
-    const { data } = await supabase.from('redemptions').select('*');
-    let html = '<tr><th>User</th><th>Address</th><th>Mobile</th><th>Product</th><th>Status</th></tr>';
-    data.forEach(r=>{
-      html += `<tr>
-        <td>${r.user_id}</td>
-        <td>${r.address}</td>
-        <td>${r.mobile}</td>
-        <td>${r.product}</td>
-        <td>${r.status}</td>
-      </tr>`;
-    });
-    redemptionsTable.innerHTML = html;
-  }
+async function loadRedemptions(){
+  const { data } = await supabase.from('redemptions').select('*');
+  let html = '<tr><th>User</th><th>Address</th><th>Mobile</th><th>Product</th><th>Status</th></tr>';
+  data.forEach(r=>{
+    html += `<tr>
+      <td>${r.user_id}</td>
+      <td>${r.address}</td>
+      <td>${r.mobile}</td>
+      <td>${r.product}</td>
+      <td>${r.status}</td>
+    </tr>`;
+  });
+  redemptionsTable.innerHTML = html;
+}
 
-  function logout(){ location.reload(); }
-
-  checkAdmin();
+function loadAll(){
   loadUsers();
   loadWithdrawals();
   loadRedemptions();
+}
+
+async function logout(){
+  await supabase.auth.signOut();
+  location.reload();
+}
+
+adminLogin();
 </script>
+
 </body>
-</html>
