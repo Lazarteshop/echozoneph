@@ -9,7 +9,7 @@
     body{font-family:Arial,Helvetica,sans-serif;background:#0f172a;color:#e2e8f0;margin:0}
     .container{max-width:900px;margin:auto;padding:20px}
     .card{background:#1e293b;padding:16px;border-radius:10px;margin-bottom:16px}
-    input,select,button{padding:10px;margin:6px 0;width:100%;border-radius:6px;border:none}
+    input,button{padding:10px;margin:6px 0;width:100%;border-radius:6px;border:none}
     button{background:#38bdf8;color:#0f172a;font-weight:bold;cursor:pointer}
     .hidden{display:none}
   </style>
@@ -23,8 +23,8 @@
     <h2>Register</h2>
     <input id="regEmail" placeholder="Email" />
     <input id="regPass" type="password" placeholder="Password" />
-    <button onclick="register()">Register</button>
-    <p>May account na? <a href="#" onclick="showLogin()">Login</a></p>
+    <button type="button" id="registerBtn">Register</button>
+    <p>May account na? <a href="#" id="goLogin">Login</a></p>
   </div>
 
   <!-- LOGIN -->
@@ -32,62 +32,71 @@
     <h2>Login</h2>
     <input id="logEmail" placeholder="Email" />
     <input id="logPass" type="password" placeholder="Password" />
-    <button onclick="login()">Login</button>
-    <p>Walang account? <a href="#" onclick="showRegister()">Register</a></p>
+    <button type="button" id="loginBtn">Login</button>
+    <p>Walang account? <a href="#" id="goRegister">Register</a></p>
   </div>
 
-  <!-- DASHBOARD (after login) -->
+  <!-- DASHBOARD -->
   <div class="card hidden" id="dashboard">
     <h2>Dashboard</h2>
     <p>Email: <span id="dEmail"></span></p>
     <p>Role: <span id="dRole"></span></p>
-    <button onclick="logout()">Logout</button>
+    <button type="button" id="logoutBtn">Logout</button>
   </div>
 </div>
 
 <script>
-// 🔴 PALITAN MO ITO NG SA SUPABASE MO
+// ✅ PALITAN MO NG SUPABASE DETAILS MO
 const supabase = window.supabase.createClient(
-  "https://kooljgoiiiufpgkqmtvm.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtvb2xqZ29paWl1ZnBna3FtdHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODgxNDUsImV4cCI6MjA4NjI2NDE0NX0.CaHD6NWsUBT_8vRdIMX2DOnVpzc30FKmNJ0It_4Kthc"
+  "https://kooljgoiiiufpgkqmtvm.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtvb2xqZ29paWl1ZnBna3FtdHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2ODgxNDUsImV4cCI6MjA4NjI2NDE0NX0.CaHD6NWsUBT_8vRdIMX2DOnVpzc30FKmNJ0It_4Kthc"
 );
 
-function showLogin(){
+// ELEMENTS
+const registerCard = document.getElementById('registerCard');
+const loginCard = document.getElementById('loginCard');
+const dashboard = document.getElementById('dashboard');
+
+// NAV LINKS
+document.getElementById('goLogin').onclick = () => {
   registerCard.classList.add('hidden');
   loginCard.classList.remove('hidden');
-}
+};
 
-function showRegister(){
+document.getElementById('goRegister').onclick = () => {
   loginCard.classList.add('hidden');
   registerCard.classList.remove('hidden');
-}
+};
 
-async function register(){
-  const email = regEmail.value;
-  const password = regPass.value;
+// REGISTER
+document.getElementById('registerBtn').onclick = async () => {
+  const email = document.getElementById('regEmail').value;
+  const password = document.getElementById('regPass').value;
 
-  const { data, error } = await supabase.auth.signUp({ email, password });
-  if(error) return alert(error.message);
+  const { error } = await supabase.auth.signUp({ email, password });
+  if (error) return alert(error.message);
 
-  alert('Registered! Pwede ka na mag login.');
-  showLogin();
-}
+  alert('Registered! Login ka na.');
+};
 
-async function login(){
-  const email = logEmail.value;
-  const password = logPass.value;
+// LOGIN
+document.getElementById('loginBtn').onclick = async () => {
+  const email = document.getElementById('logEmail').value;
+  const password = document.getElementById('logPass').value;
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if(error) return alert(error.message);
+  if (error) return alert(error.message);
 
   loadProfile(data.user);
-}
+};
 
+// LOAD PROFILE
 async function loadProfile(user){
   registerCard.classList.add('hidden');
   loginCard.classList.add('hidden');
   dashboard.classList.remove('hidden');
 
-  dEmail.innerText = user.email;
+  document.getElementById('dEmail').innerText = user.email;
 
   const { data } = await supabase
     .from('profiles')
@@ -96,22 +105,22 @@ async function loadProfile(user){
     .single();
 
   if(!data){
-    // create profile first time
     await supabase.from('profiles').insert({
       id: user.id,
       email: user.email,
       role: 'user'
     });
-    dRole.innerText = 'user';
-  }else{
-    dRole.innerText = data.role;
+    document.getElementById('dRole').innerText = 'user';
+  } else {
+    document.getElementById('dRole').innerText = data.role;
   }
 }
 
-async function logout(){
+// LOGOUT
+document.getElementById('logoutBtn').onclick = async () => {
   await supabase.auth.signOut();
   location.reload();
-}
+};
 </script>
 </body>
 </html>
