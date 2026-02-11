@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Watch To Earn Panel</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;background:#0f172a;color:#fff;margin:0}
+header{background:#1e293b;padding:10px;text-align:center;font-size:20px}
+.container{padding:15px}
+.card{background:#1e293b;margin-bottom:15px;padding:15px;border-radius:8px}
+input,select,button{padding:8px;margin:5px 0;width:100%;border-radius:5px;border:none}
+button{background:#22c55e;color:#000;font-weight:bold;cursor:pointer}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #334155;padding:8px;text-align:center}
+.status-active{color:#22c55e}
+.status-expired{color:#ef4444}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header>Watch To Earn — User & Reseller Panel</header>
+<div class="container">
+
+<!-- LOGIN -->
+<div class="card" id="loginCard">
+<h3>Login</h3>
+<select id="role">
+<option value="user">User</option>
+<option value="reseller">Reseller</option>
+</select>
+<input type="text" id="username" placeholder="Username" />
+<input type="password" id="password" placeholder="Password" />
+<button onclick="login()">Login</button>
+</div>
+
+<!-- USER PANEL -->
+<div id="userPanel" class="hidden">
+<div class="card">
+<h3>User Dashboard</h3>
+<p>Status: <span id="userStatus"></span></p>
+<p>Plan: <span id="userPlan"></span></p>
+<p>Total Balance: ₱<span id="userBalance">0</span></p>
+<button onclick="watchVideo()">Watch Random Video</button>
+<p>Videos Today: <span id="videoCount">0</span>/6</p>
+</div>
+
+<div class="card">
+<h3>Withdraw</h3>
+<input id="gcash" placeholder="GCash Number" />
+<button onclick="withdraw()">Request Withdraw</button>
+</div>
+
+<div class="card">
+<h3>Redeem Product</h3>
+<input id="address" placeholder="Address" />
+<input id="mobile" placeholder="Mobile Number" />
+<button onclick="redeem()">Redeem</button>
+</div>
+
+<div class="card">
+<h3>History</h3>
+<table>
+<thead><tr><th>Type</th><th>Amount</th></tr></thead>
+<tbody id="historyTable"></tbody>
+</table>
+</div>
+</div>
+
+<!-- RESELLER PANEL -->
+<div id="resellerPanel" class="hidden">
+<div class="card">
+<h3>Reseller Dashboard</h3>
+<p>Voucher Balance: <span id="voucherBalance">0</span></p>
+</div>
+
+<div class="card">
+<h3>Create User Account</h3>
+<input id="newUser" placeholder="Username" />
+<select id="plan">
+<option value="free">Free (3 days)</option>
+<option value="basic">Basic (2 vouchers)</option>
+<option value="premium">Premium (4 vouchers)</option>
+<option value="vip">VIP (6 vouchers)</option>
+</select>
+<button onclick="createUser()">Create User</button>
+</div>
+
+<div class="card">
+<h3>Users List</h3>
+<table>
+<thead><tr><th>User</th><th>Plan</th><th>Status</th></tr></thead>
+<tbody id="userList"></tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+<script>
+let currentUser=null;
+let videoToday=0;
+
+function login(){
+let role=document.getElementById('role').value;
+document.getElementById('loginCard').classList.add('hidden');
+if(role==='user'){
+document.getElementById('userPanel').classList.remove('hidden');
+loadUser();
+}else{
+document.getElementById('resellerPanel').classList.remove('hidden');
+loadReseller();
+}
+}
+
+function loadUser(){
+document.getElementById('userStatus').innerText='Active';
+document.getElementById('userPlan').innerText='Free';
+document.getElementById('userBalance').innerText='0';
+}
+
+function loadReseller(){
+document.getElementById('voucherBalance').innerText='50';
+}
+
+function watchVideo(){
+if(videoToday>=6){alert('Watch ads to unlock more');return;}
+window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ','_blank');
+let reward=(Math.random()*2).toFixed(2);
+let balance=document.getElementById('userBalance');
+balance.innerText=(parseFloat(balance.innerText)+parseFloat(reward)).toFixed(2);
+addHistory('Earn',reward);
+videoToday++;
+document.getElementById('videoCount').innerText=videoToday;
+}
+
+function addHistory(type,amount){
+let row=`<tr><td>${type}</td><td>₱${amount}</td></tr>`;
+document.getElementById('historyTable').innerHTML+=row;
+}
+
+function withdraw(){
+let bal=parseFloat(document.getElementById('userBalance').innerText);
+if(bal<50){alert('Minimum ₱50');return;}
+addHistory('Withdraw',50);
+document.getElementById('userBalance').innerText=(bal-50).toFixed(2);
+}
+
+function redeem(){
+let bal=parseFloat(document.getElementById('userBalance').innerText);
+if(bal<150){alert('Need ₱150');return;}
+addHistory('Redeem',150);
+document.getElementById('userBalance').innerText=(bal-150).toFixed(2);
+}
+
+function createUser(){
+let user=document.getElementById('newUser').value;
+let plan=document.getElementById('plan').value;
+let status='Active';
+let row=`<tr><td>${user}</td><td>${plan}</td><td class='status-active'>${status}</td></tr>`;
+document.getElementById('userList').innerHTML+=row;
+}
+</script>
+</body>
+</html>
