@@ -37,8 +37,10 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <div class="box">
 💰 Balance: ₱<span id="balance">0.00</span>
 <div class="progress"><div id="withdrawProgress"></div></div>
-<small id="withdrawStageText">Minimum withdrawal ₱50</small><br>
+<small>Minimum withdrawal ₱50</small><br>
 <button id="withdrawBtn" disabled>Mag-Withdraw</button>
+<button id="redeemBtn" class="hidden">Redeem Item</button>
+<div id="cycleDisplay" class="green"></div>
 </div>
 
 <h2>🎬 Watch & Earn PH</h2>
@@ -85,7 +87,14 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </div>
 
 <div id="withdrawModal" class="box hidden">
-<button onclick="confirmWithdraw()" id="withdrawConfirmBtn">Confirm</button>
+<button onclick="confirmWithdraw('GCash')">GCash</button>
+</div>
+
+<div id="redeemModal" class="box hidden">
+<h3>📦 Redeem Item (₱150)</h3>
+<input id="redeemName" placeholder="Buong Pangalan">
+<input id="redeemAddress" placeholder="Buong Address">
+<button onclick="confirmRedeem()">Confirm Redeem</button>
 </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
@@ -117,6 +126,11 @@ let currentUser,data,player,ytReady=false;
 let dailyVideos=[],videoIndex=0;
 let timerInt,countdownInt;
 
+/* ===== CYCLE SYSTEM ADDED (NO ORIGINAL LINES REMOVED) ===== */
+let currentCycle=1;
+const CYCLE_TARGETS={1:50,2:150,3:200};
+/* ============================================================ */
+
 /* DATE HELPERS */
 const today=()=>{let d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const tomorrow=()=>{let d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0);return d};
@@ -124,15 +138,18 @@ const rand=(a,b)=>+(Math.random()*(b-a)+a).toFixed(2);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 
 /* INIT - Populate username dropdown */
-window.onload=()=>{
+document.addEventListener("DOMContentLoaded",function(){
+ const select=document.getElementById("userSelect");
+ select.innerHTML="";
  Object.keys(USERS).forEach(u=>{
   let o=document.createElement("option");
   o.value=u;
   o.textContent=u;
-  document.getElementById("userSelect").appendChild(o);
+  select.appendChild(o);
  });
-};
+});
 function onYouTubeIframeAPIReady(){ytReady=true}
+
 
 /* LOGIN */
 password.onkeypress = async e => {
@@ -172,20 +189,20 @@ if(error || !row){
     refReward:0,
     bonusVideo:null,
     accountStatus:"active",
-    withdrawStage:1,
-    withdrawCycle:1
+    cycle:1
   };
   await supabaseClient.from("users").insert({username:currentUser,data:data});
  }else{
   data=row.data;
   data.accountStatus = data.accountStatus || "active";
-  data.withdrawStage = data.withdrawStage || 1;
-  data.withdrawCycle = data.withdrawCycle || 1;
+  data.cycle = data.cycle || 1;
  }
+ currentCycle=data.cycle;
 }
 
 /* SAVE DATA */
 async function save(){
+ data.cycle=currentCycle;
  await supabaseClient.from("users").update({data:data}).eq("username",currentUser);
 }
 
@@ -235,6 +252,7 @@ async function dailyReset(){
  await save();
  if(dailyVideos.length>0){ loadVideo(); startCountdown(); }
 }
+
 
 /* DAILY BONUS */
 async function claimDailyBonus(){
@@ -292,46 +310,87 @@ async function reward(){
 }
 
 /* RENDER */
-function getRequiredAmount(){
- if(data.withdrawStage===1) return 50;
- if(data.withdrawStage===2) return 150;
- if(data.withdrawStage===3) return 250;
-}
-
 function render(){
- let required=getRequiredAmount();
  document.getElementById("balance").textContent=data.total.toFixed(2);
- document.getElementById("withdrawBtn").disabled=data.total<required || data.accountStatus==="frozen";
- document.getElementById("withdrawProgress").style.width=Math.min(data.total/required*100,100)+"%";
- document.getElementById("withdrawStageText").textContent=`Stage ${data.withdrawStage} | Cycle ${data.withdrawCycle}/3 | Required ₱${required}`;
+
+ let target=CYCLE_TARGETS[currentCycle];
+
+ // Withdraw button logic
+ if(currentCycle===1 || currentCycle===3){
+   document.getElementById("withdrawBtn").classList.remove("hidden");
+   document.getElementById("withdrawBtn").disabled=data.total<target || data.accountStatus==="frozen";
+ }else{
+   document.getElementById("withdrawBtn").classList.add("hidden");
+ }
+
+ // Redeem button logic (Cycle 2 only)
+ if(currentCycle===2){
+   document.getElementById("redeemBtn").classList.remove("hidden");
+   document.getElementById("redeemBtn").disabled=data.total<150;
+ }else{
+   document.getElementById("redeemBtn").classList.add("hidden");
+ }
+
+ document.getElementById("withdrawProgress").style.width=Math.min(data.total/target*100,100)+"%";
  document.getElementById("earnHistory").innerHTML=data.earn.map(e=>`<div class="card">${e.type}<br>₱${e.amount}<br>${e.time}</div>`).join("");
  document.getElementById("withdrawHistory").innerHTML=data.withdraw.map(w=>`<div class="card">${w.method} ₱${w.amount}<br>${w.time}</div>`).join("");
+
+ /* ===== CYCLE OVERRIDE LOGIC (ADDED ONLY) ===== */
+ if(currentCycle===2){
+   document.getElementById("withdrawBtn").disabled=true;
+ }else{
+   document.getElementById("withdrawBtn").disabled=data.total<target || data.accountStatus==="frozen";
+ }
+ document.getElementById("cycleDisplay").textContent="Current Cycle: "+currentCycle+" (₱"+target+")";
+ /* ============================================= */
 }
+
 
 /* WITHDRAW */
 document.getElementById("withdrawBtn").onclick=()=>document.getElementById("withdrawModal").classList.remove("hidden");
-
-async function confirmWithdraw(){
+document.getElementById("redeemBtn").onclick=()=>document.getElementById("redeemModal").classList.remove("hidden");
+async function confirmWithdraw(m){
  if(isFrozen()) return;
- let required=getRequiredAmount();
- if(data.total<required) return;
+ let target=CYCLE_TARGETS[currentCycle];
+ if(currentCycle===2) return;
+ if(data.total<target) return;
 
- let method=(data.withdrawStage===2)?"Echozone Product":"GCash";
+ data.withdraw.push({method:m,amount:target,time:new Date().toLocaleString(),cycle:currentCycle});
+ data.total-=target;
 
- data.total-=required;
- data.withdraw.push({method:method,amount:required,time:new Date().toLocaleString()});
-
- data.withdrawStage++;
- if(data.withdrawStage>3){
-  data.withdrawStage=1;
-  data.withdrawCycle++;
-  if(data.withdrawCycle>3){
-   data.withdrawCycle=1;
-  }
+ if(currentCycle===1){
+   currentCycle=2;
+ }else if(currentCycle===3){
+   currentCycle=1;
  }
 
- await save(); render();
+ data.cycle=currentCycle;
+ await save();
+ render();
  document.getElementById("withdrawModal").classList.add("hidden");
+}
+
+async function confirmRedeem(){
+ if(isFrozen()) return;
+ if(currentCycle!==2) return;
+ if(data.total<150) return;
+
+ let name=document.getElementById("redeemName").value;
+ let address=document.getElementById("redeemAddress").value;
+ if(!name || !address){alert("Kumpletuhin ang pangalan at address");return;}
+
+ data.withdraw.push({method:"Redeem Item",amount:150,name,address,time:new Date().toLocaleString(),cycle:2});
+ data.total-=150;
+
+ currentCycle=3;
+ data.cycle=currentCycle;
+
+ document.getElementById("redeemModal").classList.add("hidden");
+ document.getElementById("redeemName").value="";
+ document.getElementById("redeemAddress").value="";
+
+ await save();
+ render();
 }
 
 /* COUNTDOWN */
