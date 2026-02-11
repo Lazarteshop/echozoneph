@@ -97,41 +97,60 @@ th,td{border:1px solid #334155;padding:8px;text-align:center}
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const supabase = window.supabase.createClient(
+  "YOUR_SUPABASE_URL",
+  "YOUR_ANON_KEY"
+); 
+
+
 let currentUser=null;
 let videoToday=0;
 
-function login(){
-let role=document.getElementById('role').value;
-document.getElementById('loginCard').classList.add('hidden');
-if(role==='user'){
-document.getElementById('userPanel').classList.remove('hidden');
-loadUser();
-}else{
-document.getElementById('resellerPanel').classList.remove('hidden');
-loadReseller();
-}
+async function login(){
+  let username = document.getElementById('username').value;
+  let password = document.getElementById('password').value;
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('username', username)
+    .eq('password', password)
+    .single();
+
+  if(error){ alert("Invalid login"); return; }
+
+  if(data.role === 'user'){
+    loadUser(data);
+  }else{
+    loadReseller(data);
+  }
 }
 
-function loadUser(){
-document.getElementById('userStatus').innerText='Active';
-document.getElementById('userPlan').innerText='Free';
-document.getElementById('userBalance').innerText='0';
+function loadUser(user){
+  document.getElementById('userPanel').classList.remove('hidden');
+  document.getElementById('userStatus').innerText =
+    new Date(user.expiry_date) > new Date() ? "Active" : "Expired";
+
+  document.getElementById('userPlan').innerText = user.plan;
+  document.getElementById('userBalance').innerText = user.balance;
 }
 
 function loadReseller(){
 document.getElementById('voucherBalance').innerText='50';
 }
 
-function watchVideo(){
-if(videoToday>=6){alert('Watch ads to unlock more');return;}
-window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ','_blank');
-let reward=(Math.random()*2).toFixed(2);
-let balance=document.getElementById('userBalance');
-balance.innerText=(parseFloat(balance.innerText)+parseFloat(reward)).toFixed(2);
-addHistory('Earn',reward);
-videoToday++;
-document.getElementById('videoCount').innerText=videoToday;
+async function watchVideo(){
+  let reward = (Math.random()*2).toFixed(2);
+  let balance = parseFloat(document.getElementById('userBalance').innerText) + parseFloat(reward);
+
+  await supabase
+    .from('users')
+    .update({ balance: balance })
+    .eq('username', username);
+
+  document.getElementById('userBalance').innerText = balance.toFixed(2);
 }
 
 function addHistory(type,amount){
@@ -139,18 +158,30 @@ let row=`<tr><td>${type}</td><td>₱${amount}</td></tr>`;
 document.getElementById('historyTable').innerHTML+=row;
 }
 
-function withdraw(){
-let bal=parseFloat(document.getElementById('userBalance').innerText);
-if(bal<50){alert('Minimum ₱50');return;}
-addHistory('Withdraw',50);
-document.getElementById('userBalance').innerText=(bal-50).toFixed(2);
+async function withdraw(){
+  let gcash = document.getElementById('gcash').value;
+
+  await supabase.from('withdrawals').insert({
+    username: username,
+    gcash: gcash,
+    amount: 50
+  });
+
+  alert("Withdrawal requested");
 }
 
-function redeem(){
-let bal=parseFloat(document.getElementById('userBalance').innerText);
-if(bal<150){alert('Need ₱150');return;}
-addHistory('Redeem',150);
-document.getElementById('userBalance').innerText=(bal-150).toFixed(2);
+async function redeem(){
+  let address = document.getElementById('address').value;
+  let mobile = document.getElementById('mobile').value;
+
+  await supabase.from('redemptions').insert({
+    username: username,
+    address: address,
+    mobile: mobile,
+    amount: 150
+  });
+
+  alert("Redeem requested");
 }
 
 function createUser(){
