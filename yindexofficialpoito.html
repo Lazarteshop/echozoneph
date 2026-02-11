@@ -1,9 +1,11 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tl">
 <head>
+<meta name="monetag" content="f6cd6220dde78c27df43aa4d5f91b623">
 <meta charset="UTF-8">
 <title>Watch & Earn PH</title>
-<meta name="viewport" content="width=device-width">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="refresh" content="350; url=https://echozoneph-viewers-watchtoearn2026.netlify.app/yindex.html">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -20,8 +22,8 @@ body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff}
 .green{color:#00ff88}
 .lock{color:#ff6666}
 button{padding:10px 15px;border:none;border-radius:6px;cursor:pointer}
-button:disabled{background:#555}
-input,select{padding:10px;width:100%;max-width:300px;margin:5px}
+button:disabled{background:#555;cursor:not-allowed}
+input,select{padding:10px;width:100%;max-width:300px;margin:5px;border-radius:6px;border:none}
 .progress{width:100%;height:12px;background:#333;border-radius:10px;overflow:hidden}
 .progress div{height:100%;background:#00ff88;width:0}
 .card{background:#111;padding:10px;border-radius:8px;margin-bottom:6px;text-align:left}
@@ -32,48 +34,54 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <body>
 <div class="container">
 
+<!-- BALANCE -->
 <div class="box">
 💰 Balance: ₱<span id="balance">0.00</span>
 <div class="progress"><div id="withdrawProgress"></div></div>
 <small>Minimum withdrawal ₱50</small><br>
-<button id="withdrawBtn" disabled>Withdraw</button>
+<button id="withdrawBtn" disabled>Mag-Withdraw</button>
 </div>
 
 <h2>🎬 Watch & Earn PH</h2>
-<h>BASIC PLAN</h>
+<h3>BASIC PLAN</h3>
 
+<!-- LOGIN -->
 <div id="login" class="box">
 <select id="userSelect"></select><br>
-<input id="password" type="password" placeholder="Enter password">
+<input id="password" type="password" placeholder="Ilagay ang password">
 </div>
 
 <div id="lockMsg" class="lock"></div>
 
+<!-- REFERRAL -->
 <div id="refBox" class="box hidden">
 <h3>👥 Referrer Username</h3>
 <input id="refUsername" placeholder="Username ng nag-invite">
-<button id="saveRef">Save</button>
+<button id="saveRef">I-save</button>
 <div id="refMsg" class="green"></div>
 </div>
 
+<!-- VIDEO AREA -->
 <div id="playerArea"></div>
 <div class="progress"><div id="videoProgress"></div></div>
 <div id="timer"></div>
 <div id="earned" class="green"></div>
 
+<!-- DAILY BONUS -->
 <div class="box">
 🎁 Daily Bonus: <span id="dailyBonus" class="green"></span><br>
-🎬 Watched today: <span id="watchedCount">0</span>/6<br>
-⏳ Next reset in: <span id="countdown"></span>
+🎬 Napanood ngayon: <span id="watchedCount">0</span>/6<br>
+⏳ Susunod na reset sa: <span id="countdown"></span>
 </div>
 
+<!-- HISTORY -->
 <div class="box">
-<h3>📊 Earnings History</h3>
+<h3>📊 Kasaysayan ng Kita</h3>
 <div id="earnHistory"></div>
 </div>
 
 <div class="box">
-<h3>📤 Withdrawal History</h3>
+<h3>📤 Kasaysayan ng Withdrawal</h3>
 <div id="withdrawHistory"></div>
 </div>
 
@@ -83,23 +91,23 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
+
 /* USERS */
 const USERS={
 user1:{pass:"dipwd1234",role:"user"},
- Jeryanroyate:{pass:"101017",role:"user"},
- risadelapate:{pass:"460613",role:"user"},
- user2:{pass:"dipwdabcd",role:"user"},
- John:{pass:"101017",role:"user"},
+Benggalleon041:{pass:"beng41",role:"user"},
+Jeryanroyate:{pass:"101017",role:"user"},
+risadelapate:{pass:"460613",role:"user"},
+user2:{pass:"dipwdabcd",role:"user"},
+John:{pass:"101017",role:"user"},
 Christinebengil:{pass:"007608",role:"user"},
 Jaycervantes:{pass:"101017",role:"user"},
 CKill:{pass:"101017",role:"user"},
 Jcarl:{pass:"101017",role:"user"},
- Delf:{pass:"230738",role:"user"},
- jonardbelleza:{pass:"251935",role:"user"},
- Regine:{pass:"230293",role:"user"},
- Benggalleon041:{pass:"beng41",role:"user"},
- jaynegalleon:{pass:"jayne1",role:"user"},
- user3:{pass:"dipwdadmin123",role:"admin"}
+Delf:{pass:"230738",role:"user"},
+jonardbelleza:{pass:"251935",role:"user"},
+Regine:{pass:"230293",role:"user"},
+user3:{pass:"dipwdadmin123",role:"admin"}
 };
 
 /* VIDEOS */
@@ -110,29 +118,32 @@ let currentUser,data,player,ytReady=false;
 let dailyVideos=[],videoIndex=0;
 let timerInt,countdownInt;
 
+/* DATE HELPERS */
 const today=()=>{let d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const tomorrow=()=>{let d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0);return d};
 const rand=(a,b)=>+(Math.random()*(b-a)+a).toFixed(2);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 
+/* INIT - Populate username dropdown */
 window.onload=()=>{
  Object.keys(USERS).forEach(u=>{
   let o=document.createElement("option");
-  o.value=u;o.textContent=u;
-  userSelect.appendChild(o);
+  o.value=u;
+  o.textContent=u;
+  document.getElementById("userSelect").appendChild(o);
  });
 };
-
 function onYouTubeIframeAPIReady(){ytReady=true}
+
 
 /* LOGIN */
 password.onkeypress = async e => {
  if(e.key!=="Enter")return;
- let u=userSelect.value;
- if(password.value!==USERS[u].pass){alert("Wrong password");return;}
+ let u=document.getElementById("userSelect").value;
+ if(password.value!==USERS[u].pass){alert("Mali ang password");return;}
  currentUser=u;
- login.remove();
- refBox.classList.remove("hidden");
+ document.getElementById("login").remove();
+ document.getElementById("refBox").classList.remove("hidden");
 
  await loadData();
  await dailyReset();
@@ -142,7 +153,7 @@ password.onkeypress = async e => {
  render();
 };
 
-/* SUPABASE DATA */
+/* LOAD DATA */
 async function loadData(){
  const { data:row, error } =
    await supabaseClient.from("users")
@@ -150,38 +161,62 @@ async function loadData(){
    .eq("username",currentUser)
    .single();
 
-if(error) console.log("SUPABASE ERROR:", error);
-
- if(error || !row){
-  data={total:0,earn:[],withdraw:[],watchedToday:[],dailyVideos:[],lastDate:null,lastBonus:null,refUser:null,refReward:0,bonusVideo:null};
+if(error || !row){
+  data={
+    total:0,
+    earn:[],
+    withdraw:[],
+    watchedToday:[],
+    dailyVideos:[],
+    lastDate:null,
+    lastBonus:null,
+    refUser:null,
+    refReward:0,
+    bonusVideo:null,
+    accountStatus:"active" // default active
+  };
   await supabaseClient.from("users").insert({username:currentUser,data:data});
  }else{
   data=row.data;
+  data.accountStatus = data.accountStatus || "active"; // siguraduhin may accountStatus
  }
 }
 
+/* SAVE DATA */
 async function save(){
  await supabaseClient.from("users").update({data:data}).eq("username",currentUser);
+}
+
+/* CHECK FREEZE */
+function isFrozen(){
+ if(data.accountStatus==="frozen"){
+   document.getElementById("lockMsg").textContent="🧊 please proceed to Extra game button and flip a card. Then contact your admin/TL if done.";
+   return true;
+ }
+ document.getElementById("lockMsg").textContent="";
+ return false;
 }
 
 /* REFERRAL */
 function loadReferral(){
  if(data.refUser){
-  refUsername.value=data.refUser;
-  refUsername.disabled=true;
-  saveRef.disabled=true;
+  document.getElementById("refUsername").value=data.refUser;
+  document.getElementById("refUsername").disabled=true;
+  document.getElementById("saveRef").disabled=true;
  }
 }
-saveRef.onclick=async ()=>{
- if(data.refUser)return;
+document.getElementById("saveRef").onclick=async ()=>{
+ if(data.refUser) return;
  let r=rand(0.1,2);
- data.refUser=refUsername.value;
+ data.refUser=document.getElementById("refUsername").value;
  data.refReward=r;
  data.total+=r;
  data.earn.push({type:"Invite Reward",amount:r,time:new Date().toLocaleString()});
- await save();render();
- refUsername.disabled=true;saveRef.disabled=true;
- refMsg.textContent="₱"+r+" added";
+ await save();
+ render();
+ document.getElementById("refUsername").disabled=true;
+ document.getElementById("saveRef").disabled=true;
+ document.getElementById("refMsg").textContent="₱"+r+" nadagdag";
 };
 
 /* DAILY RESET */
@@ -194,39 +229,32 @@ async function dailyReset(){
   data.dailyVideos=dailyVideos;
   data.bonusVideo=dailyVideos[Math.floor(Math.random()*dailyVideos.length)];
  }
-dailyVideos = data.dailyVideos || [];
+ dailyVideos=data.dailyVideos||[];
  await save();
- if(dailyVideos.length>0){
-  loadVideo();
-  startCountdown();
- }
+ if(dailyVideos.length>0){ loadVideo(); startCountdown(); }
 }
+
 
 /* DAILY BONUS */
 async function claimDailyBonus(){
- if(data.lastBonus===today()){
- dailyBonus.textContent="Claimed";
- return;
-}
+ if(isFrozen()) return;
+ if(data.lastBonus===today()){ document.getElementById("dailyBonus").textContent="Claimed"; return; }
  let b=rand(0.01,0.10);
  data.lastBonus=today();
  data.total+=b;
  data.earn.push({type:"Daily Bonus",amount:b,time:new Date().toLocaleString()});
  await save();
- dailyBonus.textContent="₱"+b;
+ document.getElementById("dailyBonus").textContent="₱"+b;
 }
-
 
 /* VIDEO */
 function loadVideo(){
- if(!dailyVideos || !dailyVideos[videoIndex]){
-  lockMsg.textContent="🔒 No video available today";
-  return;
- }
+ if(isFrozen()) return;
+ if(!dailyVideos || !dailyVideos[videoIndex]){ document.getElementById("lockMsg").textContent="🔒 Wala pang video ngayon"; return; }
  if(!ytReady){setTimeout(loadVideo,500);return;}
- watchedCount.textContent=data.watchedToday.length;
- if(data.watchedToday.length>=DAILY_LIMIT){lockMsg.textContent="🔒 Daily limit reached";return;}
- playerArea.innerHTML="<div id='player'></div>";
+ document.getElementById("watchedCount").textContent=data.watchedToday.length;
+ if(data.watchedToday.length>=DAILY_LIMIT){ document.getElementById("lockMsg").textContent="🔒 Naabot na ang daily limit";return;}
+ document.getElementById("playerArea").innerHTML="<div id='player'></div>";
  player=new YT.Player("player",{videoId:dailyVideos[videoIndex],playerVars:{autoplay:1,controls:0},
   events:{onReady:startTimer,onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)reward()}}
  });
@@ -243,40 +271,43 @@ function runTimer(t){
  let total=t;
  clearInterval(timerInt);
  timerInt=setInterval(()=>{
-  timer.textContent=`⏱ ${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`;
-  videoProgress.style.width=((total-t)/total*100)+"%";
+  document.getElementById("timer").textContent=`⏱ ${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`;
+  document.getElementById("videoProgress").style.width=((total-t)/total*100)+"%";
   t--; if(t<0)clearInterval(timerInt);
  },1000);
 }
 
 /* REWARD */
 async function reward(){
+ if(isFrozen()) return;
  let r=(dailyVideos[videoIndex]===data.bonusVideo)?0.50:rand(0.1,0.30);
  data.total+=r;
  data.watchedToday.push(dailyVideos[videoIndex]);
  data.earn.push({type:"Video",amount:r,time:new Date().toLocaleString()});
  videoIndex++;
- await save();render();
- earned.textContent="₱"+r+" earned";
+ await save(); render();
+ document.getElementById("earned").textContent="₱"+r+" nadagdag";
  setTimeout(loadVideo,1500);
 }
 
 /* RENDER */
 function render(){
- balance.textContent=data.total.toFixed(2);
- withdrawBtn.disabled=data.total<50;
- withdrawProgress.style.width=Math.min(data.total/50*100,100)+"%";
- earnHistory.innerHTML=data.earn.map(e=>`<div class="card">${e.type}<br>₱${e.amount}<br>${e.time}</div>`).join("");
- withdrawHistory.innerHTML=data.withdraw.map(w=>`<div class="card">${w.method} ₱${w.amount}<br>${w.time}</div>`).join("");
+ document.getElementById("balance").textContent=data.total.toFixed(2);
+ document.getElementById("withdrawBtn").disabled=data.total<50 || data.accountStatus==="frozen";
+ document.getElementById("withdrawProgress").style.width=Math.min(data.total/50*100,100)+"%";
+ document.getElementById("earnHistory").innerHTML=data.earn.map(e=>`<div class="card">${e.type}<br>₱${e.amount}<br>${e.time}</div>`).join("");
+ document.getElementById("withdrawHistory").innerHTML=data.withdraw.map(w=>`<div class="card">${w.method} ₱${w.amount}<br>${w.time}</div>`).join("");
 }
 
+
 /* WITHDRAW */
-withdrawBtn.onclick=()=>withdrawModal.classList.remove("hidden");
+document.getElementById("withdrawBtn").onclick=()=>document.getElementById("withdrawModal").classList.remove("hidden");
 async function confirmWithdraw(m){
+ if(isFrozen()) return;
  data.withdraw.push({method:m,amount:data.total,time:new Date().toLocaleString()});
  data.total=0;
- await save();render();
- withdrawModal.classList.add("hidden");
+ await save(); render();
+ document.getElementById("withdrawModal").classList.add("hidden");
 }
 
 /* COUNTDOWN */
@@ -284,7 +315,7 @@ function startCountdown(){
  clearInterval(countdownInt);
  countdownInt=setInterval(()=>{
   let d=tomorrow()-new Date();
-  countdown.textContent=`${Math.floor(d/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s`;
+  document.getElementById("countdown").textContent=`${Math.floor(d/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s`;
  },1000);
 }
 </script>
