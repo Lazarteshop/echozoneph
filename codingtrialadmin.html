@@ -1,12 +1,3 @@
-
-
-
-
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -101,6 +92,10 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <select id="adminUserList"></select><br>
 <input id="adminBalance" type="number" step="0.01" placeholder="Edit Balance">
 <input id="adminGcash" placeholder="GCash Number">
+
+<!-- ✅ ADDED: EXPIRATION DATE FIELD -->
+<input id="adminExpiration" type="date" placeholder="Account Expiration">
+
 <button onclick="saveAdminEdit()">Save Changes</button>
 </div>
 <div class="box">
@@ -199,6 +194,10 @@ function showAdminUser(){
  let d=JSON.parse(opt.dataset.data);
  adminBalance.value=d.total||0;
  adminGcash.value=d.gcash||"";
+
+ /* ✅ ADDED: LOAD EXPIRATION */
+ adminExpiration.value=d.expiration||"";
+
  adminWithdraws.innerHTML=(d.withdraw||[]).map(w=>`<div class="card">${w.method} ₱${w.amount}<br>${w.time}</div>`).join("");
 }
 
@@ -208,6 +207,10 @@ async function saveAdminEdit(){
  let d=JSON.parse(opt.dataset.data);
  d.total=parseFloat(adminBalance.value)||0;
  d.gcash=adminGcash.value;
+
+ /* ✅ ADDED: SAVE EXPIRATION */
+ d.expiration=adminExpiration.value;
+
  await supabaseClient.from("users").update({data:d}).eq("username",u);
  alert("Saved!");
  loadAdminUsers();
@@ -221,10 +224,10 @@ async function loadData(){
   await supabaseClient.from("users").insert({username:currentUser,data:data});
  }else data=row.data;
 }
-async function save(){await supabaseClient.from("users").update({data:data}).eq("username",currentUser);}
+async function save(){await supabaseClient.from("users").update({data:data}).eq("username",currentUser);} 
 
 /* (All your original referral, video, reward, render, withdraw, countdown functions stay EXACTLY as you sent — unchanged) */
-/* ... paste your original user-side functions here exactly ... */
+
 /* =========================
    🔔 SCROLLABLE STACKED WITHDRAW POPUP W/ CORRECT DATE
 ========================= */
