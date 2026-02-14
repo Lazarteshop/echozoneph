@@ -43,6 +43,11 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <div id="cycleDisplay" class="green"></div>
 </div>
 
+<!-- ✅ ADDED: ACCOUNT EXPIRATION DISPLAY -->
+<div class="box">
+⏳ Account Expiration: <span id="accountExpiration" class="green">Loading...</span>
+</div>
+
 <h2>🎬 Watch & Earn PH</h2>
 <h3>BASIC PLAN</h3>
 
@@ -189,21 +194,48 @@ if(error || !row){
     refReward:0,
     bonusVideo:null,
     accountStatus:"active",
-    cycle:1
+    cycle:1,
+
+    /* ✅ ADDED: EXPIRATION FIELD */
+    expiration:null
   };
   await supabaseClient.from("users").insert({username:currentUser,data:data});
  }else{
   data=row.data;
   data.accountStatus = data.accountStatus || "active";
   data.cycle = data.cycle || 1;
+
+  /* ✅ ADDED: ensure expiration exists */
+  data.expiration = data.expiration || null;
  }
  currentCycle=data.cycle;
+
+ /* ✅ SHOW EXPIRATION */
+ showExpiration();
 }
 
 /* SAVE DATA */
 async function save(){
  data.cycle=currentCycle;
  await supabaseClient.from("users").update({data:data}).eq("username",currentUser);
+}
+
+/* ✅ SHOW EXPIRATION FUNCTION */
+function showExpiration(){
+ const el=document.getElementById("accountExpiration");
+ if(!data.expiration){
+   el.textContent="No expiration set";
+   el.classList.remove("lock");
+   return;
+ }
+
+ const todayDate=new Date().toISOString().split("T")[0];
+ if(data.expiration < todayDate){
+   el.textContent=data.expiration+" (Expired)";
+   el.classList.add("lock");
+ }else{
+   el.textContent=data.expiration;
+ }
 }
 
 /* CHECK FREEZE */
