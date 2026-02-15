@@ -1,14 +1,118 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width"> 
-  <title>ECHOZONEPHapp</title>
-    <link rel="stylesheet" href="style.css">
-<body>
-  <iframe src="https://app.box.com/embed/s/hgmijvszksm0kdxqp0sryurszjf6e6xn?sortColumn=date" width="500" height="400" frameborder="0" allowfullscreen webkitallowfullscreen msallowfullscreen></iframe>
-    <!----<iframe src="https://app.box.com/embed/s/7y86c5q5kjfzowldby2wnusqh2rr16ec?sortColumn=date" width="500" height="400" frameborder="0" allowfullscreen webkitallowfullscreen msallowfullscreen></iframe>--->
-</body>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EchoZonePH APPStore</title>
+
+<style>
+body{
+  font-family: Arial, sans-serif;
+  background:#f2f2f2;
+  margin:0;
+}
+.header{
+  background:#0f9d58;
+  color:white;
+  padding:15px;
+  text-align:center;
+  font-size:20px;
+}
+.container{
+  max-width:500px;
+  margin:20px auto;
+  background:white;
+  border-radius:12px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.1);
+  overflow:hidden;
+}
+.app-header{
+  display:flex;
+  padding:15px;
+}
+.app-icon{
+  width:80px;
+  height:80px;
+  border-radius:20px;
+}
+.app-info{
+  margin-left:15px;
+}
+.app-name{
+  font-size:20px;
+  font-weight:bold;
+}
+.install-btn{
+  display:block;
+  margin:15px;
+  background:#0f9d58;
+  color:white;
+  text-align:center;
+  padding:12px;
+  border-radius:8px;
+  font-size:18px;
+  text-decoration:none;
+}
+.install-btn:hover{
+  background:#0c7a45;
+}
+.screenshots{
+  display:flex;
+  overflow-x:auto;
+  padding:10px;
+}
+.screenshots img{
+  width:200px;
+  margin-right:10px;
+  border-radius:10px;
+}
+.description{
+  padding:15px;
+  font-size:14px;
+}
+</style>
 </head>
+
+<body>
+
+<div class="header">EchoZonePH APPStore</div>
+
+<div class="container">
+
+  <div class="app-header">
+    <img src="https://echozoneph.vercel.app/EchozonePHlogo.jpg" class="app-icon">
+    <div class="app-info">
+      <div class="app-name">EchoZonePH</div>
+      <div>Developer: EchoZone Team</div>
+      <div>Version: 1.0</div>
+    </div>
+  </div>
+
+  <!-- INSTALL BUTTON -->
+  <a class="install-btn" href="#" onclick="installApp()">Install App</a>
+
+  <!-- Screenshots -->
+  <div class="screenshots">
+    <img src="https://echozoneph.vercel.app/1771133882319.jpg">
+    <img src="https://echozoneph.vercel.app/1771133892953.jpg">
+    <img src="https://echozoneph.vercel.app/1771133936006.jpg">
+  </div>
+
+  <div class="description">
+    <b>About this app</b><br><br>
+    Kumita habang nanonood ng videos sa EchoZonePH.
+    Mag-register, manood, at kumita araw-araw!
+  </div>
+
+</div>
+
+<script>
+function installApp(){
+  if(confirm("Download and install EchoZonePH App?")){
+    window.location.href="https://echozoneph.vercel.app/echozoneph.apk";
+  }
+}
+</script>
+
+</body>
 </html>
