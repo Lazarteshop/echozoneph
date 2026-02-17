@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SocialEarn User Instant Login</title>
+<title>SocialEarn User Fixed</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 body{font-family:Arial;margin:0;background:#f0f2f5}
@@ -52,17 +52,15 @@ input,textarea{width:100%;padding:8px;margin-top:5px;margin-bottom:10px}
 <button id="logoutBtn" class="primary">Logout</button>
 </div>
 <script>
-// SINGLE SUPABASE DECLARATION
 const supabaseUrl = 'https://svmkdnzbzjsjuwazzxcg.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2bWtkbnpiempzanV3YXp6eGNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMjI4MzgsImV4cCI6MjA4Njg5ODgzOH0.vK8GJi8OIVpbNxT68gsQpjtCF7QHHgHCaJw0Tjkmths';
-
 const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
 let user;
 const adReward=5, likeReward=1, commentReward=2, postReward=5, chatCost=1;
 const adUrl='https://your-monetag-direct-link.com';
 
-// ================= EVENT LISTENERS =================
+// EVENT LISTENERS
 document.getElementById('signupBtn').addEventListener('click', signup);
 document.getElementById('loginBtn').addEventListener('click', login);
 document.getElementById('watchAdBtn').addEventListener('click', watchAd);
@@ -71,20 +69,16 @@ document.getElementById('sendMessageBtn').addEventListener('click', sendMessage)
 document.getElementById('withdrawBtn').addEventListener('click', withdraw);
 document.getElementById('logoutBtn').addEventListener('click', logout);
 
-// ================= AUTH FUNCTIONS =================
+// AUTH FUNCTIONS
 async function signup(){
   const email=document.getElementById('email').value;
   const password=document.getElementById('password').value;
-  const { data, error } = await supabase.auth.signUp({email,password});
+  const { data, error } = await supabase.auth.signUp({ email, password });
   if(error){ alert(error.message); return; }
-  alert('Sign up successful! Logging you in...');
-  await loginAfterSignup(email,password);
-}
-
-async function loginAfterSignup(email,password){
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if(error){ alert(error.message); return; }
-  user = data.user;
+  // auto-login after signup
+  const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+  if(loginError){ alert(loginError.message); return; }
+  user = loginData.user || (await supabase.auth.getUser()).data.user;
   document.getElementById('authCard').style.display='none';
   document.getElementById('app').style.display='block';
   loadAccount();
@@ -96,7 +90,8 @@ async function login(){
   const password=document.getElementById('password').value;
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if(error){ alert(error.message); return; }
-  user = data.user;
+  user = data.user || (await supabase.auth.getUser()).data.user;
+  if(!user) return alert('Login failed, check credentials or confirm your email.');
   document.getElementById('authCard').style.display='none';
   document.getElementById('app').style.display='block';
   loadAccount();
@@ -110,7 +105,7 @@ async function logout(){
   document.getElementById('app').style.display='none';
 }
 
-// ================= ACCOUNT FUNCTIONS =================
+// ACCOUNT FUNCTIONS
 async function loadAccount(){
   const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
   if(!data){ await supabase.from('users').insert({id:user.id,tokens:0}); document.getElementById('tokens').innerText=0; document.getElementById('status').innerText='Active'; return; }
@@ -127,7 +122,7 @@ async function updateTokens(amount){
   document.getElementById('tokens').innerText=newTokens;
 }
 
-// ================= ADS FUNCTIONS =================
+// ADS
 let lastAdTime=0;
 async function watchAd(){
   if(isExpired()) return alert('Account expired');
@@ -139,7 +134,7 @@ async function watchAd(){
   alert('Ad opened! Tokens credited.');
 }
 
-// ================= POSTS FUNCTIONS =================
+// POSTS
 async function createPost(){
   if(isExpired()) return alert('Account expired');
   const content=document.getElementById('postContent').value;
@@ -149,7 +144,6 @@ async function createPost(){
   document.getElementById('postContent').value='';
   loadPosts();
 }
-
 async function loadPosts(){
   const { data } = await supabase.from('posts').select('*').order('id',{ascending:false});
   const container=document.getElementById('posts'); container.innerHTML='';
@@ -159,7 +153,6 @@ async function loadPosts(){
     container.appendChild(div);
   });
 }
-
 async function likePost(id){if(isExpired()) return alert('Account expired'); await updateTokens(likeReward);}
 async function commentPost(id){
   if(isExpired()) return alert('Account expired');
@@ -168,7 +161,7 @@ async function commentPost(id){
   await updateTokens(commentReward);
 }
 
-// ================= CHAT FUNCTIONS =================
+// CHAT
 async function sendMessage(){
   if(isExpired()) return alert('Account expired');
   const to=document.getElementById('chatUser').value;
@@ -181,7 +174,7 @@ async function sendMessage(){
   document.getElementById('chatMessage').value='';
 }
 
-// ================= WITHDRAW FUNCTIONS =================
+// WITHDRAW
 async function withdraw(){
   const amount=parseInt(document.getElementById('withdrawAmount').value);
   if(!amount) return;
