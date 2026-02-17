@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SocialEarn User</title>
+<title>SocialEarn User Instant Login</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 body{font-family:Arial;margin:0;background:#f0f2f5}
@@ -18,75 +18,82 @@ input,textarea{width:100%;padding:8px;margin-top:5px;margin-bottom:10px}
 <body>
 <header>SocialEarn</header>
 <div class="container">
-
-<!-- LOGIN/SIGNUP -->
 <div class="card" id="authCard">
 <h3>Login / Signup</h3>
 <input type="email" id="email" placeholder="Email">
 <input type="password" id="password" placeholder="Password">
-<button class="primary" onclick="login()">Login</button>
-<button class="primary" onclick="signup()">Sign Up</button>
+<button id="signupBtn" class="primary">Sign Up</button>
+<button id="loginBtn" class="primary">Login</button>
 </div>
-
-<!-- MAIN APP -->
 <div id="app" style="display:none">
 <div class="card">
 <h3>Account</h3>
 <p><b>Tokens:</b> <span id="tokens">0</span></p>
 <p><b>Status:</b> <span id="status">Active</span></p>
-<button class="primary" onclick="watchAd()">Watch Ad</button>
+<button id="watchAdBtn" class="primary">Watch Ad</button>
 </div>
-
 <div class="card">
 <h3>Create Post</h3>
 <textarea id="postContent" placeholder="What's on your mind?"></textarea>
-<button class="primary" onclick="createPost()">Post (+tokens)</button>
+<button id="createPostBtn" class="primary">Post (+tokens)</button>
 </div>
-
 <div id="posts"></div>
-
 <div class="card">
 <h3>Chat</h3>
 <input id="chatUser" placeholder="User ID">
 <input id="chatMessage" placeholder="Message">
-<button class="primary" onclick="sendMessage()">Send (cost tokens)</button>
+<button id="sendMessageBtn" class="primary">Send (cost tokens)</button>
 </div>
-
 <div class="card">
 <h3>Withdraw</h3>
 <input id="withdrawAmount" type="number" placeholder="Token amount">
-<button class="primary" onclick="withdraw()">Request Withdrawal</button>
+<button id="withdrawBtn" class="primary">Request Withdrawal</button>
 </div>
-
-<button class="primary" onclick="logout()">Logout</button>
+<button id="logoutBtn" class="primary">Logout</button>
 </div>
-
 <script>
-// ================= SUPABASE INIT =================
+// SINGLE SUPABASE DECLARATION
 const supabaseUrl = 'https://svmkdnzbzjsjuwazzxcg.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2bWtkbnpiempzanV3YXp6eGNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMjI4MzgsImV4cCI6MjA4Njg5ODgzOH0.vK8GJi8OIVpbNxT68gsQpjtCF7QHHgHCaJw0Tjkmths';
+
 const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
 let user;
-const adReward = 5;
-const likeReward = 1;
-const commentReward = 2;
-const postReward = 5;
-const chatCost = 1;
-const adUrl = 'https://your-monetag-direct-link.com';
+const adReward=5, likeReward=1, commentReward=2, postReward=5, chatCost=1;
+const adUrl='https://your-monetag-direct-link.com';
+
+// ================= EVENT LISTENERS =================
+document.getElementById('signupBtn').addEventListener('click', signup);
+document.getElementById('loginBtn').addEventListener('click', login);
+document.getElementById('watchAdBtn').addEventListener('click', watchAd);
+document.getElementById('createPostBtn').addEventListener('click', createPost);
+document.getElementById('sendMessageBtn').addEventListener('click', sendMessage);
+document.getElementById('withdrawBtn').addEventListener('click', withdraw);
+document.getElementById('logoutBtn').addEventListener('click', logout);
 
 // ================= AUTH FUNCTIONS =================
 async function signup(){
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const email=document.getElementById('email').value;
+  const password=document.getElementById('password').value;
+  const { data, error } = await supabase.auth.signUp({email,password});
   if(error){ alert(error.message); return; }
-  alert('Sign up successful! Please check your email to confirm.');
+  alert('Sign up successful! Logging you in...');
+  await loginAfterSignup(email,password);
+}
+
+async function loginAfterSignup(email,password){
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if(error){ alert(error.message); return; }
+  user = data.user;
+  document.getElementById('authCard').style.display='none';
+  document.getElementById('app').style.display='block';
+  loadAccount();
+  loadPosts();
 }
 
 async function login(){
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+  const email=document.getElementById('email').value;
+  const password=document.getElementById('password').value;
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if(error){ alert(error.message); return; }
   user = data.user;
@@ -98,7 +105,7 @@ async function login(){
 
 async function logout(){
   await supabase.auth.signOut();
-  user = null;
+  user=null;
   document.getElementById('authCard').style.display='block';
   document.getElementById('app').style.display='none';
 }
@@ -106,35 +113,27 @@ async function logout(){
 // ================= ACCOUNT FUNCTIONS =================
 async function loadAccount(){
   const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
-  if(!data){
-    await supabase.from('users').insert({ id: user.id, tokens:0 });
-    document.getElementById('tokens').innerText = 0;
-    document.getElementById('status').innerText = 'Active';
-    return;
-  }
-  document.getElementById('tokens').innerText = data.tokens;
-  const expired = data.expires_at && new Date(data.expires_at) < new Date();
-  document.getElementById('status').innerText = expired ? 'Expired' : 'Active';
+  if(!data){ await supabase.from('users').insert({id:user.id,tokens:0}); document.getElementById('tokens').innerText=0; document.getElementById('status').innerText='Active'; return; }
+  document.getElementById('tokens').innerText=data.tokens;
+  const expired=data.expires_at && new Date(data.expires_at)<new Date();
+  document.getElementById('status').innerText=expired?'Expired':'Active';
 }
 
-function isExpired(){
-  return document.getElementById('status').innerText === 'Expired';
-}
-
+function isExpired(){return document.getElementById('status').innerText==='Expired';}
 async function updateTokens(amount){
   const { data } = await supabase.from('users').select('tokens').eq('id', user.id).single();
-  let newTokens = (data.tokens || 0) + amount;
-  await supabase.from('users').update({ tokens: newTokens }).eq('id', user.id);
-  document.getElementById('tokens').innerText = newTokens;
+  let newTokens=(data.tokens||0)+amount;
+  await supabase.from('users').update({tokens:newTokens}).eq('id',user.id);
+  document.getElementById('tokens').innerText=newTokens;
 }
 
 // ================= ADS FUNCTIONS =================
-let lastAdTime = 0;
+let lastAdTime=0;
 async function watchAd(){
   if(isExpired()) return alert('Account expired');
-  const now = Date.now();
-  if(now - lastAdTime < 60000) return alert('Wait 1 minute before next ad');
-  lastAdTime = now;
+  const now=Date.now();
+  if(now-lastAdTime<60000) return alert('Wait 1 minute before next ad');
+  lastAdTime=now;
   window.open(adUrl,'_blank');
   await updateTokens(adReward);
   alert('Ad opened! Tokens credited.');
@@ -143,9 +142,9 @@ async function watchAd(){
 // ================= POSTS FUNCTIONS =================
 async function createPost(){
   if(isExpired()) return alert('Account expired');
-  const content = document.getElementById('postContent').value;
+  const content=document.getElementById('postContent').value;
   if(!content) return;
-  await supabase.from('posts').insert({ user_id: user.id, content });
+  await supabase.from('posts').insert({user_id:user.id,content});
   await updateTokens(postReward);
   document.getElementById('postContent').value='';
   loadPosts();
@@ -153,50 +152,42 @@ async function createPost(){
 
 async function loadPosts(){
   const { data } = await supabase.from('posts').select('*').order('id',{ascending:false});
-  const container = document.getElementById('posts');
-  container.innerHTML='';
+  const container=document.getElementById('posts'); container.innerHTML='';
   data.forEach(post=>{
-    const div=document.createElement('div');
-    div.className='card';
-    div.innerHTML=`<p>${post.content}</p>
-      <button onclick="likePost(${post.id})">Like</button>
-      <button onclick="commentPost(${post.id})">Comment</button>`;
+    const div=document.createElement('div'); div.className='card';
+    div.innerHTML=`<p>${post.content}</p><button onclick="likePost(${post.id})">Like</button><button onclick="commentPost(${post.id})">Comment</button>`;
     container.appendChild(div);
   });
 }
 
-async function likePost(id){
-  if(isExpired()) return alert('Account expired');
-  await updateTokens(likeReward);
-}
+async function likePost(id){if(isExpired()) return alert('Account expired'); await updateTokens(likeReward);}
 async function commentPost(id){
   if(isExpired()) return alert('Account expired');
-  const text = prompt('Comment:');
-  if(!text) return;
-  await supabase.from('comments').insert({ post_id:id, user_id:user.id, content:text });
+  const text=prompt('Comment:'); if(!text) return;
+  await supabase.from('comments').insert({post_id:id,user_id:user.id,content:text});
   await updateTokens(commentReward);
 }
 
 // ================= CHAT FUNCTIONS =================
 async function sendMessage(){
   if(isExpired()) return alert('Account expired');
-  const to = document.getElementById('chatUser').value;
-  const msg = document.getElementById('chatMessage').value;
-  if(!to || !msg) return;
-  const { data } = await supabase.from('users').select('tokens').eq('id', user.id).single();
-  if(data.tokens < chatCost) return alert('Not enough tokens');
-  await supabase.from('messages').insert({ from_id: user.id, to_id: to, message: msg });
+  const to=document.getElementById('chatUser').value;
+  const msg=document.getElementById('chatMessage').value;
+  if(!to||!msg) return;
+  const { data } = await supabase.from('users').select('tokens').eq('id',user.id).single();
+  if(data.tokens<chatCost) return alert('Not enough tokens');
+  await supabase.from('messages').insert({from_id:user.id,to_id:to,message:msg});
   await updateTokens(-chatCost);
   document.getElementById('chatMessage').value='';
 }
 
 // ================= WITHDRAW FUNCTIONS =================
 async function withdraw(){
-  const amount = parseInt(document.getElementById('withdrawAmount').value);
+  const amount=parseInt(document.getElementById('withdrawAmount').value);
   if(!amount) return;
-  const { data } = await supabase.from('users').select('tokens').eq('id', user.id).single();
-  if(data.tokens < amount) return alert('Insufficient tokens');
-  await supabase.from('withdrawals').insert({ user_id: user.id, amount, status:'pending' });
+  const { data } = await supabase.from('users').select('tokens').eq('id',user.id).single();
+  if(data.tokens<amount) return alert('Insufficient tokens');
+  await supabase.from('withdrawals').insert({user_id:user.id,amount,status:'pending'});
   await updateTokens(-amount);
   alert('Withdrawal requested');
 }
