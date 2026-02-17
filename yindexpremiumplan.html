@@ -37,15 +37,10 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <div class="box">
 💰 Balance: ₱<span id="balance">0.00</span>
 <div class="progress"><div id="withdrawProgress"></div></div>
-<small>Minimum withdrawal ₱50</small><br>
+<small>****</small><br>
 <button id="withdrawBtn" disabled>Mag-Withdraw</button>
 <button id="redeemBtn" class="hidden">Redeem Item</button>
 <div id="cycleDisplay" class="green"></div>
-</div>
-
-<!-- ✅ ADDED: ACCOUNT EXPIRATION DISPLAY -->
-<div class="box">
-⏳ Account Expiration: <span id="accountExpiration" class="green">Loading...</span>
 </div>
 
 <h2>🎬 Watch & Earn PH</h2>
@@ -96,10 +91,10 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </div>
 
 <div id="redeemModal" class="box hidden">
-<h3>📦 Redeem Item (₱150)</h3>
+<h3>📦 Redeem Item (₱250)</h3>
 <input id="redeemName" placeholder="Buong Pangalan">
 <input id="redeemAddress" placeholder="Buong Address">
-<button onclick="confirmRedeem()">Confirm Redeem</button>
+<button onclick="confirmRedeem()">Confirm Redeem EchozonePH products not convertable In any cash</button>
 </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
@@ -115,8 +110,7 @@ jonardbelleza2:{pass:"549018",role:"user"},
 user3:{pass:"dipwdadmin123",role:"admin"}
 };
 
-/* VIDEOS */
-const VIDEO_POOL=[ "fjy1wYj2Nh8","tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","jGyG5Xty37c","jP96fZG48h4","evj4fzBBiFI","HRaVepQYHRA","QtBuiOSrffQ","2mEte_9nhSs","U6yvT288bY8","r-jw-aWkbgc","Saf0QgV2dBs","oY_yCQvZ5Ko","4bJBloATeRw","MaLbebYE83E","iIiv0j5v6t8","ugz6RrkaN94","QQf0Qm-o9is","lGmpCB6-LUA","X6UvWJ3ApIw","YfE4a_qwYjQ","nLmaGOOMLr8"];
+const VIDEO_POOL=["fjy1wYj2Nh8","L0IxCqRMAy0","B2wZ3ashYhA","8HkPXOABOdk","DN8ZymI_PkE","wQ5CArS7768","6hbQjQ0DidY","SoXS5EWmQDQ","tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","jGyG5Xty37c","jP96fZG48h4","evj4fzBBiFI","HRaVepQYHRA","QtBuiOSrffQ","2mEte_9nhSs","U6yvT288bY8","r-jw-aWkbgc","Saf0QgV2dBs","oY_yCQvZ5Ko","4bJBloATeRw","MaLbebYE83E","iIiv0j5v6t8","ugz6RrkaN94","QQf0Qm-o9is","lGmpCB6-LUA","X6UvWJ3ApIw","YfE4a_qwYjQ","nLmaGOOMLr8"];
 const DAILY_LIMIT=6;
 
 let currentUser,data,player,ytReady=false;
@@ -186,48 +180,21 @@ if(error || !row){
     refReward:0,
     bonusVideo:null,
     accountStatus:"active",
-    cycle:1,
-
-    /* ✅ ADDED: EXPIRATION FIELD */
-    expiration:null
+    cycle:1
   };
   await supabaseClient.from("users").insert({username:currentUser,data:data});
  }else{
   data=row.data;
   data.accountStatus = data.accountStatus || "active";
   data.cycle = data.cycle || 1;
-
-  /* ✅ ADDED: ensure expiration exists */
-  data.expiration = data.expiration || null;
  }
  currentCycle=data.cycle;
-
- /* ✅ SHOW EXPIRATION */
- showExpiration();
 }
 
 /* SAVE DATA */
 async function save(){
  data.cycle=currentCycle;
  await supabaseClient.from("users").update({data:data}).eq("username",currentUser);
-}
-
-/* ✅ SHOW EXPIRATION FUNCTION */
-function showExpiration(){
- const el=document.getElementById("accountExpiration");
- if(!data.expiration){
-   el.textContent="No expiration set";
-   el.classList.remove("lock");
-   return;
- }
-
- const todayDate=new Date().toISOString().split("T")[0];
- if(data.expiration < todayDate){
-   el.textContent=data.expiration+" (Expired)";
-   el.classList.add("lock");
- }else{
-   el.textContent=data.expiration;
- }
 }
 
 /* CHECK FREEZE */
@@ -323,7 +290,7 @@ function runTimer(t){
 /* REWARD */
 async function reward(){
  if(isFrozen()) return;
- let r=(dailyVideos[videoIndex]===data.bonusVideo)?0.50:rand(0.1,0.30);
+ let r=(dailyVideos[videoIndex]===data.bonusVideo)?0.50:rand(0.50,1.00);
  data.total+=r;
  data.watchedToday.push(dailyVideos[videoIndex]);
  data.earn.push({type:"Video",amount:r,time:new Date().toLocaleString()});
@@ -423,12 +390,6 @@ function startCountdown(){
  countdownInt=setInterval(()=>{
   let d=tomorrow()-new Date();
   document.getElementById("countdown").textContent=`${Math.floor(d/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s`;
- },1000);
-}
-</script>
-</body>
-</html>
-/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s`;
  },1000);
 }
 </script>
