@@ -8,6 +8,10 @@
 <meta http-equiv="refresh" content="350; url=https://echozoneph.vercel.app/yindex.html">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<!-- ADD-ONLY: Monetag Script -->
+<script>(function(s){s.dataset.zone='10587611',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
 <script>
 const supabaseUrl = "https://latimgzxirdlcetikufy.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY";
@@ -28,6 +32,9 @@ input,select{padding:10px;width:100%;max-width:300px;margin:5px;border-radius:6p
 .card{background:#111;padding:10px;border-radius:8px;margin-bottom:6px;text-align:left}
 .hidden{display:none}
 iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
+#wheel{width:260px;height:260px;border-radius:50%;border:8px solid #222;margin:10px auto;position:relative;overflow:hidden}
+.slice{position:absolute;width:50%;height:50%;top:50%;left:50%;transform-origin:0% 0%;display:flex;align-items:center;justify-content:center;font-size:12px}
+#spinPointer{width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:20px solid #00ff88;margin:0 auto}
 </style>
 </head>
 <body>
@@ -102,9 +109,21 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <button onclick="confirmRedeem()">Confirm Redeem</button>
 </div>
 
+<!-- ===== ADD-ONLY: SPIN UI ===== -->
+<div id="spinSection" class="box hidden">
+<h3>🎡 Spin to Earn</h3>
+<div id="spinPointer"></div>
+<div id="wheel"></div>
+<p>Coins: <span id="spinCoinsDisplay">0</span></p>
+<p>Spins left today: <span id="spinsLeft">10</span></p>
+<button id="spinBtn">SPIN</button>
+<div id="spinMsg" class="green"></div>
+</div>
+
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-
+/* ORIGINAL SCRIPT COPY - NO CHANGE */
+// ... buong original code mo dito ...
 /* USERS */
 const USERS={
 user1:{pass:"dipwd1234",role:"user"},
@@ -170,6 +189,9 @@ password.onkeypress = async e => {
 
  loadReferral();
  render();
+
+ // ===== ADD-ONLY: AUTO SHOW SPIN =====
+ showSpinSection();
 };
 
 /* LOAD DATA */
@@ -196,7 +218,12 @@ if(error || !row){
     cycle:1,
 
     /* ✅ ADDED: EXPIRATION FIELD */
-    expiration:null
+    expiration:null,
+
+    /* ===== ADD-ONLY: SPIN DATA ===== */
+    spinCoins:0,
+    spinsToday:0,
+    spinDate:null
   };
   await supabaseClient.from("users").insert({username:currentUser,data:data});
  }else{
@@ -206,6 +233,11 @@ if(error || !row){
 
   /* ✅ ADDED: ensure expiration exists */
   data.expiration = data.expiration || null;
+
+  /* ===== ADD-ONLY: ensure spin fields ===== */
+  data.spinCoins = data.spinCoins || 0;
+  data.spinsToday = data.spinsToday || 0;
+  data.spinDate = data.spinDate || null;
  }
  currentCycle=data.cycle;
 
@@ -432,6 +464,92 @@ function startCountdown(){
   document.getElementById("countdown").textContent=`${Math.floor(d/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s`;
  },1000);
 }
+
+/* ===== ADD-ONLY: SPIN SYSTEM ===== */
+const SPIN_REWARDS=[50,100,150,200,250,300];
+let spinning=false;
+
+function showSpinSection(){
+ document.getElementById("spinSection").classList.remove("hidden");
+ initWheel();
+ loadSpinData();
+}
+
+function initWheel(){
+ const wheel=document.getElementById("wheel");
+ wheel.innerHTML="";
+ SPIN_REWARDS.forEach((r,i)=>{
+  const slice=document.createElement("div");
+  slice.className="slice";
+  slice.style.transform=`rotate(${i*60}deg) skewY(-30deg)`;
+  slice.textContent=r+"";
+  wheel.appendChild(slice);
+ });
+}
+
+function loadSpinData(){
+ document.getElementById("spinCoinsDisplay").textContent=data.spinCoins;
+ document.getElementById("spinsLeft").textContent=10-data.spinsToday;
+}
+
+document.getElementById("spinBtn").onclick=async ()=>{
+ if(spinning) return;
+ if(data.spinsToday>=10){alert("Daily spin limit reached");return;}
+ spinning=true;
+
+ const index=Math.floor(Math.random()*SPIN_REWARDS.length);
+ const reward=SPIN_REWARDS[index];
+ const rotation=360*5+(index*60);
+ document.getElementById("wheel").style.transition="transform 4s";
+ document.getElementById("wheel").style.transform=`rotate(${rotation}deg)`;
+
+ setTimeout(async ()=>{
+  data.spinCoins+=reward;
+  data.spinsToday++;
+  data.spinDate=today();
+
+  if(data.spinCoins>=1000){
+    const peso=Math.floor(data.spinCoins/1000);
+    data.spinCoins%=1000;
+    data.total+=peso;
+    data.earn.push({type:"Spin Convert",amount:peso,time:new Date().toLocaleString()});
+  }
+
+  await save();
+  render();
+  loadSpinData();
+  document.getElementById("spinMsg").textContent="You won "+reward+" coins";
+  spinningu=false;
+ },4000);
+};
+/* ================================= */
+/* ===== ADD-ONLY: MONETAG REQUIRED BEFORE SPIN ===== */
+let monetagReadyToSpin = false;
+let monetagLoadingNow = false;
+
+function showMonetagAdFirst(){
+ if(monetagLoadingNow) return;
+ monetagLoadingNow = true;
+ document.getElementById("spinMsg").textContent = "Loading ad...";
+ if(typeof window.show_9175254 === "function"){
+     window.show_9175254();
+ }
+ setTimeout(()=>{
+     monetagReadyToSpin = true;
+     monetagLoadingNow = false;
+     document.getElementById("spinMsg").textContent = "Ad completed! Click SPIN again.";
+ },3000);
+}
+
+document.getElementById("spinBtn").addEventListener("click", function(e){
+ if(!monetagReadyToSpin){
+     e.stopImmediatePropagation();
+     e.preventDefault();
+     showMonetagAdFirst();
+     return false;
+ }
+ setTimeout(()=>{ monetagReadyToSpin = false; },100);
+}, true);
 </script>
 </body>
 </html>
