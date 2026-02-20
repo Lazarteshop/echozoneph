@@ -469,6 +469,7 @@ let spinning=false;
 function showSpinSection(){
  document.getElementById("spinSection").classList.remove("hidden");
  initWheel();
+ resetDailySpinIfNeeded();
  loadSpinData();
 }
 
@@ -478,10 +479,18 @@ function initWheel(){
  SPIN_REWARDS.forEach((r,i)=>{
   const slice=document.createElement("div");
   slice.className="slice";
-  slice.style.transform=`rotate(${i*60}deg) skewY(-30deg)`;
-  slice.textContent=r+"";
+  slice.style.transform=`rotate(${i*36}deg) skewY(-54deg)`;
+  slice.textContent=r;
   wheel.appendChild(slice);
  });
+}
+
+function resetDailySpinIfNeeded(){
+ if(data.spinDate!==today()){
+   data.spinsToday=0;
+   data.spinDate=today();
+   save();
+ }
 }
 
 function loadSpinData(){
@@ -489,18 +498,27 @@ function loadSpinData(){
  document.getElementById("spinsLeft").textContent=10-data.spinsToday;
 }
 
-document.getElementById("spinBtn").onclick=async ()=>{
+async function startSpin(){
  if(spinning) return;
- if(data.spinsToday>=10){alert("Daily spin limit reached");return;}
+
+ if(data.spinsToday>=10){
+   alert("Daily spin limit reached");
+   return;
+ }
+
  spinning=true;
+ document.getElementById("spinMsg").textContent="Spinning...";
 
  const index=Math.floor(Math.random()*SPIN_REWARDS.length);
  const reward=SPIN_REWARDS[index];
- const rotation=360*5+(index*60);
- document.getElementById("wheel").style.transition="transform 4s";
- document.getElementById("wheel").style.transform=`rotate(${rotation}deg)`;
+ const rotation=360*5+(index*36);
+
+ const wheel=document.getElementById("wheel");
+ wheel.style.transition="transform 4s ease-out";
+ wheel.style.transform=`rotate(${rotation}deg)`;
 
  setTimeout(async ()=>{
+
   data.spinCoins+=reward;
   data.spinsToday++;
   data.spinDate=today();
@@ -515,87 +533,36 @@ document.getElementById("spinBtn").onclick=async ()=>{
   await save();
   render();
   loadSpinData();
+
   document.getElementById("spinMsg").textContent="You won "+reward+" coins";
-  spinningu=false;
+  spinning=false;
+
  },4000);
+}
+
+/* ===== MONETAG FIRST THEN AUTO SPIN ===== */
+
+document.getElementById("spinBtn").onclick=function(){
+
+ if(spinning) return;
+
+ if(data.spinsToday>=10){
+   alert("Daily spin limit reached");
+   return;
+ }
+
+ document.getElementById("spinMsg").textContent="Loading ad...";
+
+ if(typeof window.show_9175254 === "function"){
+   window.show_9175254();
+ }
+
+ setTimeout(()=>{
+   startSpin();
+ },3000);
+
 };
-/* ================================= */
-/* ===== ADD-ONLY: MONETAG REQUIRED BEFORE SPIN ===== */
-let monetagLoadingNow = false;
-let spinsToRun = 0;
-let isAutoSpinning = false; // important para hindi mag-loop ad
-
-function showMonetagAdThenSpin(){
-
-    if(monetagLoadingNow) return;
-    monetagLoadingNow = true;
-
-    document.getElementById("spinMsg").textContent = "Loading ad...";
-
-    if(typeof window.show_9175254 === "function"){
-        window.show_9175254();
-    }
-
-    // Adjust timing kung mas mahaba ad mo
-    setTimeout(()=>{
-        monetagLoadingNow = false;
-        document.getElementById("spinMsg").textContent = "Starting spins...";
-        startAutoSpin();
-    }, 3500);
-}
-
-function startAutoSpin(){
-
-    const spinsLeftElement = document.getElementById("spinsLeft");
-    spinsToRun = parseInt(spinsLeftElement.textContent);
-
-    if(spinsToRun <= 0){
-        document.getElementById("spinMsg").textContent = "No spins left today.";
-        return;
-    }
-
-    isAutoSpinning = true;
-    runSingleSpin();
-}
-
-function runSingleSpin(){
-
-    if(spinsToRun <= 0){
-        document.getElementById("spinMsg").textContent = "All spins completed!";
-        isAutoSpinning = false;
-        return;
-    }
-
-    // ✅ IMPORTANT: This triggers your ORIGINAL spin animation
-    document.getElementById("spinBtn").dispatchEvent(new Event("click"));
-
-    spinsToRun--;
-    document.getElementById("spinsLeft").textContent = spinsToRun;
-
-    // Adjust delay to match your real wheel animation duration
-    setTimeout(()=>{
-        runSingleSpin();
-    }, 2500);
-}
-
-// INTERCEPT FIRST CLICK ONLY
-const spinBtn = document.getElementById("spinBtn");
-
-spinBtn.addEventListener("click", function(e){
-
-    // If not auto spinning, show ad first
-    if(!isAutoSpinning && spinsToRun === 0){
-        e.stopImmediatePropagation();
-        e.preventDefault();
-        showMonetagAdThenSpin();
-        return false;
-    }
-
-    // If auto spinning → allow your original spin logic to run normally
-
-}, true);
 
 </script>
-
 </body>
 </html>
