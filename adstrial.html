@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta name="monetag" content="f6cd6220dde78c27df43aa4d5f91b623">
+<meta charset="UTF-8">
+<title>Watch & Earn PH</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="refresh" content="350; url=https://echozoneph.vercel.app/yindex.html">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<!-- ADD-ONLY: Monetag Script -->
+<script>(function(s){s.dataset.zone='10587611',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
+<script>
+const supabaseUrl = "https://latimgzxirdlcetikufy.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY";
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+</script>
+
+<style>
+body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff}
+.container{max-width:900px;margin:auto;padding:20px;text-align:center}
+.box{background:#111;padding:15px;border-radius:10px;margin-bottom:15px}
+.green{color:#00ff88}
+.lock{color:#ff6666}
+button{padding:10px 15px;border:none;border-radius:6px;cursor:pointer}
+button:disabled{background:#555;cursor:not-allowed}
+input,select{padding:10px;width:100%;max-width:300px;margin:5px;border-radius:6px;border:none}
+.progress{width:100%;height:12px;background:#333;border-radius:10px;overflow:hidden}
+.progress div{height:100%;background:#00ff88;width:0}
+.card{background:#111;padding:10px;border-radius:8px;margin-bottom:6px;text-align:left}
+.hidden{display:none}
+iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
+#wheel{width:260px;height:260px;border-radius:50%;border:8px solid #222;margin:10px auto;position:relative;overflow:hidden}
+.slice{position:absolute;width:50%;height:50%;top:50%;left:50%;transform-origin:0% 0%;display:flex;align-items:center;justify-content:center;font-size:12px}
+#spinPointer{width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:20px solid #00ff88;margin:0 auto}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- BALANCE -->
+<div class="box">
+💰 Balance: ₱<span id="balance">0.00</span>
+<div class="progress"><div id="withdrawProgress"></div></div>
+<small>Minimum withdrawal ₱50</small><br>
+<button id="withdrawBtn" disabled>Mag-Withdraw</button>
+<button id="redeemBtn" class="hidden">Redeem Item</button>
+<div id="cycleDisplay" class="green"></div>
+</div>
+
+<!-- ✅ ADDED: ACCOUNT EXPIRATION DISPLAY -->
+<div class="box">
+⏳ Account Expiration: <span id="accountExpiration" class="green">Loading...</span>
+</div>
+
+<h2>🎬 Watch & Earn PH</h2>
+<h3>BASIC PLAN</h3>
+
+<!-- LOGIN -->
+<div id="login" class="box">
+<select id="userSelect"></select><br>
+<input id="password" type="password" placeholder="Ilagay ang password">
+</div>
+
+<div id="lockMsg" class="lock"></div>
+
+<!-- REFERRAL -->
+<div id="refBox" class="box hidden">
+<h3>👥 Referrer Username</h3>
+<input id="refUsername" placeholder="Username ng nag-invite">
+<button id="saveRef">I-save</button>
+<div id="refMsg" class="green"></div>
+</div>
+
+<!-- VIDEO AREA -->
+<div id="playerArea"></div>
+<div class="progress"><div id="videoProgress"></div></div>
+<div id="timer"></div>
+<div id="earned" class="green"></div>
+
+<!-- DAILY BONUS -->
+<div class="box">
+🎁 Daily Bonus: <span id="dailyBonus" class="green"></span><br>
+🎬 Napanood ngayon: <span id="watchedCount">0</span>/6<br>
+⏳ Susunod na reset sa: <span id="countdown"></span>
+</div>
+
+<!-- HISTORY -->
+<div class="box">
+<h3>📊 Kasaysayan ng Kita</h3>
+<div id="earnHistory"></div>
+</div>
+
+<div class="box">
+<h3>📤 Kasaysayan ng Withdrawal</h3>
+<div id="withdrawHistory"></div>
+</div>
+
+<div id="withdrawModal" class="box hidden">
+<button onclick="confirmWithdraw('GCash')">GCash</button>
+</div>
+
+<div id="redeemModal" class="box hidden">
+<h3>📦 Redeem Item (₱150)</h3>
+<input id="redeemName" placeholder="Buong Pangalan">
+<input id="redeemAddress" placeholder="Buong Address">
+<button onclick="confirmRedeem()">Confirm Redeem</button>
+</div>
+
+<!-- ===== ADD-ONLY: SPIN UI ===== -->
+<div id="spinSection">
+    <h3>🎡 Spin to Earn</h3>
+    <p>Spins left today: <span id="spinsLeft">10</span></p>
+    <button id="spinBtn">SPIN</button>
+    <div id="spinMsg"></div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+/* ORIGINAL SCRIPT COPY - NO CHANGE */
+// ... buong original code mo dito ...
+/* USERS */
+const USERS={
+user1:{pass:"dipwd1234",role:"user"},
+Regine:{pass:"230293",role:"user"},
+Benggalleon041:{pass:"beng41",role:"user"},
+Jeryanroyate:{pass:"101017",role:"user"},
+user2:{pass:"dipwdabcd",role:"user"},
+John:{pass:"101017",role:"user"},
+Jaycervantes:{pass:"101017",role:"user"},
+CKill:{pass:"101017",role:"user"},
+Jcarl:{pass:"101017",role:"user"},
+user3:{pass:"dipwdadmin123",role:"admin"}
+};
+
+/* VIDEOS */
+const VIDEO_POOL=[ "fjy1wYj2Nh8","x9OuXv_GEmc", "6bbqMf6xoOc","kLofAi46LuY","75GnzFvwYyM","DQ3JqS70CrU","2hTIyrD9sS0","tT8OaQINFws","ltskofwl8b4","tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","jGyG5Xty37c","jP96fZG48h4","evj4fzBBiFI","HRaVepQYHRA","QtBuiOSrffQ","2mEte_9nhSs","U6yvT288bY8","r-jw-aWkbgc","Saf0QgV2dBs","oY_yCQvZ5Ko","4bJBloATeRw","MaLbebYE83E","iIiv0j5v6t8","ugz6RrkaN94","QQf0Qm-o9is","lGmpCB6-LUA","X6UvWJ3ApIw","YfE4a_qwYjQ","nLmaGOOMLr8"];
+const DAILY_LIMIT=6;
+
+let currentUser,data,player,ytReady=false;
+let dailyVideos=[],videoIndex=0;
+let timerInt,countdownInt;
+
+/* ===== CYCLE SYSTEM ADDED (NO ORIGINAL LINES REMOVED) ===== */
+let currentCycle=1;
+const CYCLE_TARGETS={1:50,2:150,3:200};
+/* ============================================================ */
+
+/* DATE HELPERS */
+const today=()=>{let d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const tomorrow=()=>{let d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0);return d};
+const rand=(a,b)=>+(Math.random()*(b-a)+a).toFixed(2);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+/* INIT - Populate username dropdown */
+document.addEventListener("DOMContentLoaded",function(){
+ const select=document.getElementById("userSelect");
+ select.innerHTML="";
+ Object.keys(USERS).forEach(u=>{
+  let o=document.createElement("option");
+  o.value=u;
+  o.textContent=u;
+  select.appendChild(o);
+ });
+});
+function onYouTubeIframeAPIReady(){ytReady=true}
+
+
+/* LOGIN */
+password.onkeypress = async e => {
+ if(e.key!=="Enter")return;
+ let u=document.getElementById("userSelect").value;
+ if(password.value!==USERS[u].pass){alert("Mali ang password");return;}
+ currentUser=u;
+ document.getElementById("login").remove();
+ document.getElementById("refBox").classList.remove("hidden");
+
+ await loadData();
+ await dailyReset();
+ await claimDailyBonus();
+
+ loadReferral();
+ render();
+
+ // ===== ADD-ONLY: AUTO SHOW SPIN =====
+ showSpinSection();
+};
+
+/* LOAD DATA */
+async function loadData(){
+ const { data:row, error } =
+   await supabaseClient.from("users")
+   .select("data")
+   .eq("username",currentUser)
+   .single();
+
+if(error || !row){
+  data={
+    total:0,
+    earn:[],
+    withdraw:[],
+    watchedToday:[],
+    dailyVideos:[],
+    lastDate:null,
+    lastBonus:null,
+    refUser:null,
+    refReward:0,
+    bonusVideo:null,
+    accountStatus:"active",
+    cycle:1,
+
+    /* ✅ ADDED: EXPIRATION FIELD */
+    expiration:null,
+
+    /* ===== ADD-ONLY: SPIN DATA ===== */
+    spinCoins:0,
+    spinsToday:0,
+    spinDate:null
+  };
+  await supabaseClient.from("users").insert({username:currentUser,data:data});
+ }else{
+  data=row.data;
+  data.accountStatus = data.accountStatus || "active";
+  data.cycle = data.cycle || 1;
+
+  /* ✅ ADDED: ensure expiration exists */
+  data.expiration = data.expiration || null;
+
+  /* ===== ADD-ONLY: ensure spin fields ===== */
+  data.spinCoins = data.spinCoins || 0;
+  data.spinsToday = data.spinsToday || 0;
+  data.spinDate = data.spinDate || null;
+ }
+ currentCycle=data.cycle;
+
+ /* ✅ SHOW EXPIRATION */
+ showExpiration();
+}
+
+/* SAVE DATA */
+async function save(){
+ data.cycle=currentCycle;
+ await supabaseClient.from("users").update({data:data}).eq("username",currentUser);
+}
+
+/* ✅ SHOW EXPIRATION FUNCTION */
+function showExpiration(){
+ const el=document.getElementById("accountExpiration");
+ if(!data.expiration){
+   el.textContent="No expiration set";
+   el.classList.remove("lock");
+   return;
+ }
+
+ const todayDate=new Date().toISOString().split("T")[0];
+ if(data.expiration < todayDate){
+   el.textContent=data.expiration+" (Expired)";
+   el.classList.add("lock");
+ }else{
+   el.textContent=data.expiration;
+ }
+}
+
+/* CHECK FREEZE */
+function isFrozen(){
+ if(data.accountStatus==="frozen"){
+   document.getElementById("lockMsg").textContent="🧊 please proceed to Extra game button and flip a card. Then contact your admin/TL if done.";
+   return true;
+ }
+ document.getElementById("lockMsg").textContent="";
+ return false;
+}
+
+/* REFERRAL */
+function loadReferral(){
+ if(data.refUser){
+  document.getElementById("refUsername").value=data.refUser;
+  document.getElementById("refUsername").disabled=true;
+  document.getElementById("saveRef").disabled=true;
+ }
+}
+document.getElementById("saveRef").onclick=async ()=>{
+ if(data.refUser) return;
+ let r=rand(0.1,2);
+ data.refUser=document.getElementById("refUsername").value;
+ data.refReward=r;
+ data.total+=r;
+ data.earn.push({type:"Invite Reward",amount:r,time:new Date().toLocaleString()});
+ await save();
+ render();
+ document.getElementById("refUsername").disabled=true;
+ document.getElementById("saveRef").disabled=true;
+ document.getElementById("refMsg").textContent="₱"+r+" nadagdag";
+};
+
+/* DAILY RESET */
+async function dailyReset(){
+ if(data.lastDate!==today()){
+  data.lastDate=today();
+  data.watchedToday=[];
+  videoIndex=0;
+  dailyVideos=shuffle([...VIDEO_POOL]).slice(0,DAILY_LIMIT);
+  data.dailyVideos=dailyVideos;
+  data.bonusVideo=dailyVideos[Math.floor(Math.random()*dailyVideos.length)];
+ }
+ dailyVideos=data.dailyVideos||[];
+ await save();
+ if(dailyVideos.length>0){ loadVideo(); startCountdown(); }
+}
+
+
+/* DAILY BONUS */
+async function claimDailyBonus(){
+ if(isFrozen()) return;
+ if(data.lastBonus===today()){ document.getElementById("dailyBonus").textContent="Claimed"; return; }
+ let b=rand(0.01,0.10);
+ data.lastBonus=today();
+ data.total+=b;
+ data.earn.push({type:"Daily Bonus",amount:b,time:new Date().toLocaleString()});
+ await save();
+ document.getElementById("dailyBonus").textContent="₱"+b;
+}
+
+/* VIDEO */
+function loadVideo(){
+ if(isFrozen()) return;
+ if(!dailyVideos || !dailyVideos[videoIndex]){ document.getElementById("lockMsg").textContent="🔒 Wala pang video ngayon"; return; }
+ if(!ytReady){setTimeout(loadVideo,500);return;}
+ document.getElementById("watchedCount").textContent=data.watchedToday.length;
+ if(data.watchedToday.length>=DAILY_LIMIT){ document.getElementById("lockMsg").textContent="🔒 Naabot na ang daily limit";return;}
+ document.getElementById("playerArea").innerHTML="<div id='player'></div>";
+ player=new YT.Player("player",{videoId:dailyVideos[videoIndex],playerVars:{autoplay:1,controls:0},
+  events:{onReady:startTimer,onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)reward()}}
+ });
+}
+
+/* TIMER */
+function startTimer(){
+ let chk=setInterval(()=>{
+  let d=player.getDuration();
+  if(d>0){clearInterval(chk);runTimer(Math.floor(d));}
+ },200);
+}
+function runTimer(t){
+ let total=t;
+ clearInterval(timerInt);
+ timerInt=setInterval(()=>{
+  document.getElementById("timer").textContent=`⏱ ${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`;
+  document.getElementById("videoProgress").style.width=((total-t)/total*100)+"%";
+  t--; if(t<0)clearInterval(timerInt);
+ },1000);
+}
+
+/* REWARD */
+async function reward(){
+ if(isFrozen()) return;
+ let r=(dailyVideos[videoIndex]===data.bonusVideo)?0.50:rand(0.1,0.30);
+ data.total+=r;
+ data.watchedToday.push(dailyVideos[videoIndex]);
+ data.earn.push({type:"Video",amount:r,time:new Date().toLocaleString()});
+ videoIndex++;
+ await save(); render();
+ document.getElementById("earned").textContent="₱"+r+" nadagdag";
+ setTimeout(loadVideo,1500);
+}
+
+/* RENDER */
+function render(){
+ document.getElementById("balance").textContent=data.total.toFixed(2);
+
+ let target=CYCLE_TARGETS[currentCycle];
+
+ // Withdraw button logic
+ if(currentCycle===1 || currentCycle===3){
+   document.getElementById("withdrawBtn").classList.remove("hidden");
+   document.getElementById("withdrawBtn").disabled=data.total<target || data.accountStatus==="frozen";
+ }else{
+   document.getElementById("withdrawBtn").classList.add("hidden");
+ }
+
+ // Redeem button logic (Cycle 2 only)
+ if(currentCycle===2){
+   document.getElementById("redeemBtn").classList.remove("hidden");
+   document.getElementById("redeemBtn").disabled=data.total<150;
+ }else{
+   document.getElementById("redeemBtn").classList.add("hidden");
+ }
+
+ document.getElementById("withdrawProgress").style.width=Math.min(data.total/target*100,100)+"%";
+ document.getElementById("earnHistory").innerHTML=data.earn.map(e=>`<div class="card">${e.type}<br>₱${e.amount}<br>${e.time}</div>`).join("");
+ document.getElementById("withdrawHistory").innerHTML=data.withdraw.map(w=>`<div class="card">${w.method} ₱${w.amount}<br>${w.time}</div>`).join("");
+
+ /* ===== CYCLE OVERRIDE LOGIC (ADDED ONLY) ===== */
+ if(currentCycle===2){
+   document.getElementById("withdrawBtn").disabled=true;
+ }else{
+   document.getElementById("withdrawBtn").disabled=data.total<target || data.accountStatus==="frozen";
+ }
+ document.getElementById("cycleDisplay").textContent="Current Cycle: "+currentCycle+" (₱"+target+")";
+ /* ============================================= */
+}
+
+
+/* WITHDRAW */
+document.getElementById("withdrawBtn").onclick=()=>document.getElementById("withdrawModal").classList.remove("hidden");
+document.getElementById("redeemBtn").onclick=()=>document.getElementById("redeemModal").classList.remove("hidden");
+async function confirmWithdraw(m){
+ if(isFrozen()) return;
+ let target=CYCLE_TARGETS[currentCycle];
+ if(currentCycle===2) return;
+ if(data.total<target) return;
+
+ data.withdraw.push({method:m,amount:target,time:new Date().toLocaleString(),cycle:currentCycle});
+ data.total-=target;
+
+ if(currentCycle===1){
+   currentCycle=2;
+ }else if(currentCycle===3){
+   currentCycle=1;
+ }
+
+ data.cycle=currentCycle;
+ await save();
+ render();
+ document.getElementById("withdrawModal").classList.add("hidden");
+}
+
+async function confirmRedeem(){
+ if(isFrozen()) return;
+ if(currentCycle!==2) return;
+ if(data.total<150) return;
+
+ let name=document.getElementById("redeemName").value;
+ let address=document.getElementById("redeemAddress").value;
+ if(!name || !address){alert("Kumpletuhin ang pangalan at address");return;}
+
+ data.withdraw.push({method:"Redeem Item",amount:150,name,address,time:new Date().toLocaleString(),cycle:2});
+ data.total-=150;
+
+ currentCycle=3;
+ data.cycle=currentCycle;
+
+ document.getElementById("redeemModal").classList.add("hidden");
+ document.getElementById("redeemName").value="";
+ document.getElementById("redeemAddress").value="";
+
+ await save();
+ render();
+}
+
+/* COUNTDOWN */
+function startCountdown(){
+ clearInterval(countdownInt);
+ countdownInt=setInterval(()=>{
+  let d=tomorrow()-new Date();
+  document.getElementById("countdown").textContent=`${Math.floor(d/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s`;
+ },1000);
+}
+
+/* ===== ADD-ONLY: SPIN SYSTEM ===== */
+const SPIN_REWARDS=[5,10,50,100,150,200,250,300,350,400];
+let spinning=false;
+
+function showSpinSection(){
+ document.getElementById("spinSection").classList.remove("hidden");
+ initWheel();
+ loadSpinData();
+}
+
+function initWheel(){
+ const wheel=document.getElementById("wheel");
+ wheel.innerHTML="";
+ SPIN_REWARDS.forEach((r,i)=>{
+  const slice=document.createElement("div");
+  slice.className="slice";
+  slice.style.transform=`rotate(${i*60}deg) skewY(-30deg)`;
+  slice.textContent=r+"";
+  wheel.appendChild(slice);
+ });
+}
+
+function loadSpinData(){
+ document.getElementById("spinCoinsDisplay").textContent=data.spinCoins;
+ document.getElementById("spinsLeft").textContent=10-data.spinsToday;
+}
+
+document.getElementById("spinBtn").onclick=async ()=>{
+ if(spinning) return;
+ if(data.spinsToday>=10){alert("Daily spin limit reached");return;}
+ spinning=true;
+
+ const index=Math.floor(Math.random()*SPIN_REWARDS.length);
+ const reward=SPIN_REWARDS[index];
+ const rotation=360*5+(index*60);
+ document.getElementById("wheel").style.transition="transform 4s";
+ document.getElementById("wheel").style.transform=`rotate(${rotation}deg)`;
+
+ setTimeout(async ()=>{
+  data.spinCoins+=reward;
+  data.spinsToday++;
+  data.spinDate=today();
+
+  if(data.spinCoins>=1000){
+    const peso=Math.floor(data.spinCoins/1000);
+    data.spinCoins%=1000;
+    data.total+=peso;
+    data.earn.push({type:"Spin Convert",amount:peso,time:new Date().toLocaleString()});
+  }
+
+  await save();
+  render();
+  loadSpinData();
+  document.getElementById("spinMsg").textContent="You won "+reward+" coins";
+  spinningu=false;
+ },4000);
+};
+/* ===== ADD-ONLY: MONETAG REQUIRED BEFORE SPIN ===== */
+let monetagLoadingNow = false;
+let spinsToRun = 0;
+let isAutoSpinning = false; // important para hindi mag-loop ad
+
+function showMonetagAdThenSpin(){
+
+    if(monetagLoadingNow) return;
+    monetagLoadingNow = true;
+
+    document.getElementById("spinMsg").textContent = "Loading ad...";
+
+    if(typeof window.show_9175254 === "function"){
+        window.show_9175254();
+    }
+
+    // Adjust timing kung mas mahaba ad mo
+    setTimeout(()=>{
+        monetagLoadingNow = false;
+        document.getElementById("spinMsg").textContent = "Starting spins...";
+        startAutoSpin();
+    }, 3500);
+}
+
+function startAutoSpin(){
+
+    const spinsLeftElement = document.getElementById("spinsLeft");
+    spinsToRun = parseInt(spinsLeftElement.textContent);
+
+    if(spinsToRun <= 0){
+        document.getElementById("spinMsg").textContent = "No spins left today.";
+        return;
+    }
+
+    isAutoSpinning = true;
+    runSingleSpin();
+}
+
+function runSingleSpin(){
+
+    if(spinsToRun <= 0){
+        document.getElementById("spinMsg").textContent = "All spins completed!";
+        isAutoSpinning = false;
+        return;
+    }
+
+    // ✅ IMPORTANT: This triggers your ORIGINAL spin animation
+    document.getElementById("spinBtn").dispatchEvent(new Event("click"));
+
+    spinsToRun--;
+    document.getElementById("spinsLeft").textContent = spinsToRun;
+
+    // Adjust delay to match your real wheel animation duration
+    setTimeout(()=>{
+        runSingleSpin();
+    }, 2500);
+}
+
+// INTERCEPT FIRST CLICK ONLY
+const spinBtn = document.getElementById("spinBtn");
+
+spinBtn.addEventListener("click", function(e){
+
+    // If not auto spinning, show ad first
+    if(!isAutoSpinning && spinsToRun === 0){
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        showMonetagAdThenSpin();
+        return false;
+    }
+
+    // If auto spinning → allow your original spin logic to run normally
+
+}, true);
+
+</script>
+
+</body>
+</html>
