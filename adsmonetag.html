@@ -8,6 +8,10 @@
 <meta http-equiv="refresh" content="350; url=https://echozoneph.vercel.app/yindex.html">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<!-- ADD-ONLY: Monetag Script -->
+<script>(function(s){s.dataset.zone='10587611',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
 <script>
 const supabaseUrl = "https://latimgzxirdlcetikufy.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhdGltZ3p4aXJkbGNldGlrdWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODI1NDksImV4cCI6MjA4Mzk1ODU0OX0.wfrJkLAmrn895meab65kMdsRWNapPrvWiiw8cdDCNUY";
@@ -28,12 +32,9 @@ input,select{padding:10px;width:100%;max-width:300px;margin:5px;border-radius:6p
 .card{background:#111;padding:10px;border-radius:8px;margin-bottom:6px;text-align:left}
 .hidden{display:none}
 iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
-
-/* ===== ADD-ONLY: SPIN WHEEL STYLES ===== */
 #wheel{width:260px;height:260px;border-radius:50%;border:8px solid #222;margin:10px auto;position:relative;overflow:hidden}
 .slice{position:absolute;width:50%;height:50%;top:50%;left:50%;transform-origin:0% 0%;display:flex;align-items:center;justify-content:center;font-size:12px}
 #spinPointer{width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:20px solid #00ff88;margin:0 auto}
-/* ======================================= */
 </style>
 </head>
 <body>
@@ -118,11 +119,11 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <button id="spinBtn">SPIN</button>
 <div id="spinMsg" class="green"></div>
 </div>
-<!-- ================================= -->
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-
+/* ORIGINAL SCRIPT COPY - NO CHANGE */
+// ... buong original code mo dito ...
 /* USERS */
 const USERS={
 user1:{pass:"dipwd1234",role:"user"},
@@ -522,6 +523,33 @@ document.getElementById("spinBtn").onclick=async ()=>{
  },4000);
 };
 /* ================================= */
+/* ===== ADD-ONLY: MONETAG REQUIRED BEFORE SPIN ===== */
+let monetagReadyToSpin = false;
+let monetagLoadingNow = false;
+
+function showMonetagAdFirst(){
+ if(monetagLoadingNow) return;
+ monetagLoadingNow = true;
+ document.getElementById("spinMsg").textContent = "Loading ad...";
+ if(typeof window.show_9175254 === "function"){
+     window.show_9175254();
+ }
+ setTimeout(()=>{
+     monetagReadyToSpin = true;
+     monetagLoadingNow = false;
+     document.getElementById("spinMsg").textContent = "Ad completed! Click SPIN again.";
+ },3000);
+}
+
+document.getElementById("spinBtn").addEventListener("click", function(e){
+ if(!monetagReadyToSpin){
+     e.stopImmediatePropagation();
+     e.preventDefault();
+     showMonetagAdFirst();
+     return false;
+ }
+ setTimeout(()=>{ monetagReadyToSpin = false; },100);
+}, true);
 </script>
 </body>
 </html>
