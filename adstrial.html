@@ -110,11 +110,14 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 </div>
 
 <!-- ===== ADD-ONLY: SPIN UI ===== -->
-<div id="spinSection">
-    <h3>🎡 Spin to Earn</h3>
-    <p>Spins left today: <span id="spinsLeft">10</span></p>
-    <button id="spinBtn">SPIN</button>
-    <div id="spinMsg"></div>
+<div id="spinSection" class="box hidden">
+<h3>🎡 Spin to Earn</h3>
+<div id="spinPointer"></div>
+<div id="wheel"></div>
+<p>Coins: <span id="spinCoinsDisplay">0</span></p>
+<p>Spins left today: <span id="spinsLeft">10</span></p>
+<button id="spinBtn">SPIN</button>
+<div id="spinMsg" class="green"></div>
 </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
@@ -516,6 +519,7 @@ document.getElementById("spinBtn").onclick=async ()=>{
   spinningu=false;
  },4000);
 };
+/* ================================= */
 /* ===== ADD-ONLY: MONETAG REQUIRED BEFORE SPIN ===== */
 let monetagLoadingNow = false;
 let spinsToRun = 0;
