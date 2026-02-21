@@ -66,6 +66,15 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 
 <div id="lockMsg" class="lock"></div>
 
+<!-- ===== ADD-ONLY: BALL DROP GAME UI ===== -->
+<div id="ballGameSection" class="box hidden">
+<h3>🎯 Drop Ball Game</h3>
+<p>Balls: <span id="ballCount">0</span></p>
+<p>Last Win: ₱<span id="lastBallWin">0</span></p>
+<button id="dropBallBtn" disabled>Drop Ball</button>
+<div id="ballGame" style="position:relative;width:100%;height:320px;background:#020617;border-radius:12px;margin-top:10px;overflow:hidden"></div>
+</div>
+
 <!-- REFERRAL -->
 <div id="refBox" class="box hidden">
 <h3>👥 Referrer Username</h3>
@@ -561,6 +570,138 @@ document.getElementById("spinBtn").onclick=function(){
    startSpin();
  },3000);
 
+};
+
+/* =========================================================
+   🎯 BALL DROP SYSTEM (ADD-ONLY — NO ORIGINAL LINES EDITED)
+========================================================= */
+
+const BALL_SLOTS=[1,2,5,2,1,"JACKPOT"];
+let ballBalance=0;
+const dropSound=new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_115b9b0a43.mp3?filename=coin-drop-39914.mp3");
+
+/* SHOW GAME */
+function showBallGame(){
+ document.getElementById("ballGameSection").classList.remove("hidden");
+ renderBallSlots();
+ renderPegs();
+}
+
+/* SLOTS */
+function renderBallSlots(){
+ const game=document.getElementById("ballGame");
+ game.innerHTML="";
+ BALL_SLOTS.forEach((v,i)=>{
+   const slot=document.createElement("div");
+   slot.style.position="absolute";
+   slot.style.bottom="0";
+   slot.style.left=(i*(100/BALL_SLOTS.length))+"%";
+   slot.style.width=(100/BALL_SLOTS.length)+"%";
+   slot.style.textAlign="center";
+   slot.innerHTML=`<div style="background:#111;padding:6px">${v==="JACKPOT"?"💎":`₱${v}`}</div>`;
+   game.appendChild(slot);
+ });
+}
+
+){
+ const game=document.getElementById("ballGame");
+ for(let r=0;r<5;r++){
+   for(let c=0;c<6;c++){
+     const peg=document.createElement("div");
+     peg.style.width="6px";
+     peg.style.height="6px";
+     peg.style.background="#666";
+     peg.style.borderRadius="50%";
+     peg.style.position="absolute";
+     peg.style.top=(40+r*40)+"px";
+     peg.style.left=(c*15+10)+"%";
+     game.appendChild(peg);
+
+
+/* GIVE BALLS AFTER VIDEO */
+function addBallsFromVideo(){
+ const earned=Math.floor(Math.random()*5)+1;
+ ballBalance+=earned;
+ document.getElementById("ballCount").textContent=ballBalance;
+ document.getElementById("dropBallBtn").disabled=false;
+}
+
+/* DROP BUTTON */
+document.getElementById("dropBallBtn").onclick=dropBall;
+
+function dropBall(){
+ if(ballBalance<=0) return;
+
+ // Monetag ad first
+ if(typeof window.show_9175254 === "function"){
+   window.show_9175254();
+ }
+
+setTimeout(()=>performDrop(),2000);
+}
+
+/* DROP PHYSICS */
+function performDrop(){
+ ballBalance--;
+ document.getElementById("ballCount").textContent=ballBalance;
+
+ const game=document.getElementById("ballGame");
+ const ball=document.createElement("div");
+ ball.style.width="14px";
+ ball.style.height="14px";
+ ball.style.background="#facc15";
+ ball.style.borderRadius="50%";
+ ball.style.position="absolute";
+ ball.style.left=Math.random()*90+"%";
+ game.appendChild(ball);
+
+ dropSound.currentTime=0;
+ dropSound.play();
+
+let top=0;
+ const fall=setInterval(async ()=>{
+   top+=5;
+
+   if(Math.random()<0.3){
+     ball.style.left=(ball.offsetLeft+(Math.random()<0.5?-10:10))+"px";
+   }
+
+   ball.style.top=top+"px";
+
+   if(top>=280){
+     clearInterval(fall);
+
+const index=Math.floor((ball.offsetLeft/game.clientWidth)*BALL_SLOTS.length);
+     let reward=BALL_SLOTS[Math.min(index,BALL_SLOTS.length-1)];
+
+     if(reward==="JACKPOT"){
+       reward=Math.floor(Math.random()*31)+20; // ₱20–₱50
+     }
+
+     data.total+=reward;
+     data.earn.push({type:"Ball Drop",amount:reward,time:new Date().toLocaleString()});
+     document.getElementById("lastBallWin").textContent=reward;
+
+     await save();
+     render();
+     ball.remove();
+
+     if(ballBalance===0){
+       document.getElementById("dropBallBtn").disabled=true;
+     }
+   }
+ },20);
+}
+
+/* =========================================================
+   🔗 HOOK INTO ORIGINAL VIDEO REWARD (NO EDIT)
+========================================================= */
+
+const originalRewardFunction = reward;
+reward = async function(){
+ await originalRewardFunction();
+ addBallsFromVideo();
+ showBallGame();
 };
 
 </script>
