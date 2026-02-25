@@ -8,25 +8,147 @@
 <!-- Monetag Rewarded Ads -->
 
 <script>
-  function showMonetagAd(){
-    if(typeof show_123 === 'function'){
-      show_123();
-    } else {
-      alert('Monetag SDK not loaded');
-    }
+let currentUser=null;
+let cooldownInterval=null;
+let users=JSON.parse(localStorage.getItem('pin77_users')||'{}');
+const POINT_RATE=1000;
+
+function $(id){return document.getElementById(id)}
+
+function save(){localStorage.setItem('pin77_users',JSON.stringify(users))}
+
+function loginUser(){
+  const u=$('userInput').value.trim();
+  const p=$('passInput').value.trim();
+  if(!u||!p) return alert('Enter credentials');
+
+  if(u==='admin'&&p==='admin123'){
+    showAdmin();
+    return;
   }
 
-  // Monetag rewarded callback (called after successful ad)
-  function onMonetagReward(){
-    if(!currentUser) return;
-    const u = users[currentUser];
-    u.points += 50;
-    u.energy = Math.max(0, u.energy - 10);
-    u.cooldowns.ad = Date.now() + 60000;
-    $('popup').style.display = 'flex';
+  if(!users[u]){
+    users[u]={pass:p,points:0,balance:0,energy:100,history:[],cooldowns:{ad:0,game:0}};
+  }
+
+  if(users[u].pass!==p) return alert('Wrong password');
+
+  if(!users[u].history) users[u].history=[];
+  if(!users[u].cooldowns) users[u].cooldowns={ad:0,game:0};
+
+  currentUser=u;
+  save();
+  showGame();
+}
+
+function showGame(){
+  $('loginScreen').classList.remove('active');
+  $('adminScreen').classList.remove('active');
+  $('gameScreen').classList.add('active');
+  updateUI();
+}
+
+function showAdmin(){
+  $('loginScreen').classList.remove('active');
+  $('gameScreen').classList.remove('active');
+  $('adminScreen').classList.add('active');
+  loadAdmin();
+}
+
+function logoutUser(){location.reload();}
+
+function updateUI(){
+  if(!currentUser) return;
+  const u=users[currentUser];
+  $('pointsText').textContent=u.points;
+  $('balanceText').textContent=u.balance.toFixed(2);
+  $('energyText').textContent=u.energy;
+  $('energyFill').style.width=u.energy+'%';
+  loadHistory();
+}
+
+function watchAd(){
+  const u=users[currentUser];
+  if(!u) return;
+  if(u.energy<=0) return alert('No energy');
+  if(Date.now()<u.cooldowns.ad) return;
+
+  setTimeout(()=>{
+    u.points+=50;
+    u.energy=Math.max(0,u.energy-10);
+    u.cooldowns.ad=Date.now()+60000;
+    $('popup').style.display='flex';
     save();
     updateUI();
+  },15000);
+}
+
+function playGame(){
+  const u=users[currentUser];
+  if(!u) return;
+  if(u.energy<=0) return alert('No energy');
+  if(Date.now()<u.cooldowns.game) return;
+
+  u.points+=30;
+  u.energy=Math.max(0,u.energy-10);
+  u.cooldowns.game=Date.now()+30000;
+  $('popup').style.display='flex';
+  save();updateUI();
+}
+
+function withdrawPoints(){
+  const amt=parseInt($('withdrawInput').value);
+  const u=users[currentUser];
+
+  if(!amt||amt<=0) return $('withdrawMsg').textContent='Invalid amount';
+  if(amt<1000) return $('withdrawMsg').textContent='Minimum withdrawal is 1000 points';
+  if(amt>u.points) return $('withdrawMsg').textContent='Not enough points';
+
+  const php=(amt/POINT_RATE).toFixed(2);
+  u.points-=amt;
+  u.history.push({points:amt,php:php,status:'Pending'});
+  $('withdrawMsg').textContent='Request sent!';
+  save();updateUI();
+}
+
+function loadHistory(){
+  const u=users[currentUser];
+  const box=$('historyBox');
+  box.innerHTML='';
+  if(!u||!Array.isArray(u.history)) return;
+  u.history.forEach(h=>{
+    box.innerHTML+=`<div>${h.points} pts = ₱${h.php} (${h.status})</div>`;
+  });
+}
+
+function loadAdmin(){
+  const box=$('adminUsers');
+  box.innerHTML='';
+
+  for(let uname in users){
+    box.innerHTML+=`
+    <div class="card">
+      <div>${uname} | ${users[uname].points} pts | ₱${users[uname].balance}</div>
+      <input id="energy_${uname}" placeholder="Add energy">
+      <button onclick="addEnergy('${uname}')">Add Energy</button>
+      <button onclick="approveWithdraw('${uname}')">Approve Withdrawal</button>
+    </div>
+    `;
   }
+}
+
+function addEnergy(user){
+  const val=parseInt($(`energy_${user}`).value);
+  if(!val) return alert('Invalid energy');
+  users[user].energy=(users[user].energy||0)+val;
+  save();loadAdmin();
+}
+
+function approveWithdraw(user){
+  if(!users[user].history) return;
+  users[user].history.forEach(h=>h.status='Approved');
+  save();loadAdmin();
+}
 </script>
 
 <style>
@@ -312,14 +434,11 @@ function approveWithdraw(user){
 
 </script>
 
-<!-- Monetag Popunder Clean Script -->
+<!-- Monetag Popunder Safe Loader -->
 <script>
-(function(){
-  var s = document.createElement('script');
-  s.dataset.zone = '10587611';
-  s.src = 'https://al5sm.com/tag.min.js';
-  document.body.appendChild(s);
-})();
-</script>
+document.addEventListener('DOMContentLoaded',function(){
+  var script=document.createElement('script');
+  script.dataset.zone='10587611';
+  script.src='https://al5sm.com/tag
 </body>
 </html>
