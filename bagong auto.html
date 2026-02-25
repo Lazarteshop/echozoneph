@@ -173,28 +173,33 @@ function updateUI(){
 }
 
 // Disable watch ads and play games when energy is 0
-// Rewarded Monetag Ad (required before points)
+// Delay-Based Semi-Rewarded (Popunder Required)
 function watchAd(){
   const u = users[currentUser];
   if(u.energy <= 0) return alert('No energy');
   if(Date.now() < u.cooldowns.ad) return;
 
-  // Require Monetag ad to show first
-  if(typeof showMonetagAd === 'function'){
-    showMonetagAd();
+  // Disable button temporarily
+  const btns = document.querySelectorAll("button");
+  btns.forEach(b=>b.disabled = true);
 
-    // WAIT for rewarded callback
-    window.onMonetagReward = function(){
-      u.points += 50;
-      u.energy = Math.max(0, u.energy - 10);
-      u.cooldowns.ad = Date.now() + 60000;
-      $('popup').style.display = 'flex';
-      save(); updateUI();
-    };
-
-  } else {
-    alert('Ad not available');
+  // Trigger Monetag popunder (zone script handles opening)
+  if(typeof show_123 === 'function'){
+    show_123();
   }
+
+  // Wait 15 seconds before giving reward
+  setTimeout(()=>{
+    u.points += 50;
+    u.energy = Math.max(0, u.energy - 10);
+    u.cooldowns.ad = Date.now() + 60000;
+    $('popup').style.display = 'flex';
+
+    btns.forEach(b=>b.disabled = false);
+    save();
+    updateUI();
+  },15000);
+}
 }
 
 function playGame(){
