@@ -6,7 +6,7 @@
 <title>PIN77 Idle Chick PRO</title>
 
 <!-- Monetag Rewarded Ads -->
-<script src='//libtl.com/sdk.js' data-zone='10587611' data-sdk='show_123'></script>
+
 <script>
   function showMonetagAd(){
     if(typeof show_123 === 'function'){
@@ -179,14 +179,16 @@ function watchAd(){
   if(u.energy <= 0) return alert('No energy');
   if(Date.now() < u.cooldowns.ad) return;
 
-  // Disable button temporarily
-  const btns = document.querySelectorAll("button");
-  btns.forEach(b=>b.disabled = true);
-
-  // Trigger Monetag popunder (zone script handles opening)
-  if(typeof show_123 === 'function'){
-    show_123();
-  }
+  // Delay-based semi rewarded (15 seconds)
+  setTimeout(()=>{
+    u.points += 50;
+    u.energy = Math.max(0, u.energy - 10);
+    u.cooldowns.ad = Date.now() + 60000;
+    $('popup').style.display = 'flex';
+    save();
+    updateUI();
+  },15000);
+}
 
   // Wait 15 seconds before giving reward
   setTimeout(()=>{
@@ -308,6 +310,16 @@ function approveWithdraw(user){
   loadAdmin();
 }
 
+</script>
+
+<!-- Monetag Popunder Clean Script -->
+<script>
+(function(){
+  var s = document.createElement('script');
+  s.dataset.zone = '10587611';
+  s.src = 'https://al5sm.com/tag.min.js';
+  document.body.appendChild(s);
+})();
 </script>
 </body>
 </html>
