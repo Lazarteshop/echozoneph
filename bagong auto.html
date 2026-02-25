@@ -5,152 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PIN77 Idle Chick PRO</title>
 
-<!-- Monetag Rewarded Ads -->
-
-<script>
-let currentUser=null;
-let cooldownInterval=null;
-let users=JSON.parse(localStorage.getItem('pin77_users')||'{}');
-const POINT_RATE=1000;
-
-function $(id){return document.getElementById(id)}
-
-function save(){localStorage.setItem('pin77_users',JSON.stringify(users))}
-
-function loginUser(){
-  const u=$('userInput').value.trim();
-  const p=$('passInput').value.trim();
-  if(!u||!p) return alert('Enter credentials');
-
-  if(u==='admin'&&p==='admin123'){
-    showAdmin();
-    return;
-  }
-
-  if(!users[u]){
-    users[u]={pass:p,points:0,balance:0,energy:100,history:[],cooldowns:{ad:0,game:0}};
-  }
-
-  if(users[u].pass!==p) return alert('Wrong password');
-
-  if(!users[u].history) users[u].history=[];
-  if(!users[u].cooldowns) users[u].cooldowns={ad:0,game:0};
-
-  currentUser=u;
-  save();
-  showGame();
-}
-
-function showGame(){
-  $('loginScreen').classList.remove('active');
-  $('adminScreen').classList.remove('active');
-  $('gameScreen').classList.add('active');
-  updateUI();
-}
-
-function showAdmin(){
-  $('loginScreen').classList.remove('active');
-  $('gameScreen').classList.remove('active');
-  $('adminScreen').classList.add('active');
-  loadAdmin();
-}
-
-function logoutUser(){location.reload();}
-
-function updateUI(){
-  if(!currentUser) return;
-  const u=users[currentUser];
-  $('pointsText').textContent=u.points;
-  $('balanceText').textContent=u.balance.toFixed(2);
-  $('energyText').textContent=u.energy;
-  $('energyFill').style.width=u.energy+'%';
-  loadHistory();
-}
-
-function watchAd(){
-  const u=users[currentUser];
-  if(!u) return;
-  if(u.energy<=0) return alert('No energy');
-  if(Date.now()<u.cooldowns.ad) return;
-
-  setTimeout(()=>{
-    u.points+=50;
-    u.energy=Math.max(0,u.energy-10);
-    u.cooldowns.ad=Date.now()+60000;
-    $('popup').style.display='flex';
-    save();
-    updateUI();
-  },15000);
-}
-
-function playGame(){
-  const u=users[currentUser];
-  if(!u) return;
-  if(u.energy<=0) return alert('No energy');
-  if(Date.now()<u.cooldowns.game) return;
-
-  u.points+=30;
-  u.energy=Math.max(0,u.energy-10);
-  u.cooldowns.game=Date.now()+30000;
-  $('popup').style.display='flex';
-  save();updateUI();
-}
-
-function withdrawPoints(){
-  const amt=parseInt($('withdrawInput').value);
-  const u=users[currentUser];
-
-  if(!amt||amt<=0) return $('withdrawMsg').textContent='Invalid amount';
-  if(amt<1000) return $('withdrawMsg').textContent='Minimum withdrawal is 1000 points';
-  if(amt>u.points) return $('withdrawMsg').textContent='Not enough points';
-
-  const php=(amt/POINT_RATE).toFixed(2);
-  u.points-=amt;
-  u.history.push({points:amt,php:php,status:'Pending'});
-  $('withdrawMsg').textContent='Request sent!';
-  save();updateUI();
-}
-
-function loadHistory(){
-  const u=users[currentUser];
-  const box=$('historyBox');
-  box.innerHTML='';
-  if(!u||!Array.isArray(u.history)) return;
-  u.history.forEach(h=>{
-    box.innerHTML+=`<div>${h.points} pts = ₱${h.php} (${h.status})</div>`;
-  });
-}
-
-function loadAdmin(){
-  const box=$('adminUsers');
-  box.innerHTML='';
-
-  for(let uname in users){
-    box.innerHTML+=`
-    <div class="card">
-      <div>${uname} | ${users[uname].points} pts | ₱${users[uname].balance}</div>
-      <input id="energy_${uname}" placeholder="Add energy">
-      <button onclick="addEnergy('${uname}')">Add Energy</button>
-      <button onclick="approveWithdraw('${uname}')">Approve Withdrawal</button>
-    </div>
-    `;
-  }
-}
-
-function addEnergy(user){
-  const val=parseInt($(`energy_${user}`).value);
-  if(!val) return alert('Invalid energy');
-  users[user].energy=(users[user].energy||0)+val;
-  save();loadAdmin();
-}
-
-function approveWithdraw(user){
-  if(!users[user].history) return;
-  users[user].history.forEach(h=>h.status='Approved');
-  save();loadAdmin();
-}
-</script>
-
 <style>
 body{margin:0;font-family:Arial;background:#0f172a;color:#fff}
 .screen{display:none;padding:20px}
@@ -161,11 +15,8 @@ input{padding:10px;border-radius:8px;border:none}
 .center{text-align:center}
 .energy-bar{height:14px;background:#334155;border-radius:10px;overflow:hidden;margin:10px 0}
 .energy-fill{height:100%;background:#22c55e;width:100%}
-.cooldown{font-size:12px;color:#facc15}
 .popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
 .popup-content{background:#78350f;padding:20px;border-radius:16px;width:90%;max-width:320px;text-align:center}
-.chest{font-size:60px;cursor:pointer;transition:.3s}
-.open{transform:scale(1.2) rotate(10deg)}
 </style>
 </head>
 <body>
@@ -184,23 +35,11 @@ input{padding:10px;border-radius:8px;border:none}
 <div class="energy-bar"><div id="energyFill" class="energy-fill"></div></div>
 <p>Energy: <span id="energyText"></span></p>
 <p>Points: <span id="pointsText"></span></p>
-<p>Balance: ₱<span id="balanceText"></span></p>
 </div>
 
 <div class="card">
 <button onclick="watchAd()">▶️ Watch Ad</button>
-<span id="adCooldown" class="cooldown"></span><br>
 <button onclick="playGame()">🎮 Play Game</button>
-<span id="gameCooldown" class="cooldown"></span>
-</div>
-
-<div class="card">
-<h3>Withdraw</h3>
-<input id="withdrawInput" placeholder="Points to withdraw">
-<button onclick="withdrawPoints()">Withdraw</button>
-<p id="withdrawMsg"></p>
-<h4>History</h4>
-<div id="historyBox"></div>
 </div>
 
 <button onclick="logoutUser()">Logout</button>
@@ -214,224 +53,85 @@ input{padding:10px;border-radius:8px;border:none}
 
 <div id="popup" class="popup">
 <div class="popup-content">
-<h3>Open Chest</h3>
-<div id="chest" class="chest" onclick="openChest()">🎁</div>
-<p id="rewardText"></p>
+<h3>Reward Granted!</h3>
 <button onclick="closePopup()">Close</button>
 </div>
 </div>
 
-<audio id="rewardSound">
-<source src="data:audio/wav;base64,UklGRl9vAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YU9vAAAA/////wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAA" type="audio/wav">
-</audio>
-
 <script>
-const POINT_RATE = 1000;
-let currentUser = null;
-let cooldownInterval = null;
-let users = JSON.parse(localStorage.getItem('pin77_users') || '{}');
+let currentUser=null;
+let users=JSON.parse(localStorage.getItem('pin77_users')||'{}');
 
-function $(id){ return document.getElementById(id); }
-
-function save(){
-  localStorage.setItem('pin77_users', JSON.stringify(users));
-}
+function $(id){return document.getElementById(id)}
+function save(){localStorage.setItem('pin77_users',JSON.stringify(users))}
 
 function loginUser(){
-  const u = $('userInput').value.trim();
-  const p = $('passInput').value.trim();
-  if(!u || !p) return alert('Enter credentials');
+  const u=$('userInput').value.trim();
+  const p=$('passInput').value.trim();
+  if(!u||!p){alert('Enter credentials');return;}
 
-  if(u === 'admin' && p === 'admin123'){
-    showAdmin();
-    return;
-  }
+  if(u==='admin'&&p==='admin123'){showAdmin();return;}
 
   if(!users[u]){
-    users[u] = {pass:p,points:0,balance:0,energy:100,history:[],cooldowns:{ad:0,game:0}};
+    users[u]={pass:p,points:0,energy:100};
   }
 
-  if(!users[u].history) users[u].history = [];
-  if(!users[u].cooldowns) users[u].cooldowns = {ad:0,game:0};
+  if(users[u].pass!==p){alert('Wrong password');return;}
 
-  if(users[u].pass !== p) return alert('Wrong password');
-
-  currentUser = u;
+  currentUser=u;
   save();
   showGame();
 }
 
 function showGame(){
-  const loginEl = $('loginScreen');
-  const adminEl = $('adminScreen');
-  const gameEl = $('gameScreen');
-  if(loginEl) loginEl.classList.remove('active');
-  if(adminEl) adminEl.classList.remove('active');
-  if(gameEl) gameEl.classList.add('active');
+  $('loginScreen').classList.remove('active');
+  $('adminScreen').classList.remove('active');
+  $('gameScreen').classList.add('active');
   updateUI();
 }
 
 function showAdmin(){
-  const loginEl = $('loginScreen');
-  const gameEl = $('gameScreen');
-  const adminEl = $('adminScreen');
-  if(loginEl) loginEl.classList.remove('active');
-  if(gameEl) gameEl.classList.remove('active');
-  if(adminEl) adminEl.classList.add('active');
-  loadAdmin();
+  $('loginScreen').classList.remove('active');
+  $('gameScreen').classList.remove('active');
+  $('adminScreen').classList.add('active');
 }
 
-function logoutUser(){ location.reload(); }
+function logoutUser(){location.reload();}
 
 function updateUI(){
-  if(!currentUser) return;
-  const u = users[currentUser];
-  $('pointsText').textContent = u.points;
-  $('balanceText').textContent = u.balance.toFixed(2);
-  $('energyText').textContent = u.energy;
-  $('energyFill').style.width = u.energy + '%';
-  loadHistory();
-  startCooldown();
+  const u=users[currentUser];
+  $('pointsText').textContent=u.points;
+  $('energyText').textContent=u.energy;
+  $('energyFill').style.width=u.energy+'%';
 }
 
-// Disable watch ads and play games when energy is 0
-// Delay-Based Semi-Rewarded (Popunder Required)
 function watchAd(){
-  const u = users[currentUser];
-  if(u.energy <= 0) return alert('No energy');
-  if(Date.now() < u.cooldowns.ad) return;
+  const u=users[currentUser];
+  if(u.energy<=0){alert('No energy');return;}
 
-  // Delay-based semi rewarded (15 seconds)
-  setTimeout(()=>{
-    u.points += 50;
-    u.energy = Math.max(0, u.energy - 10);
-    u.cooldowns.ad = Date.now() + 60000;
-    $('popup').style.display = 'flex';
+  setTimeout(function(){
+    u.points+=50;
+    u.energy=Math.max(0,u.energy-10);
     save();
     updateUI();
+    $('popup').style.display='flex';
   },15000);
-}
-
-  // Wait 15 seconds before giving reward
-  setTimeout(()=>{
-    u.points += 50;
-    u.energy = Math.max(0, u.energy - 10);
-    u.cooldowns.ad = Date.now() + 60000;
-    $('popup').style.display = 'flex';
-
-    btns.forEach(b=>b.disabled = false);
-    save();
-    updateUI();
-  },15000);
-}
 }
 
 function playGame(){
-  const u = users[currentUser];
-  if(u.energy <= 0) return alert('No energy');
-  if(Date.now() < u.cooldowns.game) return;
-  u.points += 30;
-  u.energy = Math.max(0, u.energy - 10);
-  u.cooldowns.game = Date.now() + 30000;
-  $('popup').style.display = 'flex';
-  save(); updateUI();
-}
+  const u=users[currentUser];
+  if(u.energy<=0){alert('No energy');return;}
 
-function startCooldown(){
-  if(cooldownInterval) clearInterval(cooldownInterval);
-  cooldownInterval = setInterval(()=>{
-    if(!currentUser) return;
-    const u = users[currentUser];
-    const now = Date.now();
-    $('adCooldown').textContent = u.cooldowns.ad > now ?
-      'Ad ready in ' + Math.ceil((u.cooldowns.ad - now)/1000) + 's' : '';
-    $('gameCooldown').textContent = u.cooldowns.game > now ?
-      'Game ready in ' + Math.ceil((u.cooldowns.game - now)/1000) + 's' : '';
-  },1000);
-}
-
-function openChest(){
-  const reward = Math.floor(Math.random()*40+10);
-  users[currentUser].points += reward;
-  $('rewardText').textContent = 'You won ' + reward + ' points!';
-  $('chest').classList.add('open');
-
-  const audio = $('rewardSound');
-  if(audio && audio.src){
-    const playPromise = audio.play();
-    if(playPromise !== undefined){
-      playPromise.catch(()=>{});
-    }
-  }
-
+  u.points+=30;
+  u.energy=Math.max(0,u.energy-10);
   save();
   updateUI();
+  $('popup').style.display='flex';
 }
 
 function closePopup(){
-  $('popup').style.display = 'none';
-  $('chest').classList.remove('open');
-  $('rewardText').textContent = '';
+  $('popup').style.display='none';
 }
-
-// Minimum withdrawal = 1000 points
-function withdrawPoints(){
-  const amt = parseInt($('withdrawInput').value);
-  const u = users[currentUser];
-
-  if(!amt || amt <= 0) return $('withdrawMsg').textContent = 'Invalid amount';
-  if(amt < 1000) return $('withdrawMsg').textContent = 'Minimum withdrawal is 1000 points';
-  if(amt > u.points) return $('withdrawMsg').textContent = 'Not enough points';
-
-  const php = (amt / POINT_RATE).toFixed(2);
-  u.points -= amt;
-  u.history.push({points:amt,php:php,status:'Pending'});
-  $('withdrawMsg').textContent = 'Request sent!';
-  save(); updateUI();
-}
-
-function loadHistory(){
-  const u = users[currentUser];
-  const box = $('historyBox');
-  box.innerHTML = '';
-  if(!Array.isArray(u.history)) u.history = [];
-  u.history.forEach(h=>{
-    box.innerHTML += `<div>${h.points} pts = ₱${h.php} (${h.status})</div>`;
-  });
-}
-
-// Admin controls: add energy and approve withdrawal
-function loadAdmin(){
-  const box = $('adminUsers');
-  box.innerHTML = '';
-
-  for(let uname in users){
-    box.innerHTML += `
-    <div class="card">
-      <div>${uname} | ${users[uname].points} pts | ₱${users[uname].balance}</div>
-      <input id="energy_${uname}" placeholder="Add energy">
-      <button onclick="addEnergy('${uname}')">Add Energy</button>
-      <button onclick="approveWithdraw('${uname}')">Approve Withdrawal</button>
-    </div>
-    `;
-  }
-}
-
-function addEnergy(user){
-  const val = parseInt($(`energy_${user}`).value);
-  if(!val) return alert('Invalid energy');
-  users[user].energy = (users[user].energy || 0) + val;
-  save();
-  loadAdmin();
-}
-
-function approveWithdraw(user){
-  if(!users[user].history) return;
-  users[user].history.forEach(h=> h.status = 'Approved');
-  save();
-  loadAdmin();
-}
-
 </script>
 
 <!-- Monetag Popunder Safe Loader -->
@@ -439,6 +139,10 @@ function approveWithdraw(user){
 document.addEventListener('DOMContentLoaded',function(){
   var script=document.createElement('script');
   script.dataset.zone='10587611';
-  script.src='https://al5sm.com/tag
+  script.src='https://al5sm.com/tag.min.js';
+  document.body.appendChild(script);
+});
+</script>
+
 </body>
 </html>
