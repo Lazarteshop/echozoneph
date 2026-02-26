@@ -225,7 +225,9 @@ function giveYTReward(){
 
   $('ytModal').style.display = 'none';
 
-  u.points += 50;
+  // Random reward between 30 - 70
+  const randomAdReward = Math.floor(Math.random() * 41) + 30;
+  u.points += randomAdReward;
   u.energy = Math.max(0, u.energy - 10);
   u.cooldowns.ad = Date.now() + TASK_COOLDOWN;
 
@@ -264,7 +266,9 @@ function finishMiniGame(){
   const u = users[currentUser];
   $('miniGamePopup').style.display='none';
 
-  u.points += 30;
+  // Random reward between 20 - 50
+  const randomGameReward = Math.floor(Math.random() * 31) + 20;
+  u.points += randomGameReward;
   u.energy = Math.max(0, u.energy - 10);
   u.cooldowns.game = Date.now() + TASK_COOLDOWN;
 
