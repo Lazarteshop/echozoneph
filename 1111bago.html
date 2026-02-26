@@ -417,8 +417,8 @@ function exportHistoryCSV(){
   const u = users[currentUser];
   if(!u || !u.history) return;
 
-  let csv = 'Type,Points,Status,Date
-';
+  let csv = "Type,Points,Status,Date
+";
 
   u.history.forEach(h=>{
     const date = new Date(h.date).toLocaleString();
@@ -428,10 +428,12 @@ function exportHistoryCSV(){
 
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
+
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'reward_history.csv';
+  a.download = "reward_history.csv";
   a.click();
+
   URL.revokeObjectURL(url);
 }
 
