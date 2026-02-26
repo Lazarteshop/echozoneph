@@ -1,309 +1,298 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PIN77 Idle Chick PRO</title>
+<title>Chick Miner - Earn Game</title>
 
-<!-- Monetag Rewarded Ads -->
-<script src='//libtl.com/sdk.js' data-zone='10587611' data-sdk='show_123'></script>
-<script>
-  function showMonetagAd(){
-    if(typeof show_123 === 'function'){
-      show_123();
-    } else {
-      alert('Monetag SDK not loaded');
-    }
-  }
-
-  // Monetag rewarded callback (called after successful ad)
-  function onMonetagReward(){
-    if(!currentUser) return;
-    const u = users[currentUser];
-    u.points += 50;
-    u.energy = Math.max(0, u.energy - 10);
-    u.cooldowns.ad = Date.now() + 60000;
-    $('popup').style.display = 'flex';
-    save();
-    updateUI();
-  }
-</script>
+<!-- PWA META -->
+<meta name="theme-color" content="#4fc3f7">
+<link rel="manifest" href="manifest.json">
 
 <style>
-body{margin:0;font-family:Arial;background:#0f172a;color:#fff}
-.screen{display:none;padding:20px}
-.active{display:block}
-.card{background:#1e293b;border-radius:16px;padding:16px;margin:10px 0}
-button{padding:10px;border-radius:8px;border:none;background:#22c55e;color:#fff;font-weight:bold;margin:4px}
-input{padding:10px;border-radius:8px;border:none}
-.center{text-align:center}
-.energy-bar{height:14px;background:#334155;border-radius:10px;overflow:hidden;margin:10px 0}
-.energy-fill{height:100%;background:#22c55e;width:100%}
-.cooldown{font-size:12px;color:#facc15}
-.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
-.popup-content{background:#78350f;padding:20px;border-radius:16px;width:90%;max-width:320px;text-align:center}
-.chest{font-size:60px;cursor:pointer;transition:.3s}
-.open{transform:scale(1.2) rotate(10deg)}
+  body {
+    font-family: Arial, sans-serif;
+    margin:0;
+    background: linear-gradient(#4fc3f7, #81c784);
+    color:#fff;
+  }
+  .container { max-width:420px; margin:auto; padding:15px; }
+  .card {
+    background: rgba(0,0,0,0.65);
+    padding:15px;
+    border-radius:16px;
+    margin-bottom:15px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.4);
+  }
+  input, button {
+    width:100%;
+    padding:12px;
+    margin:6px 0;
+    border-radius:10px;
+    border:none;
+    font-size:15px;
+  }
+  button {
+    background:#ffd54f;
+    font-weight:bold;
+    cursor:pointer;
+  }
+  button:disabled { background:#777; }
+
+  .install-btn {
+    background:#00e5ff;
+    color:#000;
+  }
+
+  /* CHARACTER */
+  .character-box { text-align:center; }
+  .character { font-size:60px; display:inline-block; }
+  .digging { animation: dig 0.5s infinite alternate; }
+  @keyframes dig { from { transform: translateY(0); } to { transform: translateY(8px); } }
+  .tired { animation: tiredBlink 1s infinite; opacity:0.5; }
+  @keyframes tiredBlink { 0%,100% { opacity:0.5; } 50% { opacity:0.2; } }
+
+  .energy-bar {
+    height:22px;
+    background:#222;
+    border-radius:12px;
+    overflow:hidden;
+    margin-top:5px;
+  }
+  .energy-fill {
+    height:100%;
+    background: linear-gradient(to right, #00e676, #69f0ae);
+    width:0%;
+    transition: width 0.4s ease;
+  }
+
+  .status { text-align:center; margin-top:5px; }
+  .hidden { display:none; }
 </style>
 </head>
 <body>
+<div class="container">
 
-<div id="loginScreen" class="screen active">
-<h2>Login</h2>
-<input id="userInput" placeholder="Username"><br><br>
-<input id="passInput" type="password" placeholder="Password"><br><br>
-<button onclick="loginUser()">Login / Register</button>
-</div>
+  <!-- INSTALL APP -->
+  <div class="card">
+    <h3>📲 Install App</h3>
+    <button id="installBtn" class="install-btn hidden">Install Chick Miner</button>
+  </div>
 
-<div id="gameScreen" class="screen">
-<h2>🐥 PIN77 PRO</h2>
-<div class="card center">
-<div style="font-size:70px">🐥</div>
-<div class="energy-bar"><div id="energyFill" class="energy-fill"></div></div>
-<p>Energy: <span id="energyText"></span></p>
-<p>Points: <span id="pointsText"></span></p>
-<p>Balance: ₱<span id="balanceText"></span></p>
-</div>
+  <!-- LOGIN -->
+  <div id="loginCard" class="card">
+    <h2>🎮 Game Login</h2>
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <button onclick="register()">Register</button>
+  </div>
 
-<div class="card">
-<button onclick="watchAd()">▶️ Watch Ad</button>
-<span id="adCooldown" class="cooldown"></span><br>
-<button onclick="playGame()">🎮 Play Game</button>
-<span id="gameCooldown" class="cooldown"></span>
-</div>
+  <!-- APP -->
+  <div id="app" class="hidden">
 
-<div class="card">
-<h3>Withdraw</h3>
-<input id="withdrawInput" placeholder="Points to withdraw">
-<button onclick="withdrawPoints()">Withdraw</button>
-<p id="withdrawMsg"></p>
-<h4>History</h4>
-<div id="historyBox"></div>
-</div>
+    <div class="card">
+      <div class="character-box">
+        <div id="character" class="character">🐥⛏️</div>
+        <div id="stateText" class="status">Digging...</div>
+      </div>
 
-<button onclick="logoutUser()">Logout</button>
-</div>
+      <h3>Player: <span id="userDisplay"></span></h3>
+      <p>💰 Points: <b id="points">0</b></p>
 
-<div id="adminScreen" class="screen">
-<h2>Admin Dashboard</h2>
-<div id="adminUsers"></div>
-<button onclick="logoutUser()">Logout</button>
-</div>
+      <div class="energy-bar"><div id="energyFill" class="energy-fill"></div></div>
+      <p class="status">⚡ Energy: <span id="energyText">0</span>/100</p>
+    </div>
 
-<div id="popup" class="popup">
-<div class="popup-content">
-<h3>Open Chest</h3>
-<div id="chest" class="chest" onclick="openChest()">🎁</div>
-<p id="rewardText"></p>
-<button onclick="closePopup()">Close</button>
-</div>
-</div>
+    <div class="card">
+      <h3>💰 Feed Energy</h3>
+      <button onclick="deposit()">Feed Chick (+100 Energy)</button>
+    </div>
 
-<audio id="rewardSound">
-<source src="data:audio/wav;base64,UklGRl9vAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YU9vAAAA/////wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAA" type="audio/wav">
-</audio>
+    <div class="card">
+      <h3>🎮 Tasks</h3>
+      <button id="adBtn" onclick="watchAd()">📺 Watch Ad (+50)</button>
+      <button id="gameBtn" onclick="playGame()">🕹️ Play Game (+30)</button>
+    </div>
+
+    <div class="card">
+      <h3>🎁 Treasure Chest</h3>
+      <button onclick="openChest()">Open Chest</button>
+      <p id="chestMsg"></p>
+    </div>
+
+    <div class="card">
+      <h3>💸 Withdraw</h3>
+      <input id="withdrawAmount" type="number" placeholder="Enter points">
+      <button onclick="withdraw()">Withdraw</button>
+      <p id="withdrawMsg"></p>
+    </div>
+
+    <button onclick="logout()">Logout</button>
+  </div>
+
+</div>
 
 <script>
-const POINT_RATE = 1000;
 let currentUser = null;
-let cooldownInterval = null;
-let users = JSON.parse(localStorage.getItem('pin77_users') || '{}');
+let deferredPrompt;
 
-function $(id){ return document.getElementById(id); }
+// PWA INSTALL
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.classList.remove('hidden');
+});
 
-function save(){
-  localStorage.setItem('pin77_users', JSON.stringify(users));
+installBtn.onclick = async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt = null;
+  installBtn.classList.add('hidden');
+};
+
+// STORAGE
+function getUsers(){ return JSON.parse(localStorage.getItem("users")||"{}"); }
+function saveUsers(u){ localStorage.setItem("users", JSON.stringify(u)); }
+
+function register(){
+  if(!username.value||!password.value) return alert("Enter details");
+  let users=getUsers();
+  if(users[username.value]) return alert("User exists");
+  users[username.value]={password:password.value,points:0,energy:100};
+  saveUsers(users);
+  alert("Registered!");
 }
 
-function loginUser(){
-  const u = $('userInput').value.trim();
-  const p = $('passInput').value.trim();
-  if(!u || !p) return alert('Enter credentials');
+function login(){
+  let users=getUsers();
+  if(!users[username.value]||users[username.value].password!==password.value)
+    return alert("Invalid login");
+  currentUser=username.value;
+  localStorage.setItem("session",currentUser);
+  showApp();
+}
 
-  if(u === 'admin' && p === 'admin123'){
-    showAdmin();
-    return;
+function logout(){ localStorage.removeItem("session"); location.reload(); }
+
+function showApp(){
+  loginCard.classList.add("hidden");
+  app.classList.remove("hidden");
+  let data=getUsers()[currentUser];
+
+  userDisplay.textContent=currentUser;
+  points.textContent=data.points;
+  energyText.textContent=data.energy;
+  energyFill.style.width=data.energy+"%";
+
+  updateCharacter(data.energy);
+  adBtn.disabled=data.energy<=0;
+  gameBtn.disabled=data.energy<=0;
+}
+
+function updateCharacter(energy){
+  character.classList.remove("digging","tired");
+  if(energy<=0){
+    character.textContent="🐥💤";
+    character.classList.add("tired");
+    stateText.textContent="Tired... feed me!";
+  }else{
+    character.textContent="🐥⛏️";
+    character.classList.add("digging");
+    stateText.textContent="Digging for rewards";
   }
-
-  if(!users[u]){
-    users[u] = {pass:p,points:0,balance:0,energy:100,history:[],cooldowns:{ad:0,game:0}};
-  }
-
-  if(!users[u].history) users[u].history = [];
-  if(!users[u].cooldowns) users[u].cooldowns = {ad:0,game:0};
-
-  if(users[u].pass !== p) return alert('Wrong password');
-
-  currentUser = u;
-  save();
-  showGame();
 }
 
-function showGame(){
-  const loginEl = $('loginScreen');
-  const adminEl = $('adminScreen');
-  const gameEl = $('gameScreen');
-  if(loginEl) loginEl.classList.remove('active');
-  if(adminEl) adminEl.classList.remove('active');
-  if(gameEl) gameEl.classList.add('active');
-  updateUI();
+function deposit(){
+  let users=getUsers();
+  users[currentUser].energy=100;
+  saveUsers(users);
+  showApp();
 }
 
-function showAdmin(){
-  const loginEl = $('loginScreen');
-  const gameEl = $('gameScreen');
-  const adminEl = $('adminScreen');
-  if(loginEl) loginEl.classList.remove('active');
-  if(gameEl) gameEl.classList.remove('active');
-  if(adminEl) adminEl.classList.add('active');
-  loadAdmin();
-}
-
-function logoutUser(){ location.reload(); }
-
-function updateUI(){
-  if(!currentUser) return;
-  const u = users[currentUser];
-  $('pointsText').textContent = u.points;
-  $('balanceText').textContent = u.balance.toFixed(2);
-  $('energyText').textContent = u.energy;
-  $('energyFill').style.width = u.energy + '%';
-  loadHistory();
-  startCooldown();
-}
-
-// Disable watch ads and play games when energy is 0
-// Rewarded Monetag Ad (required before points)
 function watchAd(){
-  const u = users[currentUser];
-  if(u.energy <= 0) return alert('No energy');
-  if(Date.now() < u.cooldowns.ad) return;
-
-  // Require Monetag ad to show first
-  if(typeof showMonetagAd === 'function'){
-    showMonetagAd();
-
-    // WAIT for rewarded callback
-    window.onMonetagReward = function(){
-      u.points += 50;
-      u.energy = Math.max(0, u.energy - 10);
-      u.cooldowns.ad = Date.now() + 60000;
-      $('popup').style.display = 'flex';
-      save(); updateUI();
-    };
-
-  } else {
-    alert('Ad not available');
-  }
+  let users=getUsers();
+  let u=users[currentUser];
+  if(u.energy<=0) return;
+  u.points+=50; u.energy-=10;
+  saveUsers(users);
+  showApp();
 }
 
 function playGame(){
-  const u = users[currentUser];
-  if(u.energy <= 0) return alert('No energy');
-  if(Date.now() < u.cooldowns.game) return;
-  u.points += 30;
-  u.energy = Math.max(0, u.energy - 10);
-  u.cooldowns.game = Date.now() + 30000;
-  $('popup').style.display = 'flex';
-  save(); updateUI();
-}
-
-function startCooldown(){
-  if(cooldownInterval) clearInterval(cooldownInterval);
-  cooldownInterval = setInterval(()=>{
-    if(!currentUser) return;
-    const u = users[currentUser];
-    const now = Date.now();
-    $('adCooldown').textContent = u.cooldowns.ad > now ?
-      'Ad ready in ' + Math.ceil((u.cooldowns.ad - now)/1000) + 's' : '';
-    $('gameCooldown').textContent = u.cooldowns.game > now ?
-      'Game ready in ' + Math.ceil((u.cooldowns.game - now)/1000) + 's' : '';
-  },1000);
+  let users=getUsers();
+  let u=users[currentUser];
+  if(u.energy<=0) return;
+  u.points+=30; u.energy-=15;
+  saveUsers(users);
+  showApp();
 }
 
 function openChest(){
-  const reward = Math.floor(Math.random()*40+10);
-  users[currentUser].points += reward;
-  $('rewardText').textContent = 'You won ' + reward + ' points!';
-  $('chest').classList.add('open');
-
-  const audio = $('rewardSound');
-  if(audio && audio.src){
-    const playPromise = audio.play();
-    if(playPromise !== undefined){
-      playPromise.catch(()=>{});
-    }
-  }
-
-  save();
-  updateUI();
+  let reward=Math.floor(Math.random()*100)+20;
+  let users=getUsers();
+  users[currentUser].points+=reward;
+  saveUsers(users);
+  chestMsg.textContent="You got "+reward+" points!";
+  showApp();
 }
 
-function closePopup(){
-  $('popup').style.display = 'none';
-  $('chest').classList.remove('open');
-  $('rewardText').textContent = '';
+function withdraw(){
+  let amt=parseInt(withdrawAmount.value);
+  let users=getUsers();
+  if(!amt||amt<=0) return;
+  if(amt>users[currentUser].points){ withdrawMsg.textContent="Not enough points"; return; }
+  users[currentUser].points-=amt;
+  saveUsers(users);
+  withdrawMsg.textContent="Withdraw successful";
+  showApp();
 }
 
-// Minimum withdrawal = 1000 points
-function withdrawPoints(){
-  const amt = parseInt($('withdrawInput').value);
-  const u = users[currentUser];
-
-  if(!amt || amt <= 0) return $('withdrawMsg').textContent = 'Invalid amount';
-  if(amt < 1000) return $('withdrawMsg').textContent = 'Minimum withdrawal is 1000 points';
-  if(amt > u.points) return $('withdrawMsg').textContent = 'Not enough points';
-
-  const php = (amt / POINT_RATE).toFixed(2);
-  u.points -= amt;
-  u.history.push({points:amt,php:php,status:'Pending'});
-  $('withdrawMsg').textContent = 'Request sent!';
-  save(); updateUI();
-}
-
-function loadHistory(){
-  const u = users[currentUser];
-  const box = $('historyBox');
-  box.innerHTML = '';
-  if(!Array.isArray(u.history)) u.history = [];
-  u.history.forEach(h=>{
-    box.innerHTML += `<div>${h.points} pts = ₱${h.php} (${h.status})</div>`;
-  });
-}
-
-// Admin controls: add energy and approve withdrawal
-function loadAdmin(){
-  const box = $('adminUsers');
-  box.innerHTML = '';
-
-  for(let uname in users){
-    box.innerHTML += `
-    <div class="card">
-      <div>${uname} | ${users[uname].points} pts | ₱${users[uname].balance}</div>
-      <input id="energy_${uname}" placeholder="Add energy">
-      <button onclick="addEnergy('${uname}')">Add Energy</button>
-      <button onclick="approveWithdraw('${uname}')">Approve Withdrawal</button>
-    </div>
-    `;
-  }
-}
-
-function addEnergy(user){
-  const val = parseInt($(`energy_${user}`).value);
-  if(!val) return alert('Invalid energy');
-  users[user].energy = (users[user].energy || 0) + val;
-  save();
-  loadAdmin();
-}
-
-function approveWithdraw(user){
-  if(!users[user].history) return;
-  users[user].history.forEach(h=> h.status = 'Approved');
-  save();
-  loadAdmin();
-}
-
+window.onload=()=>{
+  let s=localStorage.getItem("session");
+  if(s){ currentUser=s; showApp(); }
+};
 </script>
+<!-- Reward Modal (PlayStore-style) -->
+<div id="rewardModal" class="reward-modal" style="display:none;">
+  <div class="reward-card">
+    <div class="reward-header">Your Chick Earned Rewards!</div>
+    <div id="rewardList"></div>
+    <button class="close-btn" onclick="closeReward()">Close</button>
+  </div>
+</div>
+
+<style>
+.reward-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;}
+.reward-card{width:90%;max-width:380px;background:#7a4b2c;border-radius:20px;padding:20px;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.4);font-family:sans-serif;}
+.reward-header{font-size:20px;font-weight:bold;text-align:center;margin-bottom:15px;}
+.reward-item{background:#9b623c;border-radius:12px;padding:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.claim-btn{background:#34c759;border:none;color:#fff;padding:8px 16px;border-radius:8px;font-weight:bold;}
+.close-btn{width:100%;margin-top:10px;padding:10px;border:none;border-radius:10px;background:#555;color:#fff;}
+</style>
+
+<script>
+function showRewards(rewards){
+  const list = document.getElementById('rewardList');
+  list.innerHTML='';
+  rewards.forEach(r=>{
+    const div=document.createElement('div');
+    div.className='reward-item';
+    div.innerHTML=`<span>${r}</span><button class='claim-btn'>Claim</button>`;
+    list.appendChild(div);
+  });
+  document.getElementById('rewardModal').style.display='flex';
+}
+
+function closeReward(){
+  document.getElementById('rewardModal').style.display='none';
+}
+
+// Example trigger after digging
+function onDigReward(){
+  showRewards(['Points 40','₱0.28','Points 30','₱0.07']);
+}
+</script>
+
 </body>
 </html>
