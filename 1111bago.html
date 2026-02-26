@@ -7,6 +7,7 @@
 
 <!-- MONETAG POPUNDER SCRIPT (ILAGAY DITO ANG ORIGINAL CODE MO - WALANG TATANGGALIN SA IBABA) -->
 <script>(function(s){s.dataset.zone='10587611',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
 <style>
 body{margin:0;font-family:Arial;background:#0f172a;color:#fff}
 .screen{display:none;padding:20px}
@@ -92,20 +93,6 @@ input{padding:10px;border-radius:8px;border:none;margin:4px 0}
 </div>
 
 <!-- ADMIN -->
-<div id="adminScreen" class="screen">
-<h2>Admin Dashboard</h2>
-<div id="adminUsers"></div>
-
-<hr>
-<h3>Set User GCash Number</h3>
-<select id="adminUserSelect"></select>
-<input type="text" id="adminGcashInput" placeholder="Enter GCash Number">
-<br>
-<button onclick="adminSetGcash()">Save GCash</button>
-
-<button onclick="logoutUser()">Logout</button>
-</div>
-
 <div id="adminScreen" class="screen">
 <h2>Admin Dashboard</h2>
 <div id="adminUsers"></div>
@@ -438,53 +425,12 @@ function loadAdmin(){
   const box = $('adminUsers');
   box.innerHTML='';
 
-  loadAdminUsers();
-
   for(let username in users){
     const u = users[username];
 
     box.innerHTML += `
     <div class="admin-box">
       <strong>${username}</strong><br>
-      Points: ${u.points} | Energy: ${u.energy}<br>
-      <input placeholder="Add Energy" id="energy_${username}">
-      <button onclick="addEnergy('${username}')">Add Energy</button>
-      <h4>Withdraw Requests</h4>
-      ${u.history.map((h,i)=> h.status==='Pending' ?
-        `<div>${h.points} pts 
-          <button onclick="approveWithdraw('${username}',${i})">Approve</button>
-        </div>`:'' ).join('')}
-    </div>
-    `;
-  }
-}
-
-function loadAdminUsers(){
-  const select = $('adminUserSelect');
-  if(!select) return;
-
-  select.innerHTML='';
-  Object.keys(users).forEach(u=>{
-    const opt = document.createElement('option');
-    opt.value = u;
-    opt.textContent = u;
-    select.appendChild(opt);
-  });
-}
-
-function adminSetGcash(){
-  const username = $('adminUserSelect').value;
-  const gcash = $('adminGcashInput').value.trim();
-
-  if(!username || !gcash) return alert('Enter GCash number');
-  if(!users[username]) return;
-
-  users[username].gcash = gcash;
-  save();
-
-  alert('GCash number saved for ' + username);
-}
-</strong><br>
       Points: ${u.points} | Energy: ${u.energy}<br>
       <input placeholder="Add Energy" id="energy_${username}">
       <button onclick="addEnergy('${username}')">Add Energy</button>
