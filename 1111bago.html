@@ -7,7 +7,6 @@
 
 <!-- MONETAG POPUNDER SCRIPT (ILAGAY DITO ANG ORIGINAL CODE MO - WALANG TATANGGALIN SA IBABA) -->
 <script>(function(s){s.dataset.zone='10587611',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-
 <style>
 body{margin:0;font-family:Arial;background:#0f172a;color:#fff}
 .screen{display:none;padding:20px}
@@ -164,20 +163,29 @@ function updateUI(){
   loadHistory();
 }
 
-// ===== WATCH AD (BINAGO LANG ANG LOOB - WALANG TINANGGAL NA FEATURE) =====
+// ===== WATCH AD (FIXED REWARD ISSUE) =====
 function watchAd(){
   const u = users[currentUser];
   if(!u || u.energy <= 0) return;
   if(Date.now() < u.cooldowns.ad) return;
 
-  triggerMonetag(); // MONETAG FIRST
+  // IMPORTANT: Monetag must trigger directly inside click event
+  triggerMonetag();
 
+  // Capture user reference to avoid null issue
+  const username = currentUser;
+
+  // Give reward after short delay (ad already triggered)
   setTimeout(()=>{
-    u.points += 50;
-    u.energy = Math.max(0, u.energy - 10);
-    u.cooldowns.ad = Date.now() + TASK_COOLDOWN;
-    save(); updateUI();
-  },3000);
+    if(!username || !users[username]) return;
+
+    users[username].points += 50;
+    users[username].energy = Math.max(0, users[username].energy - 10);
+    users[username].cooldowns.ad = Date.now() + TASK_COOLDOWN;
+
+    save();
+    updateUI();
+  },1500);
 }
 
 // ===== PLAY GAME (NEED MINI GAME FIRST) =====
