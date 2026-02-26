@@ -59,6 +59,14 @@ input{padding:10px;border-radius:8px;border:none;margin:4px 0}
 <button onclick="withdrawPoints()">Withdraw</button>
 <p id="withdrawMsg"></p>
 <h4>History</h4>
+<div style="margin-bottom:8px">
+<button onclick="setFilter('all')">All</button>
+<button onclick="setFilter('watch')">Watch</button>
+<button onclick="setFilter('game')">Game</button>
+<button onclick="setFilter('withdraw')">Withdraw</button>
+<button onclick="exportHistoryCSV()">Export CSV</button>
+</div>
+<p><strong>Today Earned:</strong> <span id="todayEarned">0</span> pts</p>
 <div id="historyBox"></div>
 </div>
 
@@ -80,11 +88,26 @@ input{padding:10px;border-radius:8px;border:none;margin:4px 0}
   <div class="popup-content" style="background:#000">
     <h3>Watch Full Video To Earn Reward</h3>
     <div id="ytFrame"></div>
+    <p id="rewardDisplay" style="font-size:14px;color:#ffd700;font-weight:bold"></p>
     <p style="font-size:12px;color:#ccc">Reward will be given after video finishes.</p>
   </div>
 </div>
 
 <!-- ADMIN -->
+<div id="adminScreen" class="screen">
+<h2>Admin Dashboard</h2>
+<div id="adminUsers"></div>
+
+<hr>
+<h3>Set User GCash Number</h3>
+<select id="adminUserSelect"></select>
+<input type="text" id="adminGcashInput" placeholder="Enter GCash Number">
+<br>
+<button onclick="adminSetGcash()">Save GCash</button>
+
+<button onclick="logoutUser()">Logout</button>
+</div>
+
 <div id="adminScreen" class="screen">
 <h2>Admin Dashboard</h2>
 <div id="adminUsers"></div>
@@ -104,6 +127,17 @@ let miniCounter = 0;
 
 function $(id){ return document.getElementById(id); }
 function save(){ localStorage.setItem('pin77_users', JSON.stringify(users)); }
+
+function addHistory(entry){
+  const u = users[currentUser];
+  if(!u.history) u.history = [];
+  u.history.push(entry);
+
+  // LIMIT TO LAST 50 ENTRIES
+  if(u.history.length > 50){
+    u.history = u.history.slice(-50);
+  }
+}
 
 // ===== LOGIN =====
 function loginUser(){
@@ -223,6 +257,7 @@ function giveYTReward(){
   // Random reward between 30 - 70
   const randomAdReward = Math.floor(Math.random() * 41) + 30;
   u.points += randomAdReward;
+  addHistory({type:'watch',points:randomAdReward,status:'Completed',date:Date.now()});
   u.energy = Math.max(0, u.energy - 10);
   u.cooldowns.ad = Date.now() + TASK_COOLDOWN;
 
@@ -264,6 +299,7 @@ function finishMiniGame(){
   // Random reward between 20 - 50
   const randomGameReward = Math.floor(Math.random() * 31) + 20;
   u.points += randomGameReward;
+  addHistory({type:'game',points:randomGameReward,status:'Completed',date:Date.now()});
   u.energy = Math.max(0, u.energy - 10);
   u.cooldowns.game = Date.now() + TASK_COOLDOWN;
 
@@ -324,7 +360,7 @@ function withdrawPoints(){
     return $('withdrawMsg').textContent = 'Not enough points';
 
   u.points -= amt;
-  u.history.push({points:amt,status:'Pending'});
+  addHistory({type:'withdraw',points:amt,status:'Pending',date:Date.now()});
 
   $('withdrawMsg').textContent = 'Withdrawal pending admin approval';
 
@@ -332,18 +368,71 @@ function withdrawPoints(){
 }
 
 // ===== HISTORY =====
+let currentFilter = 'all';
+
+function setFilter(type){
+  currentFilter = type;
+  loadHistory();
+}
+
 function loadHistory(){
   const u = users[currentUser];
   const box = $('historyBox');
+  const todayBox = $('todayEarned');
   if(!box || !u) return;
 
   box.innerHTML='';
 
   if(!Array.isArray(u.history)) u.history=[];
 
-  u.history.forEach(h=>{
-    box.innerHTML += `<div>${h.points} pts - ${h.status}</div>`;
+  let todayTotal = 0;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  u.history.slice().reverse().forEach(h=>{
+    if(currentFilter !== 'all' && h.type !== currentFilter) return;
+
+    const dateObj = new Date(h.date);
+    const date = dateObj.toLocaleString();
+
+    if(dateObj >= today && (h.type==='watch' || h.type==='game')){
+      todayTotal += h.points;
+    }
+
+    if(h.type === 'watch'){
+      box.innerHTML += `<div>🎥 Watch Reward: +${h.points} pts<br><small>${date}</small></div>`;
+    }
+    else if(h.type === 'game'){
+      box.innerHTML += `<div>🎮 Game Reward: +${h.points} pts<br><small>${date}</small></div>`;
+    }
+    else if(h.type === 'withdraw'){
+      box.innerHTML += `<div>💸 Withdraw: ${h.points} pts - ${h.status}<br><small>${date}</small></div>`;
+    }
   });
+
+  if(todayBox) todayBox.textContent = todayTotal;
+}
+
+function exportHistoryCSV(){
+  const u = users[currentUser];
+  if(!u || !u.history) return;
+
+  let csv = 'Type,Points,Status,Date
+';
+
+  u.history.forEach(h=>{
+    const date = new Date(h.date).toLocaleString();
+    csv += `${h.type},${h.points},${h.status},${date}
+`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'reward_history.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ===== ADMIN (BUO - MAY ADD ENERGY AT APPROVE) =====
@@ -351,12 +440,53 @@ function loadAdmin(){
   const box = $('adminUsers');
   box.innerHTML='';
 
+  loadAdminUsers();
+
   for(let username in users){
     const u = users[username];
 
     box.innerHTML += `
     <div class="admin-box">
       <strong>${username}</strong><br>
+      Points: ${u.points} | Energy: ${u.energy}<br>
+      <input placeholder="Add Energy" id="energy_${username}">
+      <button onclick="addEnergy('${username}')">Add Energy</button>
+      <h4>Withdraw Requests</h4>
+      ${u.history.map((h,i)=> h.status==='Pending' ?
+        `<div>${h.points} pts 
+          <button onclick="approveWithdraw('${username}',${i})">Approve</button>
+        </div>`:'' ).join('')}
+    </div>
+    `;
+  }
+}
+
+function loadAdminUsers(){
+  const select = $('adminUserSelect');
+  if(!select) return;
+
+  select.innerHTML='';
+  Object.keys(users).forEach(u=>{
+    const opt = document.createElement('option');
+    opt.value = u;
+    opt.textContent = u;
+    select.appendChild(opt);
+  });
+}
+
+function adminSetGcash(){
+  const username = $('adminUserSelect').value;
+  const gcash = $('adminGcashInput').value.trim();
+
+  if(!username || !gcash) return alert('Enter GCash number');
+  if(!users[username]) return;
+
+  users[username].gcash = gcash;
+  save();
+
+  alert('GCash number saved for ' + username);
+}
+</strong><br>
       Points: ${u.points} | Energy: ${u.energy}<br>
       <input placeholder="Add Energy" id="energy_${username}">
       <button onclick="addEnergy('${username}')">Add Energy</button>
