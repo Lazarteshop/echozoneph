@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIN77 Idle Chick PRO</title>
+
+<!-- MONETAG POPUNDER SCRIPT (ILAGAY DITO ANG ORIGINAL CODE MO) -->
+<script>(function(s){s.dataset.zone='10587611',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
+<style>
+body{margin:0;font-family:Arial;background:#0f172a;color:#fff}
+.screen{display:none;padding:20px}
+.active{display:block}
+.card{background:#1e293b;border-radius:16px;padding:16px;margin:10px 0}
+button{padding:10px;border-radius:8px;border:none;background:#22c55e;color:#fff;font-weight:bold;margin:4px;cursor:pointer}
+button:disabled{background:#64748b;cursor:not-allowed}
+input{padding:10px;border-radius:8px;border:none;margin:4px 0}
+.center{text-align:center}
+.energy-bar{height:14px;background:#334155;border-radius:10px;overflow:hidden;margin:10px 0}
+.energy-fill{height:100%;background:#22c55e;width:100%}
+.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
+.popup-content{background:#1e293b;padding:20px;border-radius:16px;width:90%;max-width:320px;text-align:center}
+.admin-box{background:#1e293b;padding:10px;margin:8px 0;border-radius:10px}
+.game-area{margin-top:15px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="screen active">
+<h2>Login</h2>
+<input id="userInput" placeholder="Username"><br>
+<input id="passInput" type="password" placeholder="Password"><br>
+<button onclick="loginUser()">Login / Register</button>
+</div>
+
+<!-- GAME -->
+<div id="gameScreen" class="screen">
+<h2>🐥 PIN77 PRO</h2>
+<div class="card center">
+<div style="font-size:70px">🐥</div>
+<div class="energy-bar"><div id="energyFill" class="energy-fill"></div></div>
+<p>Energy: <span id="energyText"></span></p>
+<p>Points: <span id="pointsText"></span></p>
+<p>Balance: ₱<span id="balanceText"></span></p>
+</div>
+
+<div class="card">
+<button id="watchBtn" onclick="watchAd()">▶️ Watch Ad (+50)</button>
+<button id="playBtn" onclick="startMiniGame()">🎮 Play Game (+30)</button>
+</div>
+
+<div class="card">
+<h3>Withdraw (Min: 1000 pts)</h3>
+<input id="withdrawInput" placeholder="Points to withdraw">
+<button onclick="withdrawPoints()">Withdraw</button>
+<p id="withdrawMsg"></p>
+<h4>History</h4>
+<div id="historyBox"></div>
+</div>
+
+<button onclick="logoutUser()">Logout</button>
+</div>
+
+<!-- MINI GAME POPUP -->
+<div id="gamePopup" class="popup">
+<div class="popup-content">
+<h3>Click the Chick 5 Times!</h3>
+<p>Clicks: <span id="clickCount">0</span>/5</p>
+<div class="game-area">
+<button onclick="clickChick()" style="font-size:40px">🐥</button>
+</div>
+<br>
+<button onclick="closeGamePopup()">Cancel</button>
+</div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminScreen" class="screen">
+<h2>Admin Dashboard</h2>
+<div id="adminUsers"></div>
+<button onclick="logoutUser()">Logout</button>
+</div>
+
+<script>
+const POINT_RATE = 1000;
+const MIN_WITHDRAW = 1000;
+const TASK_COOLDOWN = 60000;
+
+let currentUser = null;
+let cooldownTimer = null;
+let users = JSON.parse(localStorage.getItem('pin77_users') || '{}');
+let miniGameClicks = 0;
+
+function $(id){ return document.getElementById(id); }
+function save(){ localStorage.setItem('pin77_users', JSON.stringify(users)); }
+
+function loginUser(){
+  const u = $('userInput').value.trim();
+  const p = $('passInput').value.trim();
+  if(!u || !p) return alert('Enter credentials');
+
+  if(u === 'admin' && p === 'admin123'){ showAdmin(); return; }
+
+  if(!users[u]){
+    users[u] = {pass:p,points:0,balance:0,energy:100,history:[],cooldowns:{ad:0,game:0,chest:0}};
+  }
+
+  if(users[u].pass !== p) return alert('Wrong password');
+
+  currentUser = u;
+  save();
+  showGame();
+}
+
+function logoutUser(){ location.reload(); }
+
+function showGame(){
+  $('loginScreen').classList.remove('active');
+  $('gameScreen').classList.add('active');
+  startCooldownTimer();
+  updateUI();
+}
+
+function showAdmin(){
+  $('loginScreen').classList.remove('active');
+  $('adminScreen').classList.add('active');
+  loadAdmin();
+}
+
+function updateUI(){
+  if(!currentUser) return;
+  const u = users[currentUser];
+
+  $('pointsText').textContent = u.points;
+  $('balanceText').textContent = u.balance.toFixed(2);
+  $('energyText').textContent = u.energy;
+  $('energyFill').style.width = u.energy + '%';
+
+  $('watchBtn').disabled = u.energy <= 0 || Date.now() < u.cooldowns.ad;
+  $('playBtn').disabled = u.energy <= 0 || Date.now() < u.cooldowns.game;
+
+  loadHistory();
+}
+
+// ===== WATCH AD WITH MONETAG GATE =====
+function watchAd(){
+  const u = users[currentUser];
+  if(!u || u.energy <= 0) return;
+  if(Date.now() < u.cooldowns.ad) return;
+
+  // Trigger Monetag Popunder FIRST
+  triggerMonetag();
+
+  // Delay reward para siguradong may ad muna
+  setTimeout(()=>{
+    u.points += 50;
+    u.energy = Math.max(0, u.energy - 10);
+    u.cooldowns.ad = Date.now() + TASK_COOLDOWN;
+    save(); updateUI();
+  },3000);
+}
+
+// ===== MINI GAME SYSTEM =====
+function startMiniGame(){
+  const u = users[currentUser];
+  if(!u || u.energy <= 0) return;
+  if(Date.now() < u.cooldowns.game) return;
+
+  miniGameClicks = 0;
+  $('clickCount').textContent = 0;
+  $('gamePopup').style.display='flex';
+}
+
+function clickChick(){
+  miniGameClicks++;
+  $('clickCount').textContent = miniGameClicks;
+
+  if(miniGameClicks >= 5){
+    finishMiniGame();
+  }
+}
+
+function finishMiniGame(){
+  const u = users[currentUser];
+  $('gamePopup').style.display='none';
+
+  u.points += 30;
+  u.energy = Math.max(0, u.energy - 10);
+  u.cooldowns.game = Date.now() + TASK_COOLDOWN;
+
+  save(); updateUI();
+}
+
+function closeGamePopup(){
+  $('gamePopup').style.display='none';
+}
+
+function startCooldownTimer(){
+  if(cooldownTimer) clearInterval(cooldownTimer);
+  cooldownTimer = setInterval(updateUI,1000);
+}
+
+function withdrawPoints(){
+  const amt = parseInt($('withdrawInput').value);
+  const u = users[currentUser];
+
+  if(!amt || amt < MIN_WITHDRAW)
+    return $('withdrawMsg').textContent = 'Minimum withdraw is 1000 points';
+
+  if(amt > u.points)
+    return $('withdrawMsg').textContent = 'Not enough points';
+
+  u.points -= amt;
+  u.history.push({points:amt,status:'Pending'});
+
+  $('withdrawMsg').textContent = 'Withdrawal pending admin approval';
+
+  save(); updateUI();
+}
+
+function loadHistory(){
+  const u = users[currentUser];
+  const box = $('historyBox');
+  box.innerHTML='';
+  u.history.forEach(h=>{
+    box.innerHTML += `<div>${h.points} pts - ${h.status}</div>`;
+  });
+}
+
+function loadAdmin(){
+  const box = $('adminUsers');
+  box.innerHTML='';
+
+  for(let username in users){
+    const u = users[username];
+    box.innerHTML += `
+    <div class="admin-box">
+      <strong>${username}</strong><br>
+      Points: ${u.points} | Energy: ${u.energy}<br>
+    </div>`;
+  }
+}
+</script>
+</body>
+</html>
