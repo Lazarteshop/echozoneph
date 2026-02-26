@@ -128,6 +128,13 @@ let currentFilter='all';
 function $(id){return document.getElementById(id)}
 function save(){localStorage.setItem('pin77_users',JSON.stringify(users))}
 
+// ✅ AUTO CONVERT POINTS TO BALANCE (SAFE ADDITION)
+function autoConvertBalance(u){
+if(!u) return;
+const converted=Math.floor(u.points/POINT_RATE);
+u.balance=converted;
+}
+
 function resetDailyUsage(u){
 const today=new Date().toDateString();
 if(u.lastEnergyReset!==today){
@@ -187,6 +194,10 @@ loadAdmin();
 function updateUI(){if(!currentUser)return;
 const u=users[currentUser];
 resetDailyUsage(u);
+
+// ✅ AUTO CONVERSION
+autoConvertBalance(u);
+
 $('pointsText').textContent=u.points;
 $('balanceText').textContent=u.balance.toFixed(2);
 $('energyText').textContent=u.energy;
@@ -221,6 +232,10 @@ if(!u)return;
 $('ytModal').style.display='none';
 const reward=Math.floor(Math.random()*41)+30;
 u.points+=reward;
+
+// ✅ ensure conversion after reward
+autoConvertBalance(u);
+
 consumeEnergy(u,10);
 u.cooldowns.ad=Date.now()+TASK_COOLDOWN;
 $('rewardDisplay').textContent='You earned '+reward+' points!';
@@ -231,7 +246,12 @@ save();updateUI();}
 // MINI GAME
 function playGame(){if(!users[currentUser])return;const u=users[currentUser];if(!canUseEnergy(u,10)) return alert('Daily energy limit reached. Come back tomorrow.');miniCounter=0;$('miniClicks').textContent=0;$('miniGamePopup').style.display='flex'}
 function miniClick(){miniCounter++;$('miniClicks').textContent=miniCounter;if(miniCounter>=5)finishMiniGame()}
-function finishMiniGame(){const u=users[currentUser];$('miniGamePopup').style.display='none';const reward=Math.floor(Math.random()*31)+20;u.points+=reward;consumeEnergy(u,10);u.cooldowns.game=Date.now()+TASK_COOLDOWN;addHistory({type:'game',points:reward,status:'Completed',date:Date.now()});$('rewardDisplay').textContent='You earned '+reward+' points!';save();updateUI()}
+function finishMiniGame(){const u=users[currentUser];$('miniGamePopup').style.display='none';const reward=Math.floor(Math.random()*31)+20;u.points+=reward;
+
+// ✅ ensure conversion after reward
+autoConvertBalance(u);
+
+consumeEnergy(u,10);u.cooldowns.game=Date.now()+TASK_COOLDOWN;addHistory({type:'game',points:reward,status:'Completed',date:Date.now()});$('rewardDisplay').textContent='You earned '+reward+' points!';save();updateUI()}
 function closeMiniGame(){$('miniGamePopup').style.display='none'}
 
 // COOLDOWN
