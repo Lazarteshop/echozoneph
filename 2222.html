@@ -158,7 +158,7 @@ if(!u||!p)return alert('Enter credentials');
 if(u==='admin'&&p==='admin123'){showAdmin();return}
 
 if(!users[u]){
-users[u]={pass:p,points:0,balance:0,energy:20000,dailyUsed:0,lastEnergyReset:new Date().toDateString(),history:[],cooldowns:{ad:0,game:0,chest:0}}}
+users[u]={pass:p,points:0,balance:0,energy:500,dailyUsed:0,lastEnergyReset:new Date().toDateString(),history:[],cooldowns:{ad:0,game:0,chest:0}}}
 
 if(users[u].pass!==p)return alert('Wrong password');
 
