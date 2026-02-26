@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIN77 Idle Chick PRO</title>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script src="https://al5sm.com/tag.min.js" data-zone="10587611" async></script>
+
+<style>
+#ytFrame{width:100%;aspect-ratio:16/9;}
+#ytFrame iframe{width:100%!important;height:100%!important;}
+body{margin:0;font-family:Arial;background:#0f172a;color:#fff}
+.screen{display:none;padding:20px}
+.active{display:block}
+.card{background:#1e293b;border-radius:16px;padding:16px;margin:10px 0}
+button{padding:10px;border-radius:8px;border:none;background:#22c55e;color:#fff;font-weight:bold;margin:4px;cursor:pointer}
+button:disabled{background:#64748b}
+input{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
+.center{text-align:center}
+.energy-bar{height:14px;background:#334155;border-radius:10px;overflow:hidden;margin:10px 0}
+.energy-fill{height:100%;background:#22c55e;width:100%}
+.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:999}
+.popup-content{background:#000;padding:20px;border-radius:16px;width:90%;max-width:320px;text-align:center}
+.admin-box{background:#1e293b;padding:10px;margin:8px 0;border-radius:10px}
+.limit-msg{color:#f87171;font-weight:bold}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="screen active center">
+<h2>Login</h2>
+<input id="userInput" placeholder="Username">
+<input id="passInput" type="password" placeholder="Password">
+<button onclick="loginUser()">Login / Register</button>
+</div>
+
+<div id="gameScreen" class="screen">
+<h2 class="center">🐥 PIN77 PRO</h2>
+<div class="card center">
+<div style="font-size:70px">🐥</div>
+<div class="energy-bar"><div id="energyFill" class="energy-fill"></div></div>
+<p>Total Energy: <span id="energyText"></span></p>
+<p>Daily Used: <span id="dailyUsedText"></span> / 500</p>
+<p class="limit-msg" id="limitMsg"></p>
+<p>Points: <span id="pointsText"></span></p>
+<p id="adCooldown"></p>
+<p id="gameCooldown"></p>
+</div>
+
+<div class="card center">
+<button id="watchBtn" onclick="watchAd()">▶️ Watch Video</button>
+<button id="playBtn" onclick="playGame()">🎮 Play Game</button>
+</div>
+
+<div class="card">
+<h3>Withdraw (Min 100000 pts)</h3>
+<input id="withdrawInput" placeholder="Points to withdraw">
+<button onclick="withdrawPoints()">Withdraw</button>
+<p id="withdrawMsg"></p>
+</div>
+
+<button onclick="logoutUser()">Logout</button>
+</div>
+
+<!-- YOUTUBE MODAL -->
+<div id="ytModal" class="popup">
+<div class="popup-content">
+<h3>Watch Full Video To Earn</h3>
+<div id="ytFrame"></div>
+</div>
+</div>
+
+<div id="adminScreen" class="screen">
+<h2>Admin Dashboard</h2>
+<div id="adminUsers"></div>
+<button onclick="logoutUser()">Logout</button>
+</div>
+
+<script>
+const DAILY_LIMIT = 500;
+const MIN_WITHDRAW = 100000;
+const TASK_COOLDOWN = 60000;
+
+let currentUser=null;
+let users=JSON.parse(localStorage.getItem('pin77_users')||'{}');
+let cooldownTimer=null;
+let ytPlayer=null;
+let ytUser=null;
+
+const ytVideos=["fjy1wYj2Nh8","x9OuXv_GEmc", "6bbqMf6xoOc","kLofAi46LuY","75GnzFvwYyM","DQ3JqS70CrU","2hTIyrD9sS0","tT8OaQINFws","ltskofwl8b4","tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","jGyG5Xty37c","jP96fZG48h4","evj4fzBBiFI","HRaVepQYHRA","QtBuiOSrffQ","2mEte_9nhSs","U6yvT288bY8","r-jw-aWkbgc","Saf0QgV2dBs","oY_yCQvZ5Ko","4bJBloATeRw","MaLbebYE83E","iIiv0j5v6t8","ugz6RrkaN94","QQf0Qm-o9is","lGmpCB6-LUA","X6UvWJ3ApIw","YfE4a_qwYjQ","nLmaGOOMLr8"];
+
+function $(id){return document.getElementById(id)}
+function save(){localStorage.setItem('pin77_users',JSON.stringify(users))}
+
+// LOGIN
+function loginUser(){
+const u=$('userInput').value.trim();
+const p=$('passInput').value.trim();
+if(!u||!p) return alert('Enter credentials');
+
+if(u==='admin'&&p==='admin123'){showAdmin();return}
+
+if(!users[u]){
+users[u]={pass:p,points:0,energy:0,dailyEnergyUsed:0,lastEnergyDate:'',cooldowns:{ad:0,game:0},history:[]}
+}
+
+if(users[u].pass!==p) return alert('Wrong password');
+currentUser=u;
+resetDaily();
+save();
+showGame();
+}
+
+function logoutUser(){location.reload()}
+
+function showGame(){
+$('loginScreen').classList.remove('active');
+$('adminScreen').classList.remove('active');
+$('gameScreen').classList.add('active');
+startCooldown();
+updateUI();
+}
+
+function showAdmin(){
+$('loginScreen').classList.remove('active');
+$('gameScreen').classList.remove('active');
+$('adminScreen').classList.add('active');
+loadAdmin();
+}
+
+// DAILY RESET
+function resetDaily(){
+const u=users[currentUser];
+const today=new Date().toDateString();
+if(u.lastEnergyDate!==today){
+u.dailyEnergyUsed=0;
+u.lastEnergyDate=today;
+}
+}
+
+// ENERGY USE
+function consumeEnergy(amount){
+const u=users[currentUser];
+resetDaily();
+if(u.energy<=0) return false;
+if(u.dailyEnergyUsed>=DAILY_LIMIT) return false;
+if(u.energy<amount) return false;
+u.energy-=amount;
+u.dailyEnergyUsed+=amount;
+return true;
+}
+
+function updateUI(){
+if(!currentUser) return;
+const u=users[currentUser];
+resetDaily();
+$('energyText').textContent=u.energy;
+$('dailyUsedText').textContent=u.dailyEnergyUsed;
+$('pointsText').textContent=u.points;
+$('energyFill').style.width = u.energy>0 ? '100%' : '0%';
+let msg='';
+if(u.energy<=0) msg='No energy provided by admin.';
+else if(u.dailyEnergyUsed>=DAILY_LIMIT) msg='Daily limit reached. Come back tomorrow.';
+$('limitMsg').textContent=msg;
+$('watchBtn').disabled = u.energy<=0 || u.dailyEnergyUsed>=DAILY_LIMIT;
+$('playBtn').disabled = u.energy<=0 || u.dailyEnergyUsed>=DAILY_LIMIT;
+}
+
+// WATCH VIDEO (RESTORED FULL LOGIC)
+function watchAd(){
+const u=users[currentUser];
+if(Date.now()<u.cooldowns.ad) return;
+if(!consumeEnergy(10)) return updateUI();
+
+ytUser=currentUser;
+const randomId=ytVideos[Math.floor(Math.random()*ytVideos.length)];
+$('ytModal').style.display='flex';
+
+if(ytPlayer){
+ytPlayer.loadVideoById(randomId);
+}else{
+ytPlayer=new YT.Player('ytFrame',{
+videoId:randomId,
+playerVars:{autoplay:1,controls:0},
+events:{onStateChange:onYTStateChange}
+});
+}
+}
+
+function onYTStateChange(e){
+if(e.data===YT.PlayerState.ENDED) giveYTReward();
+}
+
+function giveYTReward(){
+if(!ytUser) return;
+const u=users[ytUser];
+$('ytModal').style.display='none';
+const reward=Math.floor(Math.random()*41)+30;
+u.points+=reward;
+u.cooldowns.ad=Date.now()+TASK_COOLDOWN;
+addHistory('watch',reward);
+ytUser=null;
+save();updateUI();
+}
+
+// GAME
+function playGame(){
+const u=users[currentUser];
+if(Date.now()<u.cooldowns.game) return;
+if(!consumeEnergy(10)) return updateUI();
+const reward=20+Math.floor(Math.random()*30);
+u.points+=reward;
+u.cooldowns.game=Date.now()+TASK_COOLDOWN;
+addHistory('game',reward);
+save();updateUI();
+}
+
+// WITHDRAW
+function withdrawPoints(){
+const amt=parseInt($('withdrawInput').value);
+const u=users[currentUser];
+if(!amt||amt<MIN_WITHDRAW) return $('withdrawMsg').textContent='Minimum 100000 points';
+if(amt>u.points) return $('withdrawMsg').textContent='Not enough points';
+u.points-=amt;
+addHistory('withdraw',amt);
+$('withdrawMsg').textContent='Withdrawal pending';
+save();updateUI();
+}
+
+function addHistory(type,points){
+const u=users[currentUser];
+u.history.push({type,points,date:Date.now()});
+}
+
+// ADMIN
+function loadAdmin(){
+const box=$('adminUsers');
+box.innerHTML='';
+for(const name in users){
+const u=users[name];
+box.innerHTML+=`<div class='admin-box'><b>${name}</b><br>
+Energy: ${u.energy}<br>
+<input id='energy_${name}' placeholder='Add energy'>
+<button onclick="addEnergy('${name}')">Add</button></div>`;
+}
+}
+
+function addEnergy(username){
+const val=parseInt($('energy_'+username).value);
+if(!val) return;
+users[username].energy += val;
+save();
+loadAdmin();
+}
+
+// COOLDOWN
+function startCooldown(){
+if(cooldownTimer) clearInterval(cooldownTimer);
+cooldownTimer=setInterval(()=>{
+if(!currentUser) return;
+const u=users[currentUser];
+const now=Date.now();
+$('adCooldown').textContent = u.cooldowns.ad>now ? 'Ad cooldown '+Math.ceil((u.cooldowns.ad-now)/1000)+'s' : '';
+$('gameCooldown').textContent = u.cooldowns.game>now ? 'Game cooldown '+Math.ceil((u.cooldowns.game-now)/1000)+'s' : '';
+updateUI();
+},1000);
+}
+</script>
+</body>
+</html>
