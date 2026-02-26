@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIN77 Idle Chick PRO</title>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script src="https://al5sm.com/tag.min.js" data-zone="10587611" async></script>
+
+<style>
+#ytFrame{
+width:100%;
+aspect-ratio:16/9;
+}
+#ytFrame iframe{
+width:100%!important;
+height:100%!important;
+}
+
+body{margin:0;font-family:Arial;background:#0f172a;color:#fff}
+.screen{display:none;padding:20px}
+.active{display:block}
+.card{background:#1e293b;border-radius:16px;padding:16px;margin:10px 0}
+button{padding:10px;border-radius:8px;border:none;background:#22c55e;color:#fff;font-weight:bold;margin:4px;cursor:pointer}
+button:disabled{background:#64748b}
+input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
+.center{text-align:center}
+.energy-bar{height:14px;background:#334155;border-radius:10px;overflow:hidden;margin:10px 0}
+.energy-fill{height:100%;background:#22c55e;width:100%}
+.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:999}
+.popup-content{background:#000;padding:20px;border-radius:16px;width:90%;max-width:320px;text-align:center}
+.admin-box{background:#1e293b;padding:10px;margin:8px 0;border-radius:10px}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="screen active center">
+<h2>Login</h2>
+<input id="userInput" placeholder="Username with gcash#">
+<input id="passInput" type="password" placeholder="Password">
+<button onclick="loginUser()">Login / Register</button>
+</div>
+
+<div id="gameScreen" class="screen">
+<h2 class="center">🐥 PIN77 PRO</h2>
+<div class="card center">
+<div style="font-size:70px">🐥</div>
+<div class="energy-bar"><div id="energyFill" class="energy-fill"></div></div>
+<p>Energy: <span id="energyText"></span></p>
+<p>Daily Used: <span id="dailyUsedText">0</span>/500</p>
+<p>Points: <span id="pointsText"></span></p>
+<p>Balance: ₱<span id="balanceText"></span></p>
+<p id="adCooldown"></p>
+<p id="gameCooldown"></p>
+</div>
+
+<div class="card center">
+<button id="watchBtn" onclick="watchAd()">▶️ Watch Video Reward</button>
+<button id="playBtn" onclick="playGame()">🎮 Play Game Reward</button>
+</div>
+
+<div class="card">
+<h3>Withdraw (Min 100000 pts)</h3>
+<input id="withdrawInput" placeholder="Points to withdraw">
+<button onclick="withdrawPoints()">Withdraw</button>
+<p id="withdrawMsg"></p>
+
+<h4>History</h4>
+<div style="margin-bottom:8px">
+<button onclick="setFilter('all')">All</button>
+<button onclick="setFilter('watch')">Watch</button>
+<button onclick="setFilter('game')">Game</button>
+<button onclick="setFilter('withdraw')">Withdraw</button>
+<button onclick="exportHistoryCSV()">Export CSV</button>
+</div>
+
+<p><strong>Today Earned:</strong> <span id="todayEarned">0</span></p>
+<div id="historyBox"></div>
+</div>
+
+<button onclick="logoutUser()">Logout</button>
+</div>
+
+<div id="miniGamePopup" class="popup">
+<div class="popup-content">
+<h3>Click Chick 5x</h3>
+<p>Clicks: <span id="miniClicks">0</span>/5</p>
+<button onclick="miniClick()" style="font-size:40px">🐥</button><br><br>
+<button onclick="closeMiniGame()">Cancel</button>
+</div>
+</div>
+
+<div id="ytModal" class="popup">
+<div class="popup-content">
+<h3>Watch Full Video To Earn Reward</h3>
+<div id="ytFrame"></div>
+<p id="rewardDisplay" style="color:#ffd700;font-weight:bold"></p>
+</div>
+</div>
+
+<div id="adminScreen" class="screen">
+<h2>Admin Dashboard</h2>
+<div id="adminUsers"></div>
+<hr>
+<h3>Set User GCash Number</h3>
+<select id="adminUserSelect"></select>
+<input id="adminGcashInput" placeholder="Enter GCash Number">
+<button onclick="adminSetGcash()">Save GCash</button>
+<button onclick="logoutUser()">Logout</button>
+</div>
+
+<script>
+const POINT_RATE=1000;
+const MIN_WITHDRAW=100000;
+const TASK_COOLDOWN=60000;
+const DAILY_ENERGY_LIMIT=500;
+
+let currentUser=null;
+let cooldownTimer=null;
+let users=JSON.parse(localStorage.getItem('pin77_users')||'{}');
+let miniCounter=0;
+let ytPlayer=null;
+let ytUser=null;
+let currentFilter='all';
+
+function $(id){return document.getElementById(id)}
+function save(){localStorage.setItem('pin77_users',JSON.stringify(users))}
+
+function resetDailyUsage(u){
+const today=new Date().toDateString();
+if(u.lastEnergyReset!==today){
+u.dailyUsed=0;
+u.lastEnergyReset=today;
+}
+}
+
+function canUseEnergy(u,amount){
+resetDailyUsage(u);
+if(u.dailyUsed>=DAILY_ENERGY_LIMIT) return false;
+return true;
+}
+
+function consumeEnergy(u,amount){
+resetDailyUsage(u);
+if(u.dailyUsed+amount>DAILY_ENERGY_LIMIT) amount=DAILY_ENERGY_LIMIT-u.dailyUsed;
+u.energy=Math.max(0,u.energy-amount);
+u.dailyUsed+=amount;
+}
+
+// LOGIN
+function loginUser(){
+const u=$('userInput').value.trim();
+const p=$('passInput').value.trim();
+if(!u||!p)return alert('Enter credentials');
+
+if(u==='admin'&&p==='admin123'){showAdmin();return}
+
+if(!users[u]){
+users[u]={pass:p,points:0,balance:0,energy:500,dailyUsed:0,lastEnergyReset:new Date().toDateString(),history:[],cooldowns:{ad:0,game:0,chest:0}}}
+
+if(users[u].pass!==p)return alert('Wrong password');
+
+currentUser=u;
+save();
+showGame();
+}
+
+function logoutUser(){location.reload()}
+
+function showGame(){
+$('loginScreen').classList.remove('active')
+$('adminScreen').classList.remove('active')
+$('gameScreen').classList.add('active')
+startCooldownTimer();
+updateUI();
+}
+
+function showAdmin(){
+$('loginScreen').classList.remove('active')
+$('gameScreen').classList.remove('active')
+$('adminScreen').classList.add('active')
+loadAdmin();
+}
+
+function updateUI(){if(!currentUser)return;
+const u=users[currentUser];
+resetDailyUsage(u);
+$('pointsText').textContent=u.points;
+$('balanceText').textContent=u.balance.toFixed(2);
+$('energyText').textContent=u.energy;
+$('dailyUsedText').textContent=u.dailyUsed;
+$('energyFill').style.width=Math.min(100,u.energy)+'%';
+$('watchBtn').disabled=u.energy<=0 || u.dailyUsed>=DAILY_ENERGY_LIMIT;
+$('playBtn').disabled=u.energy<=0 || u.dailyUsed>=DAILY_ENERGY_LIMIT;
+loadHistory();}
+
+// WATCH VIDEO
+const ytVideos=["fjy1wYj2Nh8","x9OuXv_GEmc", "6bbqMf6xoOc","kLofAi46LuY","75GnzFvwYyM","DQ3JqS70CrU","2hTIyrD9sS0","tT8OaQINFws","ltskofwl8b4","tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","jGyG5Xty37c","jP96fZG48h4","evj4fzBBiFI","HRaVepQYHRA","QtBuiOSrffQ","2mEte_9nhSs","U6yvT288bY8","r-jw-aWkbgc","Saf0QgV2dBs","oY_yCQvZ5Ko","4bJBloATeRw","MaLbebYE83E","iIiv0j5v6t8","ugz6RrkaN94","QQf0Qm-o9is","lGmpCB6-LUA","X6UvWJ3ApIw","YfE4a_qwYjQ","nLmaGOOMLr8"];
+function watchAd(){
+const u=users[currentUser];
+if(!u||u.energy<=0)return;
+if(!canUseEnergy(u,10)) return alert('Daily energy limit reached. Come back tomorrow.');
+if(Date.now()<u.cooldowns.ad)return;
+
+ytUser=currentUser;
+const randomId=ytVideos[Math.floor(Math.random()*ytVideos.length)];
+$('ytModal').style.display='flex';
+
+if(ytPlayer){ytPlayer.loadVideoById(randomId)}
+else{ytPlayer=new YT.Player('ytFrame',{videoId:randomId,playerVars:{autoplay:1,controls:0},events:{onStateChange:onYTStateChange}})}
+}
+
+function onYTStateChange(e){if(e.data===YT.PlayerState.ENDED)giveYTReward()}
+
+function giveYTReward(){
+if(!ytUser)return;
+const u=users[ytUser];
+if(!u)return;
+$('ytModal').style.display='none';
+const reward=Math.floor(Math.random()*41)+30;
+u.points+=reward;
+consumeEnergy(u,10);
+u.cooldowns.ad=Date.now()+TASK_COOLDOWN;
+$('rewardDisplay').textContent='You earned '+reward+' points!';
+addHistory({type:'watch',points:reward,status:'Completed',date:Date.now()});
+ytUser=null;
+save();updateUI();}
+
+// MINI GAME
+function playGame(){if(!users[currentUser])return;const u=users[currentUser];if(!canUseEnergy(u,10)) return alert('Daily energy limit reached. Come back tomorrow.');miniCounter=0;$('miniClicks').textContent=0;$('miniGamePopup').style.display='flex'}
+function miniClick(){miniCounter++;$('miniClicks').textContent=miniCounter;if(miniCounter>=5)finishMiniGame()}
+function finishMiniGame(){const u=users[currentUser];$('miniGamePopup').style.display='none';const reward=Math.floor(Math.random()*31)+20;u.points+=reward;consumeEnergy(u,10);u.cooldowns.game=Date.now()+TASK_COOLDOWN;addHistory({type:'game',points:reward,status:'Completed',date:Date.now()});$('rewardDisplay').textContent='You earned '+reward+' points!';save();updateUI()}
+function closeMiniGame(){$('miniGamePopup').style.display='none'}
+
+// COOLDOWN
+function startCooldownTimer(){if(cooldownTimer)clearInterval(cooldownTimer);
+cooldownTimer=setInterval(()=>{if(!currentUser)return;const u=users[currentUser];const now=Date.now();$('adCooldown').textContent=u.cooldowns.ad>now?'Ad cooldown '+Math.ceil((u.cooldowns.ad-now)/1000)+'s':'';$('gameCooldown').textContent=u.cooldowns.game>now?'Game cooldown '+Math.ceil((u.cooldowns.game-now)/1000)+'s':'';updateUI()},1000)}
+
+// HISTORY
+function addHistory(entry){const u=users[currentUser];if(!u.history)u.history=[];u.history.push(entry);if(u.history.length>50)u.history=u.history.slice(-50)}
+function setFilter(t){currentFilter=t;loadHistory()}
+function loadHistory(){const u=users[currentUser];const box=$('historyBox');const todayBox=$('todayEarned');if(!box||!u)return;box.innerHTML='';if(!Array.isArray(u.history))u.history=[];let todayTotal=0;const today=new Date();today.setHours(0,0,0,0);
+u.history.slice().reverse().forEach(h=>{if(currentFilter!=='all'&&h.type!==currentFilter)return;const d=new Date(h.date);if(d>=today&&(h.type==='watch'||h.type==='game'))todayTotal+=h.points;if(h.type==='watch')box.innerHTML+='<div>🎥 Watch +'+h.points+'</div>';else if(h.type==='game')box.innerHTML+='<div>🎮 Game +'+h.points+'</div>';else if(h.type==='withdraw')box.innerHTML+='<div>💸 Withdraw '+h.points+' '+h.status+'</div>'});if(todayBox)todayBox.textContent=todayTotal}
+
+// WITHDRAW
+function withdrawPoints(){const amt=parseInt($('withdrawInput').value);const u=users[currentUser];if(!amt||amt<MIN_WITHDRAW)return $('withdrawMsg').textContent='Minimum 100000 points';if(amt>u.points)return $('withdrawMsg').textContent='Not enough points';u.points-=amt;addHistory({type:'withdraw',points:amt,status:'Pending',date:Date.now()});$('withdrawMsg').textContent='Withdrawal pending admin approval';save();updateUI()}
+
+// ADMIN
+function loadAdmin(){const box=$('adminUsers');box.innerHTML='';loadAdminUsers();for(let username in users){const u=users[username];box.innerHTML+=`<div class='admin-box'><strong>${username}</strong><br>Points:${u.points} | Energy:${u.energy}<br><input id='energy_${username}' placeholder='Add Energy'><button onclick="addEnergy('${username}')">Add Energy</button><h4>Withdraw Requests</h4>${u.history?.map((h,i)=>h.status==='Pending'?`<div>${h.points} pts <button onclick="approveWithdraw('${username}',${i})">Approve</button></div>`:'').join('')}</div>`}}
+function loadAdminUsers(){const select=$('adminUserSelect');if(!select)return;select.innerHTML='';Object.keys(users).forEach(u=>{const opt=document.createElement('option');opt.value=u;opt.textContent=u;select.appendChild(opt)})}
+function adminSetGcash(){const username=$('adminUserSelect').value;const gcash=$('adminGcashInput').value.trim();if(!username||!gcash)return alert('Enter GCash number');if(!users[username])return;users[username].gcash=gcash;save();alert('GCash number saved')}
+</script>
+</body>
+</html>
