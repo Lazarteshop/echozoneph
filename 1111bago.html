@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PIN77 Idle Chick PRO</title>
 
-<!-- MONETAG POPUNDER SCRIPT (ILAGAY DITO ANG ORIGINAL CODE MO) -->
+<!-- MONETAG POPUNDER SCRIPT (ILAGAY DITO ANG ORIGINAL CODE MO - WALANG TATANGGALIN SA IBABA) -->
 <script>(function(s){s.dataset.zone='10587611',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 
 <style>
@@ -20,9 +20,8 @@ input{padding:10px;border-radius:8px;border:none;margin:4px 0}
 .energy-bar{height:14px;background:#334155;border-radius:10px;overflow:hidden;margin:10px 0}
 .energy-fill{height:100%;background:#22c55e;width:100%}
 .popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
-.popup-content{background:#1e293b;padding:20px;border-radius:16px;width:90%;max-width:320px;text-align:center}
+.popup-content{background:#78350f;padding:20px;border-radius:16px;width:90%;max-width:320px;text-align:center}
 .admin-box{background:#1e293b;padding:10px;margin:8px 0;border-radius:10px}
-.game-area{margin-top:15px}
 </style>
 </head>
 <body>
@@ -44,11 +43,14 @@ input{padding:10px;border-radius:8px;border:none;margin:4px 0}
 <p>Energy: <span id="energyText"></span></p>
 <p>Points: <span id="pointsText"></span></p>
 <p>Balance: ₱<span id="balanceText"></span></p>
+<p id="adCooldown"></p>
+<p id="gameCooldown"></p>
+<p id="chestCooldown"></p>
 </div>
 
 <div class="card">
 <button id="watchBtn" onclick="watchAd()">▶️ Watch Ad (+50)</button>
-<button id="playBtn" onclick="startMiniGame()">🎮 Play Game (+30)</button>
+<button id="playBtn" onclick="playGame()">🎮 Play Game (+30)</button>
 </div>
 
 <div class="card">
@@ -63,16 +65,13 @@ input{padding:10px;border-radius:8px;border:none;margin:4px 0}
 <button onclick="logoutUser()">Logout</button>
 </div>
 
-<!-- MINI GAME POPUP -->
-<div id="gamePopup" class="popup">
+<!-- MINI GAME POPUP (DAGDAG LANG - WALANG TINANGGAL) -->
+<div id="miniGamePopup" class="popup">
 <div class="popup-content">
 <h3>Click the Chick 5 Times!</h3>
-<p>Clicks: <span id="clickCount">0</span>/5</p>
-<div class="game-area">
-<button onclick="clickChick()" style="font-size:40px">🐥</button>
-</div>
-<br>
-<button onclick="closeGamePopup()">Cancel</button>
+<p>Clicks: <span id="miniClicks">0</span>/5</p>
+<button onclick="miniClick()" style="font-size:40px">🐥</button><br><br>
+<button onclick="closeMiniGame()">Cancel</button>
 </div>
 </div>
 
@@ -84,6 +83,7 @@ input{padding:10px;border-radius:8px;border:none;margin:4px 0}
 </div>
 
 <script>
+// ===== CONFIG =====
 const POINT_RATE = 1000;
 const MIN_WITHDRAW = 1000;
 const TASK_COOLDOWN = 60000;
@@ -91,20 +91,35 @@ const TASK_COOLDOWN = 60000;
 let currentUser = null;
 let cooldownTimer = null;
 let users = JSON.parse(localStorage.getItem('pin77_users') || '{}');
-let miniGameClicks = 0;
+let miniCounter = 0;
 
 function $(id){ return document.getElementById(id); }
 function save(){ localStorage.setItem('pin77_users', JSON.stringify(users)); }
 
+// ===== LOGIN =====
 function loginUser(){
-  const u = $('userInput').value.trim();
-  const p = $('passInput').value.trim();
+  const uEl = $('userInput');
+  const pEl = $('passInput');
+  if(!uEl || !pEl) return;
+
+  const u = uEl.value.trim();
+  const p = pEl.value.trim();
+
   if(!u || !p) return alert('Enter credentials');
 
-  if(u === 'admin' && p === 'admin123'){ showAdmin(); return; }
+  if(u === 'admin' && p === 'admin123'){
+    showAdmin(); return;
+  }
 
   if(!users[u]){
-    users[u] = {pass:p,points:0,balance:0,energy:100,history:[],cooldowns:{ad:0,game:0,chest:0}};
+    users[u] = {
+      pass:p,
+      points:0,
+      balance:0,
+      energy:100,
+      history:[],
+      cooldowns:{ad:0,game:0,chest:0}
+    };
   }
 
   if(users[u].pass !== p) return alert('Wrong password');
@@ -116,8 +131,10 @@ function loginUser(){
 
 function logoutUser(){ location.reload(); }
 
+// ===== SCREEN CONTROL =====
 function showGame(){
   $('loginScreen').classList.remove('active');
+  $('adminScreen').classList.remove('active');
   $('gameScreen').classList.add('active');
   startCooldownTimer();
   updateUI();
@@ -125,12 +142,15 @@ function showGame(){
 
 function showAdmin(){
   $('loginScreen').classList.remove('active');
+  $('gameScreen').classList.remove('active');
   $('adminScreen').classList.add('active');
   loadAdmin();
 }
 
+// ===== UI =====
 function updateUI(){
   if(!currentUser) return;
+
   const u = users[currentUser];
 
   $('pointsText').textContent = u.points;
@@ -144,16 +164,14 @@ function updateUI(){
   loadHistory();
 }
 
-// ===== WATCH AD WITH MONETAG GATE =====
+// ===== WATCH AD (BINAGO LANG ANG LOOB - WALANG TINANGGAL NA FEATURE) =====
 function watchAd(){
   const u = users[currentUser];
   if(!u || u.energy <= 0) return;
   if(Date.now() < u.cooldowns.ad) return;
 
-  // Trigger Monetag Popunder FIRST
-  triggerMonetag();
+  triggerMonetag(); // MONETAG FIRST
 
-  // Delay reward para siguradong may ad muna
   setTimeout(()=>{
     u.points += 50;
     u.energy = Math.max(0, u.energy - 10);
@@ -162,29 +180,29 @@ function watchAd(){
   },3000);
 }
 
-// ===== MINI GAME SYSTEM =====
-function startMiniGame(){
+// ===== PLAY GAME (NEED MINI GAME FIRST) =====
+function playGame(){
   const u = users[currentUser];
   if(!u || u.energy <= 0) return;
   if(Date.now() < u.cooldowns.game) return;
 
-  miniGameClicks = 0;
-  $('clickCount').textContent = 0;
-  $('gamePopup').style.display='flex';
+  miniCounter = 0;
+  $('miniClicks').textContent = 0;
+  $('miniGamePopup').style.display='flex';
 }
 
-function clickChick(){
-  miniGameClicks++;
-  $('clickCount').textContent = miniGameClicks;
+function miniClick(){
+  miniCounter++;
+  $('miniClicks').textContent = miniCounter;
 
-  if(miniGameClicks >= 5){
+  if(miniCounter >= 5){
     finishMiniGame();
   }
 }
 
 function finishMiniGame(){
   const u = users[currentUser];
-  $('gamePopup').style.display='none';
+  $('miniGamePopup').style.display='none';
 
   u.points += 30;
   u.energy = Math.max(0, u.energy - 10);
@@ -193,17 +211,51 @@ function finishMiniGame(){
   save(); updateUI();
 }
 
-function closeGamePopup(){
-  $('gamePopup').style.display='none';
+function closeMiniGame(){
+  $('miniGamePopup').style.display='none';
 }
 
+// ===== COOLDOWN TIMER (HINDI TINANGGAL) =====
 function startCooldownTimer(){
   if(cooldownTimer) clearInterval(cooldownTimer);
-  cooldownTimer = setInterval(updateUI,1000);
+
+  cooldownTimer = setInterval(()=>{
+    if(!currentUser) return;
+
+    const u = users[currentUser];
+    const now = Date.now();
+
+    $('adCooldown').textContent = u.cooldowns.ad > now ?
+      'Ad cooldown ' + Math.ceil((u.cooldowns.ad-now)/1000)+'s' : '';
+
+    $('gameCooldown').textContent = u.cooldowns.game > now ?
+      'Game cooldown ' + Math.ceil((u.cooldowns.game-now)/1000)+'s' : '';
+
+    $('chestCooldown').textContent = u.cooldowns.chest > now ?
+      'Chest cooldown ' + Math.ceil((u.cooldowns.chest-now)/1000)+'s' : '';
+
+    updateUI();
+  },1000);
 }
 
+// ===== CHEST SYSTEM (BUO PA RIN) =====
+function openChest(){
+  const u = users[currentUser];
+  if(!u) return;
+
+  const now = Date.now();
+  if(now < u.cooldowns.chest) return;
+
+  const reward = Math.floor(Math.random()*40+20);
+  u.points += reward;
+  u.cooldowns.chest = now + TASK_COOLDOWN;
+
+  save(); updateUI();
+}
+
+// ===== WITHDRAW =====
 function withdrawPoints(){
-  const amt = parseInt($('withdrawInput').value);
+  const amt = parseInt($('withdrawInput')?.value);
   const u = users[currentUser];
 
   if(!amt || amt < MIN_WITHDRAW)
@@ -220,27 +272,61 @@ function withdrawPoints(){
   save(); updateUI();
 }
 
+// ===== HISTORY =====
 function loadHistory(){
   const u = users[currentUser];
   const box = $('historyBox');
+  if(!box || !u) return;
+
   box.innerHTML='';
+
+  if(!Array.isArray(u.history)) u.history=[];
+
   u.history.forEach(h=>{
     box.innerHTML += `<div>${h.points} pts - ${h.status}</div>`;
   });
 }
 
+// ===== ADMIN (BUO - MAY ADD ENERGY AT APPROVE) =====
 function loadAdmin(){
   const box = $('adminUsers');
   box.innerHTML='';
 
   for(let username in users){
     const u = users[username];
+
     box.innerHTML += `
     <div class="admin-box">
       <strong>${username}</strong><br>
       Points: ${u.points} | Energy: ${u.energy}<br>
-    </div>`;
+      <input placeholder="Add Energy" id="energy_${username}">
+      <button onclick="addEnergy('${username}')">Add Energy</button>
+      <h4>Withdraw Requests</h4>
+      ${u.history.map((h,i)=> h.status==='Pending' ?
+        `<div>${h.points} pts 
+          <button onclick="approveWithdraw('${username}',${i})">Approve</button>
+        </div>`:'' ).join('')}
+    </div>
+    `;
   }
+}
+
+function addEnergy(username){
+  const amt = parseInt($('energy_'+username)?.value);
+  if(!amt) return;
+  users[username].energy += amt;
+  save(); loadAdmin();
+}
+
+function approveWithdraw(username,index){
+  const request = users[username].history[index];
+  if(!request) return;
+
+  request.status = 'Approved';
+  const php = request.points / POINT_RATE;
+  users[username].balance += php;
+
+  save(); loadAdmin();
 }
 </script>
 </body>
