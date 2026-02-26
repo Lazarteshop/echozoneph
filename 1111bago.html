@@ -38,7 +38,7 @@ input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
 
 <div id="loginScreen" class="screen active center">
 <h2>Login</h2>
-<input id="userInput" placeholder="Username">
+<input id="userInput" placeholder="Username with gcash#">
 <input id="passInput" type="password" placeholder="Password">
 <button onclick="loginUser()">Login / Register</button>
 </div>
@@ -61,7 +61,7 @@ input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
 </div>
 
 <div class="card">
-<h3>Withdraw (Min 1000 pts)</h3>
+<h3>Withdraw (Min 100000 pts)</h3>
 <input id="withdrawInput" placeholder="Points to withdraw">
 <button onclick="withdrawPoints()">Withdraw</button>
 <p id="withdrawMsg"></p>
@@ -112,7 +112,7 @@ input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
 
 <script>
 const POINT_RATE=1000;
-const MIN_WITHDRAW=1000;
+const MIN_WITHDRAW=100000;
 const TASK_COOLDOWN=60000;
 
 let currentUser=null;
@@ -135,7 +135,7 @@ if(!u||!p)return alert('Enter credentials');
 if(u==='admin'&&p==='admin123'){showAdmin();return}
 
 if(!users[u]){
-users[u]={pass:p,points:0,balance:0,energy:100,history:[],cooldowns:{ad:0,game:0,chest:0}}}
+users[u]={pass:p,points:0,balance:0,energy:200,history:[],cooldowns:{ad:0,game:0,chest:0}}}
 
 if(users[u].pass!==p)return alert('Wrong password');
 
@@ -219,7 +219,7 @@ function loadHistory(){const u=users[currentUser];const box=$('historyBox');cons
 u.history.slice().reverse().forEach(h=>{if(currentFilter!=='all'&&h.type!==currentFilter)return;const d=new Date(h.date);if(d>=today&&(h.type==='watch'||h.type==='game'))todayTotal+=h.points;if(h.type==='watch')box.innerHTML+='<div>🎥 Watch +'+h.points+'</div>';else if(h.type==='game')box.innerHTML+='<div>🎮 Game +'+h.points+'</div>';else if(h.type==='withdraw')box.innerHTML+='<div>💸 Withdraw '+h.points+' '+h.status+'</div>'});if(todayBox)todayBox.textContent=todayTotal}
 
 // WITHDRAW
-function withdrawPoints(){const amt=parseInt($('withdrawInput').value);const u=users[currentUser];if(!amt||amt<MIN_WITHDRAW)return $('withdrawMsg').textContent='Minimum 1000 points';if(amt>u.points)return $('withdrawMsg').textContent='Not enough points';u.points-=amt;addHistory({type:'withdraw',points:amt,status:'Pending',date:Date.now()});$('withdrawMsg').textContent='Withdrawal pending admin approval';save();updateUI()}
+function withdrawPoints(){const amt=parseInt($('withdrawInput').value);const u=users[currentUser];if(!amt||amt<MIN_WITHDRAW)return $('withdrawMsg').textContent='Minimum 100000 points';if(amt>u.points)return $('withdrawMsg').textContent='Not enough points';u.points-=amt;addHistory({type:'withdraw',points:amt,status:'Pending',date:Date.now()});$('withdrawMsg').textContent='Withdrawal pending admin approval';save();updateUI()}
 
 // ADMIN
 function loadAdmin(){const box=$('adminUsers');box.innerHTML='';loadAdminUsers();for(let username in users){const u=users[username];box.innerHTML+=`<div class='admin-box'><strong>${username}</strong><br>Points:${u.points} | Energy:${u.energy}<br><input id='energy_${username}' placeholder='Add Energy'><button onclick="addEnergy('${username}')">Add Energy</button><h4>Withdraw Requests</h4>${u.history?.map((h,i)=>h.status==='Pending'?`<div>${h.points} pts <button onclick="approveWithdraw('${username}',${i})">Approve</button></div>`:'').join('')}</div>`}}
