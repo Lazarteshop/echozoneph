@@ -75,6 +75,15 @@ input{padding:10px;border-radius:8px;border:none;margin:4px 0}
 </div>
 </div>
 
+<!-- YOUTUBE MODAL -->
+<div id="ytModal" class="popup">
+  <div class="popup-content" style="background:#000">
+    <h3>Watch Full Video To Earn Reward</h3>
+    <div id="ytFrame"></div>
+    <p style="font-size:12px;color:#ccc">Reward will be given after video finishes.</p>
+  </div>
+</div>
+
 <!-- ADMIN -->
 <div id="adminScreen" class="screen">
 <h2>Admin Dashboard</h2>
@@ -164,56 +173,72 @@ function updateUI(){
   loadHistory();
 }
 
-// ===== WATCH AD (FIXED FOR MOBILE + POPUNDER) =====
-let adWaiting = false;
-let adUser = null;
-let adTimer = null;
+// ===== WATCH AD (YOUTUBE RANDOM VIDEO REQUIRED TO FINISH) =====
+let ytPlayer = null;
+let ytUser = null;
+
+const ytVideos = [
+  "dQw4w9WgXcQ",
+  "9bZkp7q19f0",
+  "l482T0yNkeo",
+  "3tmd-ClpJxA",
+  "fJ9rUzIMcZQ"
+];
 
 function watchAd(){
   const u = users[currentUser];
   if(!u || u.energy <= 0) return;
   if(Date.now() < u.cooldowns.ad) return;
 
-  adWaiting = true;
-  adUser = currentUser;
+  ytUser = currentUser;
 
-  // Fallback timer (important for mobile browsers)
-  adTimer = setTimeout(()=>{
-    giveAdReward();
-  }, 4000);
+  const randomId = ytVideos[Math.floor(Math.random()*ytVideos.length)];
 
-  // Trigger Monetag directly from click
-  triggerMonetag();
+  $('ytModal').style.display = 'flex';
+
+  if(ytPlayer){
+    ytPlayer.loadVideoById(randomId);
+  }else{
+    ytPlayer = new YT.Player('ytFrame',{
+      height:'315',
+      width:'100%',
+      videoId: randomId,
+      playerVars:{ autoplay:1, controls:0, disablekb:1, modestbranding:1 },
+      events:{
+        'onStateChange': onYTStateChange
+      }
+    });
+  }
 }
 
-function giveAdReward(){
-  if(!adWaiting || !adUser) return;
+function onYTStateChange(event){
+  if(event.data === YT.PlayerState.ENDED){
+    giveYTReward();
+  }
+}
 
-  const u = users[adUser];
+function giveYTReward(){
+  if(!ytUser) return;
+
+  const u = users[ytUser];
   if(!u) return;
 
-  adWaiting = false;
-  clearTimeout(adTimer);
+  $('ytModal').style.display = 'none';
 
   u.points += 50;
   u.energy = Math.max(0, u.energy - 10);
   u.cooldowns.ad = Date.now() + TASK_COOLDOWN;
 
+  ytUser = null;
+
   save();
   updateUI();
 }
 
-// Desktop focus return
-window.addEventListener('focus', function(){
-  giveAdReward();
-});
-
-// Mobile tab visibility return
-document.addEventListener('visibilitychange', function(){
-  if(document.visibilityState === 'visible'){
-    giveAdReward();
-  }
-});
+// Load YouTube API
+var tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+document.head.appendChild(tag);
 
 // ===== PLAY GAME (NEED MINI GAME FIRST) =====
 function playGame(){
