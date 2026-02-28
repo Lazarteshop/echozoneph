@@ -277,7 +277,14 @@ function loadAdmin(){
   loadAdminUsers()
   for(let username in users){
     const u=users[username]
-    box.innerHTML+=`<div class='admin-box'><strong>${username}</strong><br>Points:${u.points} | Energy:${u.energy}<br><input id='energy_${username}' placeholder='Add Energy'><button onclick="addEnergy('${username}')">Add Energy</button><h4>Withdraw Requests</h4>${u.history?.map((h,i)=>h.status==='Pending'?`<div>${h.points} pts <button onclick="approveWithdraw('${username}',${i})">Approve</button></div>`:'').join('')}</div>`
+    box.innerHTML+=`<div class='admin-box'>
+      <strong>${username}</strong><br>
+      Points:${u.points} | Energy:${u.energy}<br>
+      <input id='energy_${username}' placeholder='Add Energy'>
+      <button onclick="addEnergy('${username}')">Add Energy</button>
+      <h4>Withdraw Requests</h4>
+      ${u.history?.map((h,i)=>h.status==='Pending'?`<div>${h.points} pts <button onclick="approveWithdraw('${username}',${i})">Approve</button></div>`:'').join('')}
+    </div>`
   }
 }
 
@@ -296,7 +303,7 @@ function loadAdminUsers(){
 function adminSetGcash(){
   const username=$('adminUserSelect').value
   const gcash=$('adminGcashInput').value.trim()
-  if(!username||!gcash) return alert('Enter GCash number')
+  if(!username || !gcash) return alert('Enter GCash number')
   if(!users[username]) return
   users[username].gcash=gcash
   saveAndUpdate(username)
@@ -314,7 +321,7 @@ function addEnergy(username){
 
 function approveWithdraw(username,index){
   const u=users[username]
-  if(!u||!u.history[index]) return
+  if(!u || !u.history[index]) return
   u.history[index].status='Approved'
   saveAndUpdate(username)
 }
@@ -391,7 +398,6 @@ input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
 <button onclick="setFilter('watch')">Watch</button>
 <button onclick="setFilter('game')">Game</button>
 <button onclick="setFilter('withdraw')">Withdraw</button>
-<button onclick="exportHistoryCSV()">Export CSV</button>
 </div>
 
 <p><strong>Today Earned:</strong> <span id="todayEarned">0</span></p>
