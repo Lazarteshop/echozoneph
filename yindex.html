@@ -20,6 +20,27 @@ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 <style>
 body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff}
+main {
+    text-align: center;
+    font-family: "Times New Roman";
+}
+
+.marq {
+    padding-top: 30px;
+    padding-bottom: 30px;
+}
+
+.geek1 {
+    font-size: 36px;
+    font-weight: bold;
+    color: white;
+    text-align: center;
+}
+
+.geek2 {
+    text-align: center;
+    color: white;
+}
 .container{max-width:900px;margin:auto;padding:20px;text-align:center}
 .box{background:#111;padding:15px;border-radius:10px;margin-bottom:15px}
 .green{color:#00ff88}
@@ -62,6 +83,17 @@ iframe{width:100%;max-width:800px;height:450px;border-radius:10px}
 <div id="login" class="box">
 <select id="userSelect"></select><br>
 <input id="password" type="password" placeholder="Ilagay ang password">
+</div>
+<!-- announcement area📢📢-->
+<div class="main">
+    <marquee class="marq" bgcolor="green" direction="up" scrollamount="3">
+        <div class="geek1">
+            03-01-26
+        </div>
+        <div class="geek2">
+    Sanoria Julierose your account are now temporarily suspended due to issues of receipt unmatched / not existing in our merchant partner BPI
+        </div>
+    </marquee>
 </div>
 
 <div id="lockMsg" class="lock"></div>
