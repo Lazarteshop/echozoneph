@@ -355,10 +355,47 @@ async function adminAddEnergy(username, amount){
 </div>
 
 <script>
-function handleAddEnergy(){
-  const username = document.getElementById("energyUsername").value.trim();
-  const amount = parseInt(document.getElementById("energyAmount").value);
-  adminAddEnergy(username, amount);
+// This function is no longer used (global input removed)
+// Energy is now added per-user card
+
+async function addEnergyToUser(username){
+  const input = document.getElementById('energy_'+username);
+  const amount = parseInt(input.value);
+
+  if(!amount || amount <= 0){
+    alert('Enter valid energy amount');
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('pin77_users')
+    .select('*')
+    .eq('username', username)
+    .maybeSingle();
+
+  if(error || !data){
+    alert('User not found');
+    return;
+  }
+
+  let userData = data.data || {};
+  userData.energy = (userData.energy || 0) + amount;
+
+  const { error: saveError } = await supabase
+    .from('pin77_users')
+    .upsert({
+      username: username,
+      data: userData,
+      updated_at: new Date()
+    });
+
+  if(saveError){
+    console.error(saveError);
+    alert('Failed to add energy');
+  } else {
+    alert('Energy added successfully');
+    loadAdminUsers();
+  }
 }
 </script>
 
