@@ -304,6 +304,45 @@ $('gameCooldown').textContent=u.cooldowns.game>now?'Game cooldown '+Math.ceil((u
 },1000);
 }
 
+
+
+// ================= ADMIN ENERGY CONTROL =================
+// Admin can manually add energy to any user
+async function adminAddEnergy(username, amount){
+  if(!username || !amount) return alert("Missing username or amount");
+
+  const { data, error } = await supabase
+    .from('pin77_users')
+    .select('*')
+    .eq('username', username)
+    .maybeSingle();
+
+  if(error || !data) return alert("User not found");
+
+  let userData = data.data;
+  userData.energy = (userData.energy || 0) + parseInt(amount);
+
+  const { error: saveError } = await supabase
+    .from('pin77_users')
+    .upsert({
+      username: username,
+      data: userData,
+      updated_at: new Date()
+    });
+
+  if(saveError){
+    console.error(saveError);
+    alert("Failed to add energy");
+  } else {
+    alert("Energy added successfully");
+    loadAdminUsers();
+  }
+}
+
+// Add button handler (call this inside admin panel HTML)
+// Example usage button:
+// <button onclick="adminAddEnergy('USERNAME', 100)">Add 100 Energy</button>
+
 </script>
 </body>
 </html>
