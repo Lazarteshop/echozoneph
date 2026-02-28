@@ -344,5 +344,23 @@ async function adminAddEnergy(username, amount){
 // <button onclick="adminAddEnergy('USERNAME', 100)">Add 100 Energy</button>
 
 </script>
+
+
+<!-- ADMIN ENERGY ADD UI -->
+<div id="adminEnergyControl" style="padding:20px; background:#111; color:#fff; margin-top:20px;">
+  <h3>Admin: Add Energy to User</h3>
+  <input type="text" id="energyUsername" placeholder="Enter Username" />
+  <input type="number" id="energyAmount" placeholder="Energy Amount" />
+  <button onclick="handleAddEnergy()">Add Energy</button>
+</div>
+
+<script>
+function handleAddEnergy(){
+  const username = document.getElementById("energyUsername").value.trim();
+  const amount = parseInt(document.getElementById("energyAmount").value);
+  adminAddEnergy(username, amount);
+}
+</script>
+
 </body>
 </html>
