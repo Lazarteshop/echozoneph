@@ -6,7 +6,7 @@
 <title>PIN77 Idle Chick PRO</title>
 
 <script src="https://www.youtube.com/iframe_api"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 body{margin:0;font-family:Arial;background:#0f172a;color:#fff}
@@ -56,16 +56,7 @@ input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
 <input id="withdrawInput" placeholder="Points to withdraw">
 <button onclick="withdrawPoints()">Withdraw</button>
 <p id="withdrawMsg"></p>
-
 <h4>History</h4>
-<div style="margin-bottom:8px">
-<button onclick="setFilter('all')">All</button>
-<button onclick="setFilter('watch')">Watch</button>
-<button onclick="setFilter('game')">Game</button>
-<button onclick="setFilter('withdraw')">Withdraw</button>
-</div>
-
-<p><strong>Today Earned:</strong> <span id="todayEarned">0</span></p>
 <div id="historyBox"></div>
 </div>
 
@@ -85,34 +76,14 @@ input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
 <div class="popup-content">
 <h3>Watch Full Video To Earn Reward</h3>
 <div id="ytFrame"></div>
-<p id="rewardDisplay" style="color:#ffd700;font-weight:bold"></p>
 </div>
-</div>
-
-<div id="adminScreen" class="screen">
-<h2>Admin Dashboard</h2>
-<div id="adminUsers"></div>
-<hr>
-<h3>Set User GCash Number</h3>
-<select id="adminUserSelect"></select>
-<input id="adminGcashInput" placeholder="Enter GCash Number">
-<button onclick="adminSetGcash()">Save GCash</button>
-<button onclick="logoutUser()">Logout</button>
 </div>
 
 <script>
-/* ===============================
-   SUPABASE CONFIG
-================================ */
 
 const SUPABASE_URL="https://pbwaozztfclanvplpmvm.supabase.co";
 const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBid2Fvenp0ZmNsYW52cGxwbXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjQ1NzIsImV4cCI6MjA4NzgwMDU3Mn0.bbY-C4legzoHwQEiL3-IHwp8D6_hrL53GJPa78li1aY";
-
-window.sbClient = window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-
-/* ===============================
-   GLOBAL STATE
-================================ */
+const sb = supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
 const POINT_RATE=1000;
 const MIN_WITHDRAW=100000;
@@ -120,196 +91,141 @@ const TASK_COOLDOWN=60000;
 const DAILY_ENERGY_LIMIT=500;
 
 let currentUser=null;
-let users={};
-let miniCounter=0;
+let userData=null;
 let ytPlayer=null;
-let ytUser=null;
-let currentFilter='all';
-let saveLock=false;
+let miniCounter=0;
+let cooldownTimer=null;
 
 function $(id){return document.getElementById(id)}
 
-/* =========================================
-   FIXED ULTRA PERSISTENCE STORAGE ENGINE
-========================================= */
+/* ================= DATABASE ================= */
 
-let saveQueue = new Set();
-
-async function saveUser(username){
-if(!username) return;
-
-if(saveQueue.has(username)) return;
-saveQueue.add(username);
-
-try{
-if(!users[username]){
-saveQueue.delete(username);
-return;
-}
-
-const cleanData = JSON.parse(JSON.stringify(users[username]));
-cleanData.__lastSync = Date.now();
-
-const payload = {
-username: username,
-data: cleanData,
-updated_at: new Date().toISOString()
-};
-
-const { error } = await sbClient
+async function loadUser(username){
+const { data, error } = await sb
 .from('pin77_users')
-.upsert(payload,{onConflict:'username'});
+.select('*')
+.eq('username',username)
+.maybeSingle();
 
 if(error){
-console.error("SAVE ERROR:",error.message);
-setTimeout(()=>saveUser(username),3000);
+console.error("LOAD ERROR:",error);
+return null;
+}
+return data;
 }
 
-}catch(err){
-console.error("CRITICAL SAVE ERROR:",err);
-setTimeout(()=>saveUser(username),4000);
-}
+async function saveUser(){
+if(!currentUser || !userData) return;
 
-saveQueue.delete(username);
-}
-
-/* Auto Background Sync Every 20s */
-setInterval(()=>{
-if(!currentUser) return;
-saveUser(currentUser);
-},20000);
-
-/* ===============================
-   USER LOADER FIX
-================================ */
-
-async function loadUsers(){
-try{
-const { data, error } = await sbClient
+const { error } = await sb
 .from('pin77_users')
-.select('*');
+.upsert({
+username:currentUser,
+data:userData,
+updated_at:new Date().toISOString()
+},{onConflict:'username'});
 
 if(error){
-console.error("LOAD ERROR:",error.message);
-return;
-}
-
-if(data){
-data.forEach(r=>{
-users[r.username]=r.data||{};
-});
-}
-
-}catch(err){
-console.error(err);
+console.error("SAVE ERROR:",error);
 }
 }
 
-/* ===============================
-   AUTH SYSTEM
-================================ */
+/* ================= LOGIN ================= */
 
 async function loginUser(){
-await loadUsers();
-
 const u=$('userInput').value.trim();
 const p=$('passInput').value.trim();
 if(!u||!p) return alert('Enter credentials');
 
-if(u==='admin' && p==='admin123'){showAdmin();return;}
+let dbUser=await loadUser(u);
 
-if(!users[u]){
-users[u]={pass:p,points:0,balance:0,energy:500,dailyUsed:0,lastEnergyReset:new Date().toDateString(),history:[],cooldowns:{ad:0,game:0}};
-await saveUser(u);
+if(!dbUser){
+userData={
+pass:p,
+points:0,
+balance:0,
+energy:500,
+dailyUsed:0,
+lastEnergyReset:new Date().toDateString(),
+history:[],
+cooldowns:{ad:0,game:0}
+};
+currentUser=u;
+await saveUser();
+}else{
+if(dbUser.data.pass!==p) return alert('Wrong password');
+userData=dbUser.data;
+currentUser=u;
 }
 
-if(users[u].pass!==p) return alert('Wrong password');
-
-currentUser=u;
 showGame();
+updateUI();
 }
 
 function logoutUser(){location.reload()}
 
-/* ===============================
-   UI RENDERING
-================================ */
+/* ================= ENERGY ================= */
+
+function resetDailyUsage(){
+const t=new Date().toDateString();
+if(userData.lastEnergyReset!==t){
+userData.dailyUsed=0;
+userData.lastEnergyReset=t;
+}
+}
+
+function canUseEnergy(){
+resetDailyUsage();
+return userData.dailyUsed<DAILY_ENERGY_LIMIT;
+}
+
+function consumeEnergy(a){
+resetDailyUsage();
+if(userData.dailyUsed+a>DAILY_ENERGY_LIMIT)a=DAILY_ENERGY_LIMIT-userData.dailyUsed;
+userData.energy=Math.max(0,userData.energy-a);
+userData.dailyUsed+=a;
+}
+
+/* ================= UI ================= */
 
 function showGame(){
 $('loginScreen').classList.remove('active');
-$('adminScreen').classList.remove('active');
 $('gameScreen').classList.add('active');
 startCooldownTimer();
-updateUI();
 }
-
-function showAdmin(){
-$('loginScreen').classList.remove('active');
-$('gameScreen').classList.remove('active');
-$('adminScreen').classList.add('active');
-loadAdmin();
-}
-
-function autoConvertBalance(u){u.balance=Math.floor(u.points/POINT_RATE)}
-function resetDailyUsage(u){const t=new Date().toDateString();if(u.lastEnergyReset!==t){u.dailyUsed=0;u.lastEnergyReset=t}}
-function canUseEnergy(u){resetDailyUsage(u);return u.dailyUsed<DAILY_ENERGY_LIMIT}
-function consumeEnergy(u,a){resetDailyUsage(u);if(u.dailyUsed+a>DAILY_ENERGY_LIMIT)a=DAILY_ENERGY_LIMIT-u.dailyUsed;u.energy=Math.max(0,u.energy-a);u.dailyUsed+=a}
 
 function updateUI(){
-if(!currentUser) return;
-const u=users[currentUser];
-resetDailyUsage(u);
-autoConvertBalance(u);
-$('pointsText').textContent=u.points;
-$('balanceText').textContent=u.balance.toFixed(2);
-$('energyText').textContent=u.energy;
-$('dailyUsedText').textContent=u.dailyUsed;
-$('energyFill').style.width=Math.min(100,u.energy)+'%';
-$('watchBtn').disabled=!canUseEnergy(u);
-$('playBtn').disabled=!canUseEnergy(u);
+resetDailyUsage();
+userData.balance=Math.floor(userData.points/POINT_RATE);
+$('pointsText').textContent=userData.points;
+$('balanceText').textContent=userData.balance.toFixed(2);
+$('energyText').textContent=userData.energy;
+$('dailyUsedText').textContent=userData.dailyUsed;
+$('energyFill').style.width=Math.min(100,userData.energy)+'%';
 loadHistory();
 }
 
-/* ===============================
-   REWARD SYSTEM
-================================ */
+/* ================= REWARD ================= */
 
 const ytVideos=["fjy1wYj2Nh8","x9OuXv_GEmc","6bbqMf6xoOc"];
 
 function watchAd(){
-const u=users[currentUser];
-if(!u||u.energy<=0) return;
-if(!canUseEnergy(u)) return alert('Daily energy limit reached');
-
-ytUser=currentUser;
+if(!canUseEnergy()) return alert('Daily energy limit reached');
 $('ytModal').style.display='flex';
 const id=ytVideos[Math.floor(Math.random()*ytVideos.length)];
-
 if(ytPlayer) ytPlayer.loadVideoById(id);
 else ytPlayer=new YT.Player('ytFrame',{videoId:id,playerVars:{autoplay:1,controls:0},events:{onStateChange:onYTStateChange}});
 }
 
-function onYTStateChange(e){if(e.data===YT.PlayerState.ENDED) giveYTReward()}
-
-async function giveYTReward(){
-if(!ytUser) return;
-const u=users[ytUser];
+function onYTStateChange(e){
+if(e.data===YT.PlayerState.ENDED){
 $('ytModal').style.display='none';
-
-const r=Math.floor(Math.random()*41)+30;
-u.points+=r;
-autoConvertBalance(u);
-consumeEnergy(u,10);
-u.cooldowns.ad=Date.now()+TASK_COOLDOWN;
-addHistory({type:'watch',points:r,status:'Completed',date:Date.now()});
-await saveUser(ytUser);
-ytUser=null;
-updateUI();
+rewardUser(Math.floor(Math.random()*41)+30,'watch');
+}
 }
 
 function playGame(){
-const u=users[currentUser];
-if(!canUseEnergy(u)) return alert('Daily energy limit reached');
+if(!canUseEnergy()) return alert('Daily energy limit reached');
 miniCounter=0;
 $('miniClicks').textContent=0;
 $('miniGamePopup').style.display='flex';
@@ -318,190 +234,59 @@ $('miniGamePopup').style.display='flex';
 function miniClick(){
 miniCounter++;
 $('miniClicks').textContent=miniCounter;
-if(miniCounter>=5) finishMiniGame();
+if(miniCounter>=5){
+$('miniGamePopup').style.display='none';
+rewardUser(Math.floor(Math.random()*31)+20,'game');
+}
 }
 
-async function finishMiniGame(){
-const u=users[currentUser];
-$('miniGamePopup').style.display='none';
+function closeMiniGame(){ $('miniGamePopup').style.display='none'; }
 
-const r=Math.floor(Math.random()*31)+20;
-u.points+=r;
-autoConvertBalance(u);
-consumeEnergy(u,10);
-u.cooldowns.game=Date.now()+TASK_COOLDOWN;
-addHistory({type:'game',points:r,status:'Completed',date:Date.now()});
-await saveUser(currentUser);
+async function rewardUser(amount,type){
+userData.points+=amount;
+consumeEnergy(10);
+userData.cooldowns[type]=Date.now()+TASK_COOLDOWN;
+userData.history.push({type:type,points:amount,status:'Completed',date:Date.now()});
+await saveUser();
 updateUI();
 }
 
-function closeMiniGame(){$('miniGamePopup').style.display='none'}
-
-/* ===============================
-   HISTORY SYSTEM
-================================ */
-
-function addHistory(e){
-const u=users[currentUser];
-if(!u.history) u.history=[];
-u.history.push(e);
-if(u.history.length>50) u.history=u.history.slice(-50);
-}
-
-function setFilter(t){currentFilter=t;loadHistory()}
-
-function loadHistory(){
-const u=users[currentUser];
-const box=$('historyBox');
-if(!box||!u) return;
-
-box.innerHTML='';
-let todayTotal=0;
-const today=new Date();today.setHours(0,0,0,0);
-
-u.history?.slice().reverse().forEach(h=>{
-if(currentFilter!=='all' && h.type!==currentFilter) return;
-
-const d=new Date(h.date);
-if(d>=today && (h.type==='watch'||h.type==='game')) todayTotal+=h.points;
-
-if(h.type==='watch') box.innerHTML+='<div>🎥 Watch +'+h.points+'</div>';
-else if(h.type==='game') box.innerHTML+='<div>🎮 Game +'+h.points+'</div>';
-else if(h.type==='withdraw') box.innerHTML+='<div>💸 Withdraw '+h.points+' '+h.status+'</div>';
-});
-
-$('todayEarned').textContent=todayTotal;
-}
-
-/* ===============================
-   WITHDRAW SYSTEM
-================================ */
+/* ================= WITHDRAW ================= */
 
 async function withdrawPoints(){
 const amt=parseInt($('withdrawInput').value);
-const u=users[currentUser];
+if(!amt||amt<MIN_WITHDRAW) return $('withdrawMsg').textContent='Minimum 100000 points';
+if(amt>userData.points) return $('withdrawMsg').textContent='Not enough points';
 
-if(!amt || amt<MIN_WITHDRAW) return $('withdrawMsg').textContent='Minimum 100000 points';
-if(amt>u.points) return $('withdrawMsg').textContent='Not enough points';
-
-u.points-=amt;
-addHistory({type:'withdraw',points:amt,status:'Pending',date:Date.now()});
-$('withdrawMsg').textContent='Withdrawal pending admin approval';
-
-await saveUser(currentUser);
+userData.points-=amt;
+userData.history.push({type:'withdraw',points:amt,status:'Pending',date:Date.now()});
+$('withdrawMsg').textContent='Withdrawal pending';
+await saveUser();
 updateUI();
 }
 
-/* ===============================
-   ADMIN SYSTEM
-================================ */
+/* ================= HISTORY ================= */
 
-function loadAdmin(){
-const box=$('adminUsers');
+function loadHistory(){
+const box=$('historyBox');
 box.innerHTML='';
-
-loadAdminUsers();
-
-for(let username in users){
-const u=users[username];
-
-box.innerHTML+=`
-<div class='admin-box'>
-<strong>${username}</strong><br>
-Points:${u.points} | Energy:${u.energy}
-<br>
-<input id='energy_${username}' placeholder='Add Energy'>
-<button onclick="addEnergy('${username}')">Add Energy</button>
-<h4>Withdraw Requests</h4>
-${u.history?.map((h,i)=>h.status==='Pending'?`
-<div>${h.points} pts
-<button onclick="approveWithdraw('${username}',${i})">Approve</button>
-</div>`:'').join('')}
-</div>
-`;
-}
-}
-
-function loadAdminUsers(){
-const select=$('adminUserSelect');
-if(!select) return;
-select.innerHTML='';
-Object.keys(users).forEach(u=>{
-const opt=document.createElement('option');
-opt.value=u;
-opt.textContent=u;
-select.appendChild(opt);
+userData.history.slice().reverse().forEach(h=>{
+if(h.type==='watch') box.innerHTML+='<div>🎥 Watch +'+h.points+'</div>';
+if(h.type==='game') box.innerHTML+='<div>🎮 Game +'+h.points+'</div>';
+if(h.type==='withdraw') box.innerHTML+='<div>💸 Withdraw '+h.points+' '+h.status+'</div>';
 });
 }
 
-function addEnergy(username){
-const input=$(`energy_${username}`);
-if(!input) return;
+/* ================= COOLDOWN ================= */
 
-const val=parseInt(input.value);
-if(!val) return alert('Enter energy');
-if(!users[username]) return;
-
-users[username].energy+=val;
-saveUser(username);
-alert('Energy added');
-updateUI();
-}
-
-function approveWithdraw(username,index){
-const u=users[username];
-if(!u?.history?.[index]) return;
-
-u.history[index].status='Approved';
-saveUser(username);
-alert('Withdrawal approved');
-loadAdmin();
-}
-
-function adminSetGcash(){
-const username=$('adminUserSelect').value;
-const gcash=$('adminGcashInput').value.trim();
-
-if(!username||!gcash) return alert('Enter GCash number');
-if(!users[username]) return;
-
-users[username].gcash=gcash;
-saveUser(username);
-alert('GCash number saved');
-}
-
-/* ===============================
-   COOLDOWN TIMER
-================================ */
-
-/* ===============================
-   ADVANCED AUTOSAVE SAFETY LAYER
-================================ */
-
-let autosaveRunning=true;
-
-setInterval(async()=>{
-if(!autosaveRunning) return;
-if(!currentUser) return;
-
-await saveUser(currentUser);
-},20000);
-
-/* ===============================
-   COOLDOWN TIMER
-================================ */
-
-let cooldownTimer=null;
 function startCooldownTimer(){
 if(cooldownTimer) clearInterval(cooldownTimer);
 
 cooldownTimer=setInterval(()=>{
-if(!currentUser) return;
-const u=users[currentUser];
+if(!userData) return;
 const now=Date.now();
-
-$('adCooldown').textContent=u.cooldowns?.ad>now? 'Ad cooldown '+Math.ceil((u.cooldowns.ad-now)/1000)+'s':'';
-$('gameCooldown').textContent=u.cooldowns?.game>now? 'Game cooldown '+Math.ceil((u.cooldowns.game-now)/1000)+'s':'';
+$('adCooldown').textContent=userData.cooldowns.watch>now? 'Ad cooldown '+Math.ceil((userData.cooldowns.watch-now)/1000)+'s':'';
+$('gameCooldown').textContent=userData.cooldowns.game>now? 'Game cooldown '+Math.ceil((userData.cooldowns.game-now)/1000)+'s':'';
 },1000);
 }
 
