@@ -129,42 +129,80 @@ let saveLock=false;
 
 function $(id){return document.getElementById(id)}
 
-/* ===============================
-   BULLETPROOF STORAGE ENGINE
-================================ */
+/* =========================================
+   FIXED ULTRA PERSISTENCE STORAGE ENGINE
+========================================= */
+
+let saveQueue = new Set();
 
 async function saveUser(username){
-if(saveLock) return;
-saveLock=true;
-try{
-if(!users[username]) return;
+if(!username) return;
 
-const payload={
-username:username,
-data:JSON.parse(JSON.stringify(users[username]))
+if(saveQueue.has(username)) return;
+saveQueue.add(username);
+
+try{
+if(!users[username]){
+saveQueue.delete(username);
+return;
+}
+
+const cleanData = JSON.parse(JSON.stringify(users[username]));
+cleanData.__lastSync = Date.now();
+
+const payload = {
+username: username,
+data: cleanData,
+updated_at: new Date().toISOString()
 };
 
-const {error}=await sbClient.from('pin77_users').upsert(payload,{onConflict:'username'});
+const { error } = await sbClient
+.from('pin77_users')
+.upsert(payload,{onConflict:'username'});
 
 if(error){
-console.error(error);
-setTimeout(()=>saveUser(username),2000);
+console.error("SAVE ERROR:",error.message);
+setTimeout(()=>saveUser(username),3000);
+}
+
+}catch(err){
+console.error("CRITICAL SAVE ERROR:",err);
+setTimeout(()=>saveUser(username),4000);
+}
+
+saveQueue.delete(username);
+}
+
+/* Auto Background Sync Every 20s */
+setInterval(()=>{
+if(!currentUser) return;
+saveUser(currentUser);
+},20000);
+
+/* ===============================
+   USER LOADER FIX
+================================ */
+
+async function loadUsers(){
+try{
+const { data, error } = await sbClient
+.from('pin77_users')
+.select('*');
+
+if(error){
+console.error("LOAD ERROR:",error.message);
+return;
+}
+
+if(data){
+data.forEach(r=>{
+users[r.username]=r.data||{};
+});
 }
 
 }catch(err){
 console.error(err);
-setTimeout(()=>saveUser(username),3000);
 }
-
-saveLock=false;
-}
-
-async function loadUsers(){
-try{
-const {data,error}=await sbClient.from('pin77_users').select('*');
-if(error){console.error(error);return;}
-if(data){data.forEach(r=>{users[r.username]=r.data||{}});}
-}catch(err){console.error(err);}
 }
 
 /* ===============================
@@ -431,6 +469,23 @@ users[username].gcash=gcash;
 saveUser(username);
 alert('GCash number saved');
 }
+
+/* ===============================
+   COOLDOWN TIMER
+================================ */
+
+/* ===============================
+   ADVANCED AUTOSAVE SAFETY LAYER
+================================ */
+
+let autosaveRunning=true;
+
+setInterval(async()=>{
+if(!autosaveRunning) return;
+if(!currentUser) return;
+
+await saveUser(currentUser);
+},20000);
 
 /* ===============================
    COOLDOWN TIMER
