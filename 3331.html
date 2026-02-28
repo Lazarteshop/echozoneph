@@ -6,6 +6,7 @@
 <title>PIN77 Idle Chick PRO</title>
 
 <script src="https://www.youtube.com/iframe_api"></script>
+<script src="https://al5sm.com/tag.min.js" data-zone="10587611" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
@@ -162,7 +163,8 @@ function showAdmin(){$('loginScreen').classList.remove('active');$('gameScreen')
 
 function updateUI(){if(!currentUser)return;const u=users[currentUser];resetDailyUsage(u);autoConvertBalance(u);$('pointsText').textContent=u.points;$('balanceText').textContent=u.balance.toFixed(2);$('energyText').textContent=u.energy;$('dailyUsedText').textContent=u.dailyUsed;$('energyFill').style.width=Math.min(100,u.energy)+'%';$('watchBtn').disabled=!canUseEnergy(u);$('playBtn').disabled=!canUseEnergy(u);loadHistory()}
 
-const ytVideos=["fjy1wYj2Nh8","x9OuXv_GEmc","6bbqMf6xoOc"];
+// WATCH VIDEO
+const ytVideos=["fjy1wYj2Nh8","x9OuXv_GEmc", "6bbqMf6xoOc","kLofAi46LuY","75GnzFvwYyM","DQ3JqS70CrU","2hTIyrD9sS0","tT8OaQINFws","ltskofwl8b4","tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","jGyG5Xty37c","jP96fZG48h4","evj4fzBBiFI","HRaVepQYHRA","QtBuiOSrffQ","2mEte_9nhSs","U6yvT288bY8","r-jw-aWkbgc","Saf0QgV2dBs","oY_yCQvZ5Ko","4bJBloATeRw","MaLbebYE83E","iIiv0j5v6t8","ugz6RrkaN94","QQf0Qm-o9is","lGmpCB6-LUA","X6UvWJ3ApIw","YfE4a_qwYjQ","nLmaGOOMLr8"];
 
 function watchAd(){const u=users[currentUser];if(!u||u.energy<=0)return;if(!canUseEnergy(u))return alert('Daily energy limit reached.');ytUser=currentUser;$('ytModal').style.display='flex';const id=ytVideos[Math.floor(Math.random()*ytVideos.length)];if(ytPlayer){ytPlayer.loadVideoById(id)}else{ytPlayer=new YT.Player('ytFrame',{videoId:id,playerVars:{autoplay:1,controls:0},events:{onStateChange:onYTStateChange}})}}
 window.watchAd=watchAd;
