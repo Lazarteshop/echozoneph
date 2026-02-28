@@ -26,6 +26,7 @@ input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="loginScreen" class="screen active center">
 <h2>Login</h2>
 <input id="userInput" placeholder="Username with gcash#">
@@ -33,8 +34,10 @@ input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
 <button onclick="loginUser()">Login / Register</button>
 </div>
 
+<!-- GAME -->
 <div id="gameScreen" class="screen">
 <h2 class="center">🐥 PIN77 PRO</h2>
+
 <div class="card center">
 <div style="font-size:70px">🐥</div>
 <div class="energy-bar"><div id="energyFill" class="energy-fill"></div></div>
@@ -56,6 +59,7 @@ input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
 <input id="withdrawInput" placeholder="Points to withdraw">
 <button onclick="withdrawPoints()">Withdraw</button>
 <p id="withdrawMsg"></p>
+
 <h4>History</h4>
 <div id="historyBox"></div>
 </div>
@@ -63,6 +67,7 @@ input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
 <button onclick="logoutUser()">Logout</button>
 </div>
 
+<!-- MINI GAME -->
 <div id="miniGamePopup" class="popup">
 <div class="popup-content">
 <h3>Click Chick 5x</h3>
@@ -72,6 +77,7 @@ input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
 </div>
 </div>
 
+<!-- YT MODAL -->
 <div id="ytModal" class="popup">
 <div class="popup-content">
 <h3>Watch Full Video To Earn Reward</h3>
@@ -79,11 +85,23 @@ input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
 </div>
 </div>
 
+<!-- ADMIN -->
+<div id="adminScreen" class="screen">
+<h2>Admin Dashboard</h2>
+<div id="adminUsers"></div>
+<hr>
+<h3>Set User GCash</h3>
+<select id="adminUserSelect"></select>
+<input id="adminGcashInput" placeholder="GCash Number">
+<button onclick="adminSetGcash()">Save</button>
+<button onclick="logoutUser()">Logout</button>
+</div>
+
 <script>
 
 const SUPABASE_URL="https://pbwaozztfclanvplpmvm.supabase.co";
 const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBid2Fvenp0ZmNsYW52cGxwbXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjQ1NzIsImV4cCI6MjA4NzgwMDU3Mn0.bbY-C4legzoHwQEiL3-IHwp8D6_hrL53GJPa78li1aY";
-const sb = supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
 const POINT_RATE=1000;
 const MIN_WITHDRAW=100000;
@@ -91,7 +109,7 @@ const TASK_COOLDOWN=60000;
 const DAILY_ENERGY_LIMIT=500;
 
 let currentUser=null;
-let userData=null;
+let users={};
 let ytPlayer=null;
 let miniCounter=0;
 let cooldownTimer=null;
@@ -100,34 +118,27 @@ function $(id){return document.getElementById(id)}
 
 /* ================= DATABASE ================= */
 
-async function loadUser(username){
-const { data, error } = await sb
-.from('pin77_users')
-.select('*')
-.eq('username',username)
-.maybeSingle();
-
-if(error){
-console.error("LOAD ERROR:",error);
-return null;
+async function loadAllUsers(){
+const {data,error}=await sb.from('pin77_users').select('*');
+if(error) return console.error(error);
+users={};
+data.forEach(r=>users[r.username]=r.data);
 }
+
+async function loadUser(username){
+const {data,error}=await sb.from('pin77_users').select('*').eq('username',username).maybeSingle();
+if(error) return console.error(error);
 return data;
 }
 
-async function saveUser(){
-if(!currentUser || !userData) return;
-
-const { error } = await sb
-.from('pin77_users')
-.upsert({
-username:currentUser,
-data:userData,
+async function saveUser(username){
+if(!users[username]) return;
+const {error}=await sb.from('pin77_users').upsert({
+username:username,
+data:users[username],
 updated_at:new Date().toISOString()
 },{onConflict:'username'});
-
-if(error){
-console.error("SAVE ERROR:",error);
-}
+if(error) console.error("SAVE ERROR",error);
 }
 
 /* ================= LOGIN ================= */
@@ -137,27 +148,23 @@ const u=$('userInput').value.trim();
 const p=$('passInput').value.trim();
 if(!u||!p) return alert('Enter credentials');
 
+if(u==='admin'&&p==='admin123'){
+await loadAllUsers();
+showAdmin();
+return;
+}
+
 let dbUser=await loadUser(u);
 
 if(!dbUser){
-userData={
-pass:p,
-points:0,
-balance:0,
-energy:500,
-dailyUsed:0,
-lastEnergyReset:new Date().toDateString(),
-history:[],
-cooldowns:{ad:0,game:0}
-};
-currentUser=u;
-await saveUser();
+users[u]={pass:p,points:0,balance:0,energy:500,dailyUsed:0,lastEnergyReset:new Date().toDateString(),history:[],cooldowns:{watch:0,game:0}};
+await saveUser(u);
 }else{
 if(dbUser.data.pass!==p) return alert('Wrong password');
-userData=dbUser.data;
-currentUser=u;
+users[u]=dbUser.data;
 }
 
+currentUser=u;
 showGame();
 updateUI();
 }
@@ -166,42 +173,39 @@ function logoutUser(){location.reload()}
 
 /* ================= ENERGY ================= */
 
-function resetDailyUsage(){
+function resetDaily(u){
 const t=new Date().toDateString();
-if(userData.lastEnergyReset!==t){
-userData.dailyUsed=0;
-userData.lastEnergyReset=t;
-}
+if(u.lastEnergyReset!==t){u.dailyUsed=0;u.lastEnergyReset=t}
 }
 
-function canUseEnergy(){
-resetDailyUsage();
-return userData.dailyUsed<DAILY_ENERGY_LIMIT;
-}
+function canUse(u){resetDaily(u);return u.dailyUsed<DAILY_ENERGY_LIMIT}
 
-function consumeEnergy(a){
-resetDailyUsage();
-if(userData.dailyUsed+a>DAILY_ENERGY_LIMIT)a=DAILY_ENERGY_LIMIT-userData.dailyUsed;
-userData.energy=Math.max(0,userData.energy-a);
-userData.dailyUsed+=a;
-}
+function consume(u,a){resetDaily(u);if(u.dailyUsed+a>DAILY_ENERGY_LIMIT)a=DAILY_ENERGY_LIMIT-u.dailyUsed;u.energy=Math.max(0,u.energy-a);u.dailyUsed+=a}
 
 /* ================= UI ================= */
 
 function showGame(){
 $('loginScreen').classList.remove('active');
+$('adminScreen').classList.remove('active');
 $('gameScreen').classList.add('active');
-startCooldownTimer();
+startCooldown();
+}
+
+function showAdmin(){
+$('loginScreen').classList.remove('active');
+$('gameScreen').classList.remove('active');
+$('adminScreen').classList.add('active');
+renderAdmin();
 }
 
 function updateUI(){
-resetDailyUsage();
-userData.balance=Math.floor(userData.points/POINT_RATE);
-$('pointsText').textContent=userData.points;
-$('balanceText').textContent=userData.balance.toFixed(2);
-$('energyText').textContent=userData.energy;
-$('dailyUsedText').textContent=userData.dailyUsed;
-$('energyFill').style.width=Math.min(100,userData.energy)+'%';
+const u=users[currentUser];
+u.balance=Math.floor(u.points/POINT_RATE);
+$('pointsText').textContent=u.points;
+$('balanceText').textContent=u.balance.toFixed(2);
+$('energyText').textContent=u.energy;
+$('dailyUsedText').textContent=u.dailyUsed;
+$('energyFill').style.width=Math.min(100,u.energy)+'%';
 loadHistory();
 }
 
@@ -210,83 +214,93 @@ loadHistory();
 const ytVideos=["fjy1wYj2Nh8","x9OuXv_GEmc","6bbqMf6xoOc"];
 
 function watchAd(){
-if(!canUseEnergy()) return alert('Daily energy limit reached');
+const u=users[currentUser];
+if(!canUse(u)) return alert('Daily limit reached');
 $('ytModal').style.display='flex';
 const id=ytVideos[Math.floor(Math.random()*ytVideos.length)];
 if(ytPlayer) ytPlayer.loadVideoById(id);
-else ytPlayer=new YT.Player('ytFrame',{videoId:id,playerVars:{autoplay:1,controls:0},events:{onStateChange:onYTStateChange}});
+else ytPlayer=new YT.Player('ytFrame',{videoId:id,playerVars:{autoplay:1,controls:0},events:{onStateChange:onYT}});
 }
 
-function onYTStateChange(e){
-if(e.data===YT.PlayerState.ENDED){
-$('ytModal').style.display='none';
-rewardUser(Math.floor(Math.random()*41)+30,'watch');
-}
-}
+function onYT(e){if(e.data===YT.PlayerState.ENDED){$('ytModal').style.display='none';giveReward('watch')}}
 
 function playGame(){
-if(!canUseEnergy()) return alert('Daily energy limit reached');
-miniCounter=0;
-$('miniClicks').textContent=0;
-$('miniGamePopup').style.display='flex';
+const u=users[currentUser];
+if(!canUse(u)) return alert('Daily limit reached');
+miniCounter=0;$('miniClicks').textContent=0;$('miniGamePopup').style.display='flex';
 }
 
-function miniClick(){
-miniCounter++;
-$('miniClicks').textContent=miniCounter;
-if(miniCounter>=5){
-$('miniGamePopup').style.display='none';
-rewardUser(Math.floor(Math.random()*31)+20,'game');
-}
-}
+function miniClick(){miniCounter++;$('miniClicks').textContent=miniCounter;if(miniCounter>=5){$('miniGamePopup').style.display='none';giveReward('game')}}
+function closeMiniGame(){$('miniGamePopup').style.display='none'}
 
-function closeMiniGame(){ $('miniGamePopup').style.display='none'; }
-
-async function rewardUser(amount,type){
-userData.points+=amount;
-consumeEnergy(10);
-userData.cooldowns[type]=Date.now()+TASK_COOLDOWN;
-userData.history.push({type:type,points:amount,status:'Completed',date:Date.now()});
-await saveUser();
-updateUI();
+async function giveReward(type){
+const u=users[currentUser];
+const amount=type==='watch'?Math.floor(Math.random()*41)+30:Math.floor(Math.random()*31)+20;
+u.points+=amount;consume(u,10);u.cooldowns[type]=Date.now()+TASK_COOLDOWN;u.history.push({type:type,points:amount,status:'Completed',date:Date.now()});
+await saveUser(currentUser);updateUI();
 }
 
 /* ================= WITHDRAW ================= */
 
 async function withdrawPoints(){
 const amt=parseInt($('withdrawInput').value);
+const u=users[currentUser];
 if(!amt||amt<MIN_WITHDRAW) return $('withdrawMsg').textContent='Minimum 100000 points';
-if(amt>userData.points) return $('withdrawMsg').textContent='Not enough points';
-
-userData.points-=amt;
-userData.history.push({type:'withdraw',points:amt,status:'Pending',date:Date.now()});
+if(amt>u.points) return $('withdrawMsg').textContent='Not enough points';
+u.points-=amt;u.history.push({type:'withdraw',points:amt,status:'Pending',date:Date.now()});
 $('withdrawMsg').textContent='Withdrawal pending';
-await saveUser();
-updateUI();
+await saveUser(currentUser);updateUI();
 }
 
 /* ================= HISTORY ================= */
 
 function loadHistory(){
-const box=$('historyBox');
-box.innerHTML='';
-userData.history.slice().reverse().forEach(h=>{
+const box=$('historyBox');box.innerHTML='';
+users[currentUser].history.slice().reverse().forEach(h=>{
 if(h.type==='watch') box.innerHTML+='<div>🎥 Watch +'+h.points+'</div>';
 if(h.type==='game') box.innerHTML+='<div>🎮 Game +'+h.points+'</div>';
 if(h.type==='withdraw') box.innerHTML+='<div>💸 Withdraw '+h.points+' '+h.status+'</div>';
 });
 }
 
+/* ================= ADMIN ================= */
+
+function renderAdmin(){
+const box=$('adminUsers');box.innerHTML='';
+Object.keys(users).forEach(username=>{
+const u=users[username];
+box.innerHTML+=`<div class='admin-box'><strong>${username}</strong><br>Points:${u.points}<br><button onclick="approveWithdraw('${username}')">Approve Withdraw</button></div>`;
+});
+
+const select=$('adminUserSelect');select.innerHTML='';
+Object.keys(users).forEach(u=>{const opt=document.createElement('option');opt.value=u;opt.textContent=u;select.appendChild(opt)});
+}
+
+async function approveWithdraw(username){
+let u=users[username];
+u.history=u.history.map(h=>{if(h.type==='withdraw'&&h.status==='Pending')h.status='Approved';return h});
+await saveUser(username);alert('Approved');renderAdmin();
+}
+
+async function adminSetGcash(){
+const username=$('adminUserSelect').value;
+const gcash=$('adminGcashInput').value.trim();
+if(!username||!gcash) return alert('Enter GCash');
+users[username].gcash=gcash;
+await saveUser(username);
+alert('Saved');
+}
+
 /* ================= COOLDOWN ================= */
 
-function startCooldownTimer(){
+function startCooldown(){
 if(cooldownTimer) clearInterval(cooldownTimer);
-
 cooldownTimer=setInterval(()=>{
-if(!userData) return;
+if(!currentUser) return;
+const u=users[currentUser];
 const now=Date.now();
-$('adCooldown').textContent=userData.cooldowns.watch>now? 'Ad cooldown '+Math.ceil((userData.cooldowns.watch-now)/1000)+'s':'';
-$('gameCooldown').textContent=userData.cooldowns.game>now? 'Game cooldown '+Math.ceil((userData.cooldowns.game-now)/1000)+'s':'';
+$('adCooldown').textContent=u.cooldowns.watch>now?'Ad cooldown '+Math.ceil((u.cooldowns.watch-now)/1000)+'s':'';
+$('gameCooldown').textContent=u.cooldowns.game>now?'Game cooldown '+Math.ceil((u.cooldowns.game-now)/1000)+'s':'';
 },1000);
 }
 
