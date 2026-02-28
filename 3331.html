@@ -6,7 +6,6 @@
 <title>PIN77 Idle Chick PRO</title>
 
 <script src="https://www.youtube.com/iframe_api"></script>
-<script src="https://al5sm.com/tag.min.js" data-zone="10587611" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
@@ -106,7 +105,7 @@ input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
 <script>
 
 const SUPABASE_URL="https://pbwaozztfclanvplpmvm.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBid2Fvenp0ZmNsYW52cGxwbXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjQ1NzIsImV4cCI6MjA4NzgwMDU3Mn0.bbY-C4legzoHwQEiL3-IHwp8D6_hrL53GJPa78li1aY";
+const SUPABASE_ANON_KEY="YOUR_ANON_KEY";
 
 if(!window.sbClient){
 window.sbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
@@ -163,8 +162,7 @@ function showAdmin(){$('loginScreen').classList.remove('active');$('gameScreen')
 
 function updateUI(){if(!currentUser)return;const u=users[currentUser];resetDailyUsage(u);autoConvertBalance(u);$('pointsText').textContent=u.points;$('balanceText').textContent=u.balance.toFixed(2);$('energyText').textContent=u.energy;$('dailyUsedText').textContent=u.dailyUsed;$('energyFill').style.width=Math.min(100,u.energy)+'%';$('watchBtn').disabled=!canUseEnergy(u);$('playBtn').disabled=!canUseEnergy(u);loadHistory()}
 
-// WATCH VIDEO
-const ytVideos=["fjy1wYj2Nh8","x9OuXv_GEmc", "6bbqMf6xoOc","kLofAi46LuY","75GnzFvwYyM","DQ3JqS70CrU","2hTIyrD9sS0","tT8OaQINFws","ltskofwl8b4","tUMXTD8STeU","ZspGPko6-1w","JATpLtghZCY","vJ7iZH6ILJM","jGyG5Xty37c","jP96fZG48h4","evj4fzBBiFI","HRaVepQYHRA","QtBuiOSrffQ","2mEte_9nhSs","U6yvT288bY8","r-jw-aWkbgc","Saf0QgV2dBs","oY_yCQvZ5Ko","4bJBloATeRw","MaLbebYE83E","iIiv0j5v6t8","ugz6RrkaN94","QQf0Qm-o9is","lGmpCB6-LUA","X6UvWJ3ApIw","YfE4a_qwYjQ","nLmaGOOMLr8"];
+const ytVideos=["fjy1wYj2Nh8","x9OuXv_GEmc","6bbqMf6xoOc"];
 
 function watchAd(){const u=users[currentUser];if(!u||u.energy<=0)return;if(!canUseEnergy(u))return alert('Daily energy limit reached.');ytUser=currentUser;$('ytModal').style.display='flex';const id=ytVideos[Math.floor(Math.random()*ytVideos.length)];if(ytPlayer){ytPlayer.loadVideoById(id)}else{ytPlayer=new YT.Player('ytFrame',{videoId:id,playerVars:{autoplay:1,controls:0},events:{onStateChange:onYTStateChange}})}}
 window.watchAd=watchAd;
@@ -199,6 +197,87 @@ function adminSetGcash(){const username=$('adminUserSelect').value;const gcash=$
 window.adminSetGcash=adminSetGcash;
 
 function startCooldownTimer(){if(cooldownTimer)clearInterval(cooldownTimer);cooldownTimer=setInterval(()=>{if(!currentUser)return;const u=users[currentUser];const now=Date.now();$('adCooldown').textContent=u.cooldowns.ad>now?'Ad cooldown '+Math.ceil((u.cooldowns.ad-now)/1000)+'s':'';$('gameCooldown').textContent=u.cooldowns.game>now?'Game cooldown '+Math.ceil((u.cooldowns.game-now)/1000)+'s':''},1000)}
+
+/* ===== ADMIN LOGIC RESTORED ===== */
+
+function loadAdmin(){
+const box=document.getElementById('adminUsers');
+box.innerHTML='';
+
+loadAdminUsers();
+
+for(let username in users){
+const u=users[username];
+
+box.innerHTML+=`
+<div class='admin-box'>
+<strong>${username}</strong><br>
+Points:${u.points} | Energy:${u.energy}
+
+<br>
+<input id='energy_${username}' placeholder='Add Energy'>
+<button onclick="addEnergy('${username}')">Add Energy</button>
+
+<h4>Withdraw Requests</h4>
+
+${u.history?.map((h,i)=>h.status==='Pending'?
+`<div>${h.points} pts 
+<button onclick="approveWithdraw('${username}',${i})">Approve</button>
+</div>`:'').join('')}
+</div>
+`;
+}
+}
+
+function loadAdminUsers(){
+const select=document.getElementById('adminUserSelect');
+if(!select)return;
+
+select.innerHTML='';
+Object.keys(users).forEach(u=>{
+const opt=document.createElement('option');
+opt.value=u;
+opt.textContent=u;
+select.appendChild(opt);
+});
+}
+
+function addEnergy(username){
+const input=document.getElementById(`energy_${username}`);
+if(!input)return;
+
+const val=parseInt(input.value);
+if(!val)return alert('Enter energy');
+if(!users[username])return;
+
+users[username].energy+=val;
+saveUser(username);
+
+alert('Energy added');
+updateUI();
+}
+
+function approveWithdraw(username,index){
+const u=users[username];
+if(!u||!u.history||!u.history[index])return;
+
+u.history[index].status='Approved';
+saveUser(username);
+alert('Withdrawal approved');
+loadAdmin();
+}
+
+function adminSetGcash(){
+const username=document.getElementById('adminUserSelect').value;
+const gcash=document.getElementById('adminGcashInput').value.trim();
+
+if(!username||!gcash)return alert('Enter GCash number');
+if(!users[username])return;
+
+users[username].gcash=gcash;
+saveUser(username);
+alert('GCash number saved');
+}
 
 </script>
 </body>
