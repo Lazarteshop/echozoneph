@@ -6,9 +6,6 @@
 <title>PIN77 Idle Chick PRO</title>
 
 <script src="https://www.youtube.com/iframe_api"></script>
-<script src="https://al5sm.com/tag.min.js" data-zone="10587611" async></script>
-
-<!-- SUPABASE (FIXED CDN ONLY) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
@@ -106,9 +103,14 @@ input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
 </div>
 
 <script>
-const SUPABASE_URL = "https://pbwaozztfclanvplpmvm.supabase.co";
+
+const SUPABASE_URL="https://pbwaozztfclanvplpmvm.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBid2Fvenp0ZmNsYW52cGxwbXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjQ1NzIsImV4cCI6MjA4NzgwMDU3Mn0.bbY-C4legzoHwQEiL3-IHwp8D6_hrL53GJPa78li1aY";
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+if(!window.sbClient){
+window.sbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+}
+const sbClient=window.sbClient;
 
 const POINT_RATE=1000;
 const MIN_WITHDRAW=100000;
@@ -126,83 +128,76 @@ let currentFilter='all';
 function $(id){return document.getElementById(id)}
 
 async function saveUser(username){
-  const u = users[username];
-  await supabase.from('pin77_users').upsert({username, data:u});
+await sbClient.from('pin77_users').upsert({username,data:users[username]});
 }
 
 async function loadUsers(){
-  const { data } = await supabase.from('pin77_users').select('*');
-  if(data){
-    data.forEach(row=>users[row.username]=row.data);
-  }
+const {data}=await sbClient.from('pin77_users').select('*');
+if(data){data.forEach(r=>users[r.username]=r.data)}
 }
 
-function autoConvertBalance(u){if(!u)return;const converted=Math.floor(u.points/POINT_RATE);u.balance=converted;}
-function resetDailyUsage(u){const today=new Date().toDateString();if(u.lastEnergyReset!==today){u.dailyUsed=0;u.lastEnergyReset=today;}}
-function canUseEnergy(u){resetDailyUsage(u);return u.dailyUsed<DAILY_ENERGY_LIMIT;}
-function consumeEnergy(u,amount){resetDailyUsage(u);if(u.dailyUsed+amount>DAILY_ENERGY_LIMIT)amount=DAILY_ENERGY_LIMIT-u.dailyUsed;u.energy=Math.max(0,u.energy-amount);u.dailyUsed+=amount;}
+function autoConvertBalance(u){u.balance=Math.floor(u.points/POINT_RATE)}
+function resetDailyUsage(u){const t=new Date().toDateString();if(u.lastEnergyReset!==t){u.dailyUsed=0;u.lastEnergyReset=t}}
+function canUseEnergy(u){resetDailyUsage(u);return u.dailyUsed<DAILY_ENERGY_LIMIT}
+function consumeEnergy(u,a){resetDailyUsage(u);if(u.dailyUsed+a>DAILY_ENERGY_LIMIT)a=DAILY_ENERGY_LIMIT-u.dailyUsed;u.energy=Math.max(0,u.energy-a);u.dailyUsed+=a}
 
 async function loginUser(){
-  await loadUsers();
-  const u=$('userInput').value.trim();
-  const p=$('passInput').value.trim();
-  if(!u||!p)return alert('Enter credentials');
-  if(u==='admin'&&p==='admin123'){showAdmin();return;}
-  if(!users[u]){
-    users[u]={pass:p,points:0,balance:0,energy:500,dailyUsed:0,lastEnergyReset:new Date().toDateString(),history:[],cooldowns:{ad:0,game:0}};
-    await saveUser(u);
-  }
-  if(users[u].pass!==p)return alert('Wrong password');
-  currentUser=u;
-  showGame();
+await loadUsers();
+const u=$('userInput').value.trim();
+const p=$('passInput').value.trim();
+if(!u||!p)return alert('Enter credentials');
+if(u==='admin'&&p==='admin123'){showAdmin();return}
+if(!users[u]){users[u]={pass:p,points:0,balance:0,energy:500,dailyUsed:0,lastEnergyReset:new Date().toDateString(),history:[],cooldowns:{ad:0,game:0}};await saveUser(u)}
+if(users[u].pass!==p)return alert('Wrong password');
+currentUser=u;showGame();
 }
 
-function logoutUser(){location.reload();}
+window.loginUser=loginUser;
 
-function showGame(){
-$('loginScreen').classList.remove('active');
-$('adminScreen').classList.remove('active');
-$('gameScreen').classList.add('active');
-startCooldownTimer();
-updateUI();}
+function logoutUser(){location.reload()}
+window.logoutUser=logoutUser;
 
-function showAdmin(){
-$('loginScreen').classList.remove('active');
-$('gameScreen').classList.remove('active');
-$('adminScreen').classList.add('active');
-loadAdmin();}
+function showGame(){$('loginScreen').classList.remove('active');$('adminScreen').classList.remove('active');$('gameScreen').classList.add('active');startCooldownTimer();updateUI()}
+function showAdmin(){$('loginScreen').classList.remove('active');$('gameScreen').classList.remove('active');$('adminScreen').classList.add('active');loadAdmin()}
 
-function updateUI(){if(!currentUser)return;const u=users[currentUser];resetDailyUsage(u);autoConvertBalance(u);$('pointsText').textContent=u.points;$('balanceText').textContent=u.balance.toFixed(2);$('energyText').textContent=u.energy;$('dailyUsedText').textContent=u.dailyUsed;$('energyFill').style.width=Math.min(100,u.energy)+'%';$('watchBtn').disabled=u.energy<=0||u.dailyUsed>=DAILY_ENERGY_LIMIT;$('playBtn').disabled=u.energy<=0||u.dailyUsed>=DAILY_ENERGY_LIMIT;loadHistory();}
+function updateUI(){if(!currentUser)return;const u=users[currentUser];resetDailyUsage(u);autoConvertBalance(u);$('pointsText').textContent=u.points;$('balanceText').textContent=u.balance.toFixed(2);$('energyText').textContent=u.energy;$('dailyUsedText').textContent=u.dailyUsed;$('energyFill').style.width=Math.min(100,u.energy)+'%';$('watchBtn').disabled=!canUseEnergy(u);$('playBtn').disabled=!canUseEnergy(u);loadHistory()}
 
 const ytVideos=["fjy1wYj2Nh8","x9OuXv_GEmc","6bbqMf6xoOc"];
 
-function watchAd(){
-const u=users[currentUser];if(!u||u.energy<=0)return;if(!canUseEnergy(u))return alert('Daily energy limit reached.');ytUser=currentUser;$('ytModal').style.display='flex';const randomId=ytVideos[Math.floor(Math.random()*ytVideos.length)];
-if(ytPlayer){ytPlayer.loadVideoById(randomId)}else{ytPlayer=new YT.Player('ytFrame',{videoId:randomId,playerVars:{autoplay:1,controls:0},events:{onStateChange:onYTStateChange}});}}
+function watchAd(){const u=users[currentUser];if(!u||u.energy<=0)return;if(!canUseEnergy(u))return alert('Daily energy limit reached.');ytUser=currentUser;$('ytModal').style.display='flex';const id=ytVideos[Math.floor(Math.random()*ytVideos.length)];if(ytPlayer){ytPlayer.loadVideoById(id)}else{ytPlayer=new YT.Player('ytFrame',{videoId:id,playerVars:{autoplay:1,controls:0},events:{onStateChange:onYTStateChange}})}}
+window.watchAd=watchAd;
 
-function onYTStateChange(e){if(e.data===YT.PlayerState.ENDED)giveYTReward();}
+function onYTStateChange(e){if(e.data===YT.PlayerState.ENDED)giveYTReward()}
 
-async function giveYTReward(){if(!ytUser)return;const u=users[ytUser];$('ytModal').style.display='none';const reward=Math.floor(Math.random()*41)+30;u.points+=reward;autoConvertBalance(u);consumeEnergy(u,10);u.cooldowns.ad=Date.now()+TASK_COOLDOWN;addHistory({type:'watch',points:reward,status:'Completed',date:Date.now()});await saveUser(ytUser);ytUser=null;updateUI();}
+async function giveYTReward(){if(!ytUser)return;const u=users[ytUser];$('ytModal').style.display='none';const r=Math.floor(Math.random()*41)+30;u.points+=r;autoConvertBalance(u);consumeEnergy(u,10);u.cooldowns.ad=Date.now()+TASK_COOLDOWN;addHistory({type:'watch',points:r,status:'Completed',date:Date.now()});await saveUser(ytUser);ytUser=null;updateUI()}
 
-function playGame(){const u=users[currentUser];if(!canUseEnergy(u))return alert('Daily energy limit reached.');miniCounter=0;$('miniClicks').textContent=0;$('miniGamePopup').style.display='flex';}
-function miniClick(){miniCounter++;$('miniClicks').textContent=miniCounter;if(miniCounter>=5)finishMiniGame();}
+function playGame(){const u=users[currentUser];if(!canUseEnergy(u))return alert('Daily energy limit reached.');miniCounter=0;$('miniClicks').textContent=0;$('miniGamePopup').style.display='flex'}
+window.playGame=playGame;
 
-async function finishMiniGame(){const u=users[currentUser];$('miniGamePopup').style.display='none';const reward=Math.floor(Math.random()*31)+20;u.points+=reward;autoConvertBalance(u);consumeEnergy(u,10);u.cooldowns.game=Date.now()+TASK_COOLDOWN;addHistory({type:'game',points:reward,status:'Completed',date:Date.now()});await saveUser(currentUser);updateUI();}
+function miniClick(){miniCounter++;$('miniClicks').textContent=miniCounter;if(miniCounter>=5)finishMiniGame()}
+window.miniClick=miniClick;
 
-function closeMiniGame(){$('miniGamePopup').style.display='none';}
+async function finishMiniGame(){const u=users[currentUser];$('miniGamePopup').style.display='none';const r=Math.floor(Math.random()*31)+20;u.points+=r;autoConvertBalance(u);consumeEnergy(u,10);u.cooldowns.game=Date.now()+TASK_COOLDOWN;addHistory({type:'game',points:r,status:'Completed',date:Date.now()});await saveUser(currentUser);updateUI()}
 
-function addHistory(entry){const u=users[currentUser];if(!u.history)u.history=[];u.history.push(entry);if(u.history.length>50)u.history=u.history.slice(-50);}
-function setFilter(t){currentFilter=t;loadHistory();}
+function closeMiniGame(){$('miniGamePopup').style.display='none'}
+window.closeMiniGame=closeMiniGame;
 
-function loadHistory(){const u=users[currentUser];const box=$('historyBox');if(!box||!u)return;box.innerHTML='';let todayTotal=0;const today=new Date();today.setHours(0,0,0,0);u.history.slice().reverse().forEach(h=>{if(currentFilter!=='all'&&h.type!==currentFilter)return;const d=new Date(h.date);if(d>=today&&(h.type==='watch'||h.type==='game'))todayTotal+=h.points;if(h.type==='watch')box.innerHTML+='<div>🎥 Watch +'+h.points+'</div>';else if(h.type==='game')box.innerHTML+='<div>🎮 Game +'+h.points+'</div>';else if(h.type==='withdraw')box.innerHTML+='<div>💸 Withdraw '+h.points+' '+h.status+'</div>';});$('todayEarned').textContent=todayTotal;}
+function addHistory(e){const u=users[currentUser];if(!u.history)u.history=[];u.history.push(e);if(u.history.length>50)u.history=u.history.slice(-50)}
+function setFilter(t){currentFilter=t;loadHistory()}
+window.setFilter=setFilter;
 
-async function withdrawPoints(){const amt=parseInt($('withdrawInput').value);const u=users[currentUser];if(!amt||amt<MIN_WITHDRAW)return $('withdrawMsg').textContent='Minimum 100000 points';if(amt>u.points)return $('withdrawMsg').textContent='Not enough points';u.points-=amt;addHistory({type:'withdraw',points:amt,status:'Pending',date:Date.now()});$('withdrawMsg').textContent='Withdrawal pending admin approval';await saveUser(currentUser);updateUI();}
+function loadHistory(){const u=users[currentUser];const box=$('historyBox');if(!box||!u)return;box.innerHTML='';let todayTotal=0;const today=new Date();today.setHours(0,0,0,0);u.history.slice().reverse().forEach(h=>{if(currentFilter!=='all'&&h.type!==currentFilter)return;const d=new Date(h.date);if(d>=today&&(h.type==='watch'||h.type==='game'))todayTotal+=h.points;if(h.type==='watch')box.innerHTML+='<div>🎥 Watch +'+h.points+'</div>';else if(h.type==='game')box.innerHTML+='<div>🎮 Game +'+h.points+'</div>';else if(h.type==='withdraw')box.innerHTML+='<div>💸 Withdraw '+h.points+' '+h.status+'</div>'});$('todayEarned').textContent=todayTotal}
 
-function loadAdmin(){const box=$('adminUsers');box.innerHTML='';for(let username in users){const u=users[username];box.innerHTML+=`<div class='admin-box'><strong>${username}</strong><br>Points:${u.points} | Energy:${u.energy}<br><h4>Withdraw Requests</h4>${u.history?.map((h,i)=>h.status==='Pending'?`<div>${h.points} pts <button onclick="approveWithdraw('${username}',${i})">Approve</button></div>`:'').join('')}</div>`;}}
+async function withdrawPoints(){const amt=parseInt($('withdrawInput').value);const u=users[currentUser];if(!amt||amt<MIN_WITHDRAW)return $('withdrawMsg').textContent='Minimum 100000 points';if(amt>u.points)return $('withdrawMsg').textContent='Not enough points';u.points-=amt;addHistory({type:'withdraw',points:amt,status:'Pending',date:Date.now()});$('withdrawMsg').textContent='Withdrawal pending admin approval';await saveUser(currentUser);updateUI()}
+window.withdrawPoints=withdrawPoints;
 
-function adminSetGcash(){const username=$('adminUserSelect').value;const gcash=$('adminGcashInput').value.trim();if(!username||!gcash)return alert('Enter GCash number');users[username].gcash=gcash;saveUser(username);alert('GCash number saved');}
+function loadAdmin(){const box=$('adminUsers');box.innerHTML='';for(let username in users){const u=users[username];box.innerHTML+=`<div class='admin-box'><strong>${username}</strong><br>Points:${u.points} | Energy:${u.energy}<br><h4>Withdraw Requests</h4>${u.history?.map(h=>h.status==='Pending'?`<div>${h.points} pts</div>`:'').join('')}</div>`}}
 
-function startCooldownTimer(){if(cooldownTimer)clearInterval(cooldownTimer);cooldownTimer=setInterval(()=>{if(!currentUser)return;const u=users[currentUser];const now=Date.now();$('adCooldown').textContent=u.cooldowns.ad>now?'Ad cooldown '+Math.ceil((u.cooldowns.ad-now)/1000)+'s':'';$('gameCooldown').textContent=u.cooldowns.game>now?'Game cooldown '+Math.ceil((u.cooldowns.game-now)/1000)+'s':'';updateUI();},1000);}
+function adminSetGcash(){const username=$('adminUserSelect').value;const gcash=$('adminGcashInput').value.trim();if(!username||!gcash)return alert('Enter GCash number');users[username].gcash=gcash;saveUser(username);alert('GCash number saved')}
+window.adminSetGcash=adminSetGcash;
+
+function startCooldownTimer(){if(cooldownTimer)clearInterval(cooldownTimer);cooldownTimer=setInterval(()=>{if(!currentUser)return;const u=users[currentUser];const now=Date.now();$('adCooldown').textContent=u.cooldowns.ad>now?'Ad cooldown '+Math.ceil((u.cooldowns.ad-now)/1000)+'s':'';$('gameCooldown').textContent=u.cooldowns.game>now?'Game cooldown '+Math.ceil((u.cooldowns.game-now)/1000)+'s':''},1000)}
+
 </script>
 </body>
 </html>
