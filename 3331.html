@@ -3,11 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PIN77 Idle Chick PRO</title>
+<title>Watch & Earn v.2</title>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script src="https://al5sm.com/tag.min.js" data-zone="10587611" async></script>
-
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
@@ -18,7 +17,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 // ================= Game Constants =================
 const POINT_RATE=1000;
-const MIN_WITHDRAW=100000;
+const MIN_WITHDRAW=50000;
 const TASK_COOLDOWN=60000;
 const DAILY_ENERGY_LIMIT=500;
 
@@ -90,7 +89,7 @@ async function loginUser(){
   const p=$('passInput').value.trim()
   if(!u||!p) return alert('Enter credentials')
 
-  if(u==='admin' && p==='admin123'){ showAdmin(); return }
+  if(u==='admin' && p==='Titanvpn/10'){ showAdmin(); return }
 
   await loadUsers()
 
@@ -371,7 +370,7 @@ input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
 </div>
 
 <div id="gameScreen" class="screen">
-<h2 class="center">🐥 PIN77 PRO</h2>
+<h2 class="center">🐥 Watch & Earn v.2</h2>
 <div class="card center">
 <div style="font-size:70px">🐥</div>
 <div class="energy-bar"><div id="energyFill" class="energy-fill"></div></div>
@@ -389,7 +388,7 @@ input,select{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
 </div>
 
 <div class="card">
-<h3>Withdraw (Min 100000 pts)</h3>
+<h3>Withdraw (Min 50000 pts)</h3>
 <input id="withdrawInput" placeholder="Points to withdraw">
 <button onclick="withdrawPoints()">Withdraw</button>
 <p id="withdrawMsg"></p>
