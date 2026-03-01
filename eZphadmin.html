@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIN77 Idle Chick PRO - Admin Fixed</title>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+const SUPABASE_URL = 'https://pbwaozztfclanvplpmvm.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBid2Fvenp0ZmNsYW52cGxwbXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjQ1NzIsImV4cCI6MjA4NzgwMDU3Mn0.bbY-C4legzoHwQEiL3-IHwp8D6_hrL53GJPa78li1aY'
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+const POINT_RATE=1000;
+const DAILY_ENERGY_LIMIT=500;
+
+let currentUser=null;
+let users={};
+
+function $(id){return document.getElementById(id)}
+
+async function loadUsers(){
+  const { data, error } = await supabase.from('pin77_users').select('*')
+  if(error){ console.error(error); return }
+  users={}
+  data.forEach(u=>{ users[u.username]=u.data })
+}
+
+async function saveUser(username){
+  if(!users[username]) return
+  const { error } = await supabase.from('pin77_users').upsert({ username: username, data: users[username] })
+  if(error) console.error(error)
+}
+
+async function saveAndUpdate(username){
+  await saveUser(username)
+  if(currentUser==='admin'){
+    await loadUsers();
+    loadAdmin();
+  }
+}
+
+async function loginUser(){
+  const u=$('userInput').value.trim();
+  const p=$('passInput').value.trim();
+  if(!u||!p) return alert('Enter credentials')
+
+  if(u==='admin' && p==='admin123'){
+    currentUser='admin';
+    await showAdmin();
+    return
+  }
+
+  await loadUsers()
+
+  if(!users[u]){
+    users[u]={pass:p, points:0, balance:0, energy:500, dailyUsed:0, history:[], gcash:''}
+    await saveUser(u)
+  }
+
+  if(users[u].pass!==p) return alert('Wrong password')
+
+  alert('User login success')
+}
+
+async function showAdmin(){
+  $('loginScreen').classList.remove('active');
+  $('adminScreen').classList.add('active');
+  await loadUsers();
+  loadAdmin();
+}
+
+function logoutUser(){ location.reload() }
+
+function loadAdmin(){
+  const box=$('adminUsers');
+  box.innerHTML='';
+
+  if(Object.keys(users).length===0){
+    box.innerHTML='<p>No users found</p>';
+    return;
+  }
+
+  for(let username in users){
+    const u=users[username];
+
+    box.innerHTML+=`
+    <div class="admin-card">
+      <h3>${username}</h3>
+      <p>Points: ${u.points}</p>
+      <p>Energy: ${u.energy}</p>
+      <p>GCash: ${u.gcash || 'Not Set'}</p>
+
+      <input id="energy_${username}" type="number" placeholder="Add Energy">
+      <button onclick="addEnergy('${username}')">Add Energy</button>
+
+      <hr>
+      <strong>Withdraw Requests</strong>
+      ${(u.history||[]).map((h,i)=>
+        h.status==='Pending'
+        ? `<div>${h.points} pts <button onclick="approveWithdraw('${username}',${i})">Approve</button></div>`
+        : ''
+      ).join('')}
+
+      <hr>
+      <strong>Set GCash Number</strong>
+      <input id="gcash_${username}" type="text" placeholder="Enter GCash Number" value="${u.gcash || ''}">
+      <button onclick="addGcash('${username}')">Save GCash</button>
+    </div>
+    `
+  }
+}
+
+function addEnergy(username){
+  const input=$('energy_'+username);
+  const val=parseInt(input.value);
+  if(!val) return alert('Enter energy amount')
+
+  users[username].energy += val;
+  saveAndUpdate(username);
+  alert('Energy added')
+}
+
+function approveWithdraw(username,index){
+  const u=users[username];
+  if(!u.history[index]) return;
+  u.history[index].status='Approved';
+  saveAndUpdate(username);
+}
+
+function addGcash(username){
+  const input = $('gcash_'+username);
+  const number = input.value.trim();
+  if(!number) return alert('Enter GCash number');
+
+  users[username].gcash = number;
+  saveAndUpdate(username);
+  alert('GCash number saved');
+}
+
+window.loginUser=loginUser;
+window.logoutUser=logoutUser;
+window.addEnergy=addEnergy;
+window.approveWithdraw=approveWithdraw;
+window.addGcash=addGcash;
+</script>
+
+<style>
+body{margin:0;font-family:Arial;background:#0f172a;color:#fff}
+.screen{display:none;padding:20px}
+.active{display:block}
+button{padding:10px;border-radius:8px;border:none;background:#22c55e;color:#fff;font-weight:bold;margin:4px;cursor:pointer}
+input{padding:10px;border-radius:8px;border:none;margin:4px 0;width:100%}
+.admin-card{background:#1e293b;padding:15px;margin:10px 0;border-radius:12px}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="screen active">
+<h2>Login</h2>
+<input id="userInput" placeholder="Username">
+<input id="passInput" type="password" placeholder="Password">
+<button onclick="loginUser()">Login</button>
+</div>
+
+<div id="adminScreen" class="screen">
+<h2>Admin Dashboard</h2>
+<div id="adminUsers"></div>
+<button onclick="logoutUser()">Logout</button>
+</div>
+
+</body>
+</html>
