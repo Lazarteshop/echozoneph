@@ -19,7 +19,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 const POINT_RATE=1000;
 const MIN_WITHDRAW=50000;
 const TASK_COOLDOWN=60000;
-const DAILY_ENERGY_LIMIT=500;
+const DAILY_ENERGY_LIMIT=1800;
 
 // ================= State =================
 let currentUser=null;
@@ -94,7 +94,7 @@ async function loginUser(){
   await loadUsers()
 
   if(!users[u]){
-    users[u]={pass:p, points:0, balance:0, energy:500, dailyUsed:0, lastEnergyReset:new Date().toDateString(), history:[], cooldowns:{ad:0, game:0, chest:0}}
+    users[u]={pass:p, points:0, balance:0, energy:1800, dailyUsed:0, lastEnergyReset:new Date().toDateString(), history:[], cooldowns:{ad:0, game:0, chest:0}}
     await saveUser(u)
   }
 
