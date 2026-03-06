@@ -181,32 +181,35 @@ function giveYTReward(){
 }
 
 function playGame(){
- const u=users[currentUser]
- if(!u) return
- if(!canUseEnergy(u,10)) return alert('Daily energy limit reached.')
- miniCounter=0
- $('miniClicks').textContent=0
- $('miniGamePopup').style.display='flex'
+  const u=users[currentUser]
+  if(!u) return
+  if(!canUseEnergy(u,10)) return alert('Daily energy limit reached. Come back tomorrow.')
+  miniCounter=0
+  $('miniClicks').textContent=0
+  $('miniGamePopup').style.display='flex'
 }
 
 function miniClick(){
- miniCounter++
- $('miniClicks').textContent=miniCounter
- if(miniCounter>=5) finishMiniGame()
+  miniCounter++
+  $('miniClicks').textContent=miniCounter
+  if(miniCounter>=5) finishMiniGame()
 }
 
 function finishMiniGame(){
- const u=users[currentUser]
- $('miniGamePopup').style.display='none'
- const reward=Math.floor(Math.random()*31)+20
- u.points+=reward
- consumeEnergy(u,10)
- addHistory({type:'game',points:reward,status:'Completed',date:Date.now()})
- saveAndUpdate(currentUser)
+  const u=users[currentUser]
+  $('miniGamePopup').style.display='none'
+  const reward=Math.floor(Math.random()*31)+20
+  u.points+=reward
+  autoConvertBalance(u)
+  consumeEnergy(u,10)
+  u.cooldowns.game=Date.now()+TASK_COOLDOWN
+  addHistory({type:'game',points:reward,status:'Completed',date:Date.now()})
+  $('rewardDisplay').textContent='You earned '+reward+' points!'
+  saveAndUpdate(currentUser)
 }
 
 function closeMiniGame(){
- $('miniGamePopup').style.display='none'
+  $('miniGamePopup').style.display='none'
 }
 
 function addHistory(entry){
