@@ -2,77 +2,421 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>WATCH & EARN PRO DEMO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watch & Earn PRO - Standalone Demo</title>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+const POINT_RATE = 1000;
+const MIN_WITHDRAW = 50000;
+const TASK_COOLDOWN = 60000;
+const DAILY_ENERGY_LIMIT = 1800;
+
+let currentUser = null;
+let cooldownTimer = null;
+let users = {};
+let miniCounter = 0;
+let ytPlayer = null;
+let ytUser = null;
+let currentFilter = 'all';
+
+// Sample YouTube videos
+const ytVideos = ["fjy1wYj2Nh8","x9OuXv_GEmc","6bbqMf6xoOc","kLofAi46LuY","75GnzFvwYyM","DQ3JqS70CrU","2hTIyrD9sS0","tT8OaQINFws"];
+
+// Utility
+function $(id){return document.getElementById(id)}
+
+// Load users from localStorage
+function loadUsers(){
+    const data = localStorage.getItem('watchEarnUsers');
+    users = data ? JSON.parse(data) : {};
+}
+
+// Save users to localStorage
+function saveUsers(){
+    localStorage.setItem('watchEarnUsers', JSON.stringify(users));
+}
+
+// Auto convert points to balance
+function autoConvertBalance(u){
+    u.balance = Math.floor(u.points / POINT_RATE);
+}
+
+// Reset daily usage
+function resetDaily(u){
+    const today = new Date().toDateString();
+    if(u.lastEnergyReset !== today){
+        u.dailyUsed = 0;
+        u.lastEnergyReset = today;
+    }
+}
+
+// Check if user can use energy
+function canUseEnergy(u,amount){
+    resetDaily(u);
+    if(u.dailyUsed >= DAILY_ENERGY_LIMIT) return false;
+    return true;
+}
+
+// Consume energy
+function consumeEnergy(u,amount){
+    resetDaily(u);
+    if(u.dailyUsed + amount > DAILY_ENERGY_LIMIT) amount = DAILY_ENERGY_LIMIT - u.dailyUsed;
+    u.energy = Math.max(0, u.energy - amount);
+    u.dailyUsed += amount;
+}
+
+// Login / Register
+function loginUser(){
+    const u = $('userInput').value.trim();
+    const p = $('passInput').value.trim();
+    if(!u || !p) return alert('Enter credentials');
+
+    loadUsers();
+
+    // Admin login
+    if(u === 'admin' && p === 'Titanvpn/10'){ showAdmin(); return; }
+
+    // Register new user
+    if(!users[u]){
+        users[u] = {pass:p, points:0, balance:0, energy:1800, dailyUsed:0, lastEnergyReset:new Date().toDateString(), history:[], cooldowns:{ad:0, game:0}, banned:false};
+        saveUsers();
+    }
+
+    if(users[u].banned) return alert('Your account is banned');
+    if(users[u].pass !== p) return alert('Wrong password');
+
+    currentUser = u;
+    showGame();
+}
+
+// Logout
+function logoutUser(){ location.reload(); }
+
+// Update UI
+function updateUI(){
+    if(!currentUser) return;
+    const u = users[currentUser];
+    resetDaily(u);
+    autoConvertBalance(u);
+
+    $('pointsText').textContent = u.points;
+    $('balanceText').textContent = u.balance.toFixed(2);
+    $('energyText').textContent = u.energy;
+    $('dailyUsedText').textContent = u.dailyUsed;
+    $('energyFill').style.width = Math.min(100,u.energy/18)+'%'; // scale to 1800
+    $('watchBtn').disabled = u.energy<=0 || u.dailyUsed>=DAILY_ENERGY_LIMIT;
+    $('playBtn').disabled = u.energy<=0 || u.dailyUsed>=DAILY_ENERGY_LIMIT;
+
+    loadHistory();
+    loadTransferHistory();
+}
+
+// Show game screen
+function showGame(){
+    $('loginScreen').classList.remove('active');
+    $('adminScreen').classList.remove('active');
+    $('gameScreen').classList.add('active');
+    startCooldownTimer();
+    updateUI();
+}
+
+// Show admin screen
+function showAdmin(){
+    $('loginScreen').classList.remove('active');
+    $('gameScreen').classList.remove('active');
+    $('adminScreen').classList.add('active');
+    loadAdmin();
+}
+
+// Cooldown timer
+function startCooldownTimer(){
+    if(cooldownTimer) clearInterval(cooldownTimer);
+    cooldownTimer = setInterval(()=>{
+        if(!currentUser) return;
+        const u = users[currentUser];
+        const now = Date.now();
+        $('adCooldown').textContent = u.cooldowns.ad > now ? 'Ad cooldown '+Math.ceil((u.cooldowns.ad-now)/1000)+'s' : '';
+        updateUI();
+    },1000);
+}
+
+// Watch video reward
+function watchAd(){
+    const u = users[currentUser];
+    if(!u || u.energy <=0) return;
+    if(!canUseEnergy(u,10)) return alert('Daily energy limit reached. Come back tomorrow.');
+    if(Date.now() < u.cooldowns.ad) return;
+
+    ytUser = currentUser;
+    const randomId = ytVideos[Math.floor(Math.random()*ytVideos.length)];
+    $('ytModal').style.display='flex';
+
+    if(ytPlayer){ ytPlayer.loadVideoById(randomId); }
+    else{
+        ytPlayer = new YT.Player('ytFrame',{
+            videoId: randomId,
+            playerVars: {autoplay:1,controls:0},
+            events: {onStateChange: onYTStateChange}
+        });
+    }
+}
+
+// YouTube video end
+function onYTStateChange(e){
+    if(e.data === 0) giveYTReward();
+}
+
+// Reward for watching video
+function giveYTReward(){
+    if(!ytUser) return;
+    const u = users[ytUser];
+    $('ytModal').style.display='none';
+    const reward = Math.floor(Math.random()*41)+30;
+    u.points += reward;
+    consumeEnergy(u,10);
+    u.cooldowns.ad = Date.now() + TASK_COOLDOWN;
+    addHistory({type:'watch',points:reward,status:'Completed',date:Date.now()});
+    ytUser = null;
+    saveUsers();
+    updateUI();
+}
+
+// Mini game
+function playGame(){
+    const u = users[currentUser];
+    if(!u) return;
+    if(!canUseEnergy(u,10)) return alert('Daily energy limit reached. Come back tomorrow.');
+    miniCounter = 0;
+    $('miniClicks').textContent = 0;
+    $('miniGamePopup').style.display='flex';
+}
+
+function miniClick(){
+    miniCounter++;
+    $('miniClicks').textContent = miniCounter;
+    if(miniCounter >=5) finishMiniGame();
+}
+
+function finishMiniGame(){
+    const u = users[currentUser];
+    $('miniGamePopup').style.display='none';
+    const reward = Math.floor(Math.random()*31)+20;
+    u.points += reward;
+    autoConvertBalance(u);
+    consumeEnergy(u,10);
+    u.cooldowns.game = Date.now() + TASK_COOLDOWN;
+    addHistory({type:'game',points:reward,status:'Completed',date:Date.now()});
+    $('rewardDisplay').textContent='You earned '+reward+' points!';
+    saveUsers();
+    updateUI();
+}
+
+function closeMiniGame(){ $('miniGamePopup').style.display='none'; }
+
+// History
+function addHistory(entry){
+    const u = users[currentUser];
+    if(!u.history) u.history = [];
+    u.history.push(entry);
+    if(u.history.length>50) u.history = u.history.slice(-50);
+    saveUsers();
+}
+
+function loadHistory(){
+    const u = users[currentUser];
+    const box = $('historyBox');
+    if(!box||!u) return;
+    box.innerHTML = '';
+    u.history.slice().reverse().forEach(h=>{
+        if(currentFilter!=='all' && h.type !== currentFilter) return;
+        if(h.type==='watch') box.innerHTML += '<div>🎥 Watch +'+h.points+'</div>';
+        else if(h.type==='game') box.innerHTML += '<div>🎮 Game +'+h.points+'</div>';
+        else if(h.type==='withdraw') box.innerHTML += '<div>💸 Withdraw '+h.points+' '+h.status+'</div>';
+        else if(h.type==='transfer_out') box.innerHTML += '<div>➡️ Transfer '+h.amount+' to '+h.sender+'</div>';
+        else if(h.type==='transfer_in') box.innerHTML += '<div>⬅️ Received '+h.amount+' from '+h.sender+'</div>';
+        else if(h.type==='energy_out') box.innerHTML += '<div>⚡ Sent '+h.amount+' energy using '+h.balanceUsed+'₱</div>';
+        else if(h.type==='energy_in') box.innerHTML += '<div>⚡ Received '+h.amount+' energy</div>';
+    });
+}
+
+function setFilter(f){ currentFilter=f; loadHistory(); }
+
+// Transfer balance
+function transferBalance(){
+    const toUser = $('transferUser').value.trim();
+    const amount = parseFloat($('transferAmount').value);
+    if(!toUser||!amount) return $('transferMsg').textContent='Enter username and amount';
+    if(!users[toUser]) return $('transferMsg').textContent='User not found';
+    if(toUser === currentUser) return $('transferMsg').textContent='Cannot send to yourself';
+
+    const sender = users[currentUser];
+    const receiver = users[toUser];
+
+    if(sender.balance < amount) return $('transferMsg').textContent='Insufficient balance';
+
+    const fee = amount*0.05;
+    const receiveAmount = amount-fee;
+    const senderPoints = Math.floor(amount*POINT_RATE);
+    const receiverPoints = Math.floor(receiveAmount*POINT_RATE);
+
+    sender.points -= senderPoints;
+    receiver.points += receiverPoints;
+
+    autoConvertBalance(sender);
+    autoConvertBalance(receiver);
+
+    const ref = 'TX'+Date.now();
+    sender.history.push({type:'transfer_out',sender:toUser,amount:amount,ref:ref,date:Date.now()});
+    receiver.history.push({type:'transfer_in',sender:currentUser,amount:receiveAmount,ref:ref,date:Date.now()});
+
+    $('transferMsg').textContent='Transfer successful (5% fee applied)';
+    saveUsers();
+    updateUI();
+}
+
+// Transfer energy
+function transferEnergy(){
+    const toUser = $('transferUserEnergy').value.trim();
+    const useBalance = parseFloat($('transferAmountEnergy').value);
+    if(!toUser || !useBalance) return $('transferMsg1').textContent='Enter username and amount';
+    if(!users[toUser]) return $('transferMsg1').textContent='User not found';
+    if(toUser === currentUser) return $('transferMsg1').textContent='Cannot send to yourself';
+
+    const sender = users[currentUser];
+    const receiver = users[toUser];
+
+    if(sender.balance < useBalance) return $('transferMsg1').textContent='Insufficient balance';
+
+    const energySent = Math.floor((54000/250)*useBalance);
+    sender.balance -= useBalance;
+    receiver.energy += energySent;
+
+    const ref = 'ENERGY'+Date.now();
+    sender.history.push({type:'energy_out',sender:currentUser,amount:energySent,balanceUsed:useBalance,ref:ref,date:Date.now()});
+    receiver.history.push({type:'energy_in',sender:currentUser,amount:energySent,ref:ref,date:Date.now()});
+
+    $('transferMsg1').textContent=`Successfully sent ${energySent} energy using ${useBalance}₱ balance`;
+    saveUsers();
+    updateUI();
+}
+
+// Load transfer history
+function loadTransferHistory(){ loadHistory(); }
+
+// Admin panel
+function loadAdmin(){
+    const box = $('adminUsers');
+    box.innerHTML = '';
+    for(let username in users){
+        const u = users[username];
+        box.innerHTML += `<div class='admin-box'>
+            <strong>${username}</strong><br>
+            Points:${u.points} | Energy:${u.energy}<br>
+            <input id='energy_${username}' placeholder='Add Energy'>
+            <button onclick="addEnergy('${username}')">Add Energy</button>
+        </div>`;
+    }
+}
+
+function addEnergy(username){
+    const val = parseInt($('energy_'+username).value);
+    if(!val) return alert('Enter energy amount');
+    users[username].energy += val;
+    saveUsers();
+    updateUI();
+}
+
+// Expose functions to HTML
+window.loginUser=loginUser;
+window.logoutUser=logoutUser;
+window.watchAd=watchAd;
+window.playGame=playGame;
+window.miniClick=miniClick;
+window.closeMiniGame=closeMiniGame;
+window.setFilter=setFilter;
+window.transferBalance=transferBalance;
+window.transferEnergy=transferEnergy;
+window.addEnergy=addEnergy;
+</script>
+
 <style>
-body{margin:0;padding:20px;font-family:Arial;background:#0f172a;color:white}
-.card{background:#1e293b;padding:15px;border-radius:12px;margin-bottom:15px}
-button{background:#22c55e;border:none;padding:10px;border-radius:8px;color:white;font-weight:bold;margin:4px}
-input{padding:10px;width:100%;margin:5px 0;border:none;border-radius:6px}
-.energybar{height:14px;background:#334155;border-radius:10px;overflow:hidden}
-.energyfill{height:100%;background:#22c55e}
+body{margin:0;font-family:Arial;background:#0f172a;color:white}
+.screen{display:none;padding:20px}
+.active{display:block}
+.card{background:#1e293b;border-radius:14px;padding:16px;margin:10px 0}
+button{padding:10px;border-radius:8px;border:none;background:#22c55e;color:white;font-weight:bold;margin:4px}
+input{padding:10px;border-radius:8px;border:none;width:100%;margin:5px 0}
 .center{text-align:center}
-.hidden{display:none}
-table{width:100%;border-collapse:collapse;font-size:13px}
-td,th{border-bottom:1px solid #334155;padding:6px;text-align:center}
+.energy-bar{height:14px;background:#334155;border-radius:10px;overflow:hidden}
+.energy-fill{height:100%;background:#22c55e;width:100%}
 .popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
 .popup-content{background:#000;padding:20px;border-radius:16px;width:90%;max-width:320px;text-align:center}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border-bottom:1px solid #334155;padding:6px;text-align:center}
+.admin-box{background:#1e293b;padding:10px;margin:6px 0;border-radius:10px}
+#ytFrame{width:100%;aspect-ratio:16/9}
+#ytFrame iframe{width:100%!important;height:100%!important}
 </style>
 </head>
+
 <body>
 
-<div id="login" class="center">
-<h2>WATCH & EARN PRO DEMO</h2>
-<input id="user" placeholder="Username">
-<input id="pass" type="password" placeholder="Password">
-<button onclick="login()">Login / Register</button>
+<div id="loginScreen" class="screen active center">
+<h2>Login / Register</h2>
+<input id="userInput" placeholder="Username">
+<input id="passInput" type="password" placeholder="Password">
+<button onclick="loginUser()">Login / Register</button>
 </div>
 
-<div id="app" class="hidden">
+<div id="gameScreen" class="screen">
+<h2 class="center">Watch & Earn</h2>
+
 <div class="card center">
-<div class="energybar"><div id="energyFill" class="energyfill"></div></div>
-Energy: <span id="energy"></span><br>
-Daily Used: <span id="daily"></span><br>
-Points: <span id="points"></span><br>
-Balance: ₱<span id="balance"></span>
+<div style="font-size:60px">🐥</div>
+<div class="energy-bar"><div id="energyFill" class="energy-fill"></div></div>
+<p>Energy: <span id="energyText"></span></p>
+<p>Daily Used: <span id="dailyUsedText"></span></p>
+<p>Points: <span id="pointsText"></span></p>
+<p>Balance: ₱<span id="balanceText"></span></p>
+<p id="adCooldown"></p>
 </div>
 
 <div class="card center">
-<button onclick="watch()">🎥 Watch Video Reward</button>
-<button onclick="game()">🎮 Play Game Reward</button>
+<button id="watchBtn" onclick="watchAd()">▶️ Watch Video Reward</button>
+<button id="playBtn" onclick="playGame()">🎮 Play Game Reward</button>
 </div>
 
 <div class="card">
 <h3>Transfer Balance</h3>
-<input id="toUser" placeholder="Recipient username">
-<input id="amount" placeholder="Amount ₱">
-<button onclick="transfer()">Send</button>
+<input id="transferUser" placeholder="Recipient Username">
+<input id="transferAmount" placeholder="Amount (₱)">
+<button onclick="transferBalance()">Send</button>
 <p id="transferMsg"></p>
-<h4>Transfer History</h4>
-<table>
-<thead><tr><th>Date</th><th>User</th><th>Amount</th></tr></thead>
-<tbody id="transferHistory"></tbody>
-</table>
+<h4>History</h4>
+<div style="margin-bottom:8px">
+<button onclick="setFilter('all')">All</button>
+<button onclick="setFilter('watch')">Watch</button>
+<button onclick="setFilter('game')">Game</button>
+<button onclick="setFilter('transfer_out')">Transfer Out</button>
+<button onclick="setFilter('transfer_in')">Transfer In</button>
+<button onclick="setFilter('energy_out')">Energy Sent</button>
+<button onclick="setFilter('energy_in')">Energy Received</button>
+</div>
+<div id="historyBox"></div>
 </div>
 
 <div class="card">
-<h3>Convert Balance → Energy</h3>
-<input id="energyUser" placeholder="Recipient">
-<input id="energyAmount" placeholder="Balance ₱">
-<button onclick="sendEnergy()">Send Energy</button>
+<h3>Use balance to send energy (₱250=54000E)</h3>
+<input id="transferUserEnergy" placeholder="Recipient Username">
+<input id="transferAmountEnergy" placeholder="Balance to use (₱)">
+<button onclick="transferEnergy()">Send Energy</button>
+<p id="transferMsg1"></p>
 </div>
 
-<div class="card">
-<h3>History</h3>
-<div id="history"></div>
+<button onclick="logoutUser()">Logout</button>
 </div>
-
-<div id="adminPanel" class="card hidden">
-<h3>Admin Dashboard</h3>
-<div id="adminUsers"></div>
-</div>
-
-<button onclick="logout()">Logout</button>
 
 <div id="miniGamePopup" class="popup">
 <div class="popup-content">
@@ -83,135 +427,19 @@ Balance: ₱<span id="balance"></span>
 </div>
 </div>
 
+<div id="ytModal" class="popup">
+<div class="popup-content">
+<h3>Watch Full Video To Earn Reward</h3>
+<div id="ytFrame"></div>
+<p id="rewardDisplay" style="color:#ffd700;font-weight:bold"></p>
+</div>
 </div>
 
-<script>
-let users={},current=null,miniCount=0
-const DAILY_LIMIT=1800
+<div id="adminScreen" class="screen">
+<h2>Admin Dashboard</h2>
+<div id="adminUsers"></div>
+<button onclick="logoutUser()">Logout</button>
+</div>
 
-function save(){localStorage.setItem("demoUsers",JSON.stringify(users))}
-function load(){let d=localStorage.getItem("demoUsers");if(d)users=JSON.parse(d)}
-
-function login(){
-load()
-let u=user.value.trim(),p=pass.value.trim()
-if(!u||!p)return alert("Enter credentials")
-if(!users[u]){users[u]={pass:p,points:0,energy:1800,daily:0,history:[],banned:false}}
-if(users[u].banned)return alert("Account banned")
-if(users[u].pass!==p)return alert("Wrong password")
-current=u
-login.style.display="none";app.classList.remove("hidden")
-if(u=="admin")adminPanel.classList.remove("hidden")
-update()
-}
-
-function logout(){location.reload()}
-
-function update(){
-let u=users[current]
-points.innerText=u.points
-balance.innerText=Math.floor(u.points/1000)
-energy.innerText=u.energy
-daily.innerText=u.daily
-energyFill.style.width=(u.energy/DAILY_LIMIT*100)+"%"
-loadHistory();loadTransfer()
-save()
-}
-
-function addHistory(text){users[current].history.push(text)}
-
-function loadHistory(){
-history.innerHTML=""
-users[current].history.slice().reverse().forEach(h=>history.innerHTML+="<div>"+h+"</div>")
-}
-
-function watch(){
-let u=users[current]
-if(u.energy<10)return alert("No energy")
-let reward=Math.floor(Math.random()*40)+30
-u.points+=reward;u.energy-=10;u.daily+=10
-addHistory("🎥 Watch +"+reward+" pts")
-update()
-}
-
-function game(){
-let u=users[current]
-if(u.energy<10)return alert("No energy")
-miniCount=0;document.getElementById("miniClicks").innerText=0
-miniGamePopup.style.display="flex"
-}
-
-function miniClick(){
-miniCount++
-document.getElementById("miniClicks").innerText=miniCount
-if(miniCount>=5){
-let reward=Math.floor(Math.random()*30)+20
-users[current].points+=reward
-users[current].energy-=10
-users[current].daily+=10
-addHistory("🎮 Game +"+reward+" pts")
-miniGamePopup.style.display="none"
-update()
-}}
-
-function closeMiniGame(){miniGamePopup.style.display="none"}
-
-function transfer(){
-let to=toUser.value.trim(),amt=parseFloat(amount.value)
-if(!users[to])return transferMsg.innerText="User not found"
-let sender=users[current]
-let balance=Math.floor(sender.points/1000)
-if(balance<amt)return transferMsg.innerText="Insufficient balance"
-let fee=amt*0.05,receive=amt-fee
-sender.points-=amt*1000
-users[to].points+=receive*1000
-addHistory("💸 Sent ₱"+amt+" to "+to)
-transferMsg.innerText="Transfer successful (5% fee)"
-update()
-}
-
-function sendEnergy(){
-let to=energyUser.value.trim(),amt=parseFloat(energyAmount.value)
-if(!users[to])return alert("User not found")
-let sender=users[current]
-let balance=Math.floor(sender.points/1000)
-if(balance<amt)return alert("Insufficient balance")
-let energy=Math.floor((54000/250)*amt)
-sender.points-=amt*1000
-users[to].energy+=energy
-addHistory("⚡ Sent "+energy+" energy to "+to)
-update()
-}
-
-function loadTransfer(){
-transferHistory.innerHTML=""
-Object.keys(users).forEach(u=>{
-users[u].history.filter(h=>h.includes("Sent")||h.includes("Received")).forEach(h=>{
-let tr=document.createElement("tr")
-tr.innerHTML=`<td>${new Date().toLocaleString()}</td><td>${u}</td><td>${h}</td>`
-transferHistory.appendChild(tr)
-})
-})
-}
-
-function loadAdmin(){
-adminUsers.innerHTML=""
-Object.keys(users).forEach(u=>{
-let div=document.createElement("div")
-div.innerHTML=`<strong>${u}</strong> - Points: ${users[u].points} | Energy: ${users[u].energy}
-<input placeholder="Add Energy" id="addE_${u}">
-<button onclick="addEnergy('${u}')">Add</button>`
-adminUsers.appendChild(div)
-})
-}
-
-function addEnergy(u){
-let val=parseInt(document.getElementById("addE_"+u).value)
-if(!val)return alert("Enter energy")
-users[u].energy+=val
-update()
-}
-
-</script>
 </body>
 </html>
