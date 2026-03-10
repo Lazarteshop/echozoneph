@@ -297,14 +297,14 @@ async function transferEnergy(){
   const toUser = $('transferUser').value.trim()
   const useBalance = parseFloat($('transferAmount').value) // yung balance amount na gagamitin
 
-  if(!toUser || !useBalance) return $('transferMsg').textContent='Enter recipient and balance amount'
-  if(!users[toUser]) return $('transferMsg').textContent='User not found'
-  if(toUser === currentUser) return $('transferMsg').textContent='Cannot send to yourself'
+  if(!toUser || !useBalance) return $('transferMsg1').textContent='Enter recipient and balance amount'
+  if(!users[toUser]) return $('transferMsg1').textContent='User not found'
+  if(toUser === currentUser) return $('transferMsg1').textContent='Cannot send to yourself'
 
   const sender = users[currentUser]
   const receiver = users[toUser]
 
-  if(sender.balance < useBalance) return $('transferMsg').textContent='Insufficient balance'
+  if(sender.balance < useBalance) return $('transferMsg1').textContent='Insufficient balance'
 
   // Conversion rate: 250 balance → 54000 energy
   const energySent = Math.floor((54000 / 250) * useBalance)
@@ -320,7 +320,7 @@ async function transferEnergy(){
   await saveUser(currentUser)
   await saveUser(toUser)
 
-  $('transferMsg').textContent=`Successfully sent ${energySent} energy using ${useBalance}₱ balance`
+  $('transferMsg1').textContent=`Successfully sent ${energySent} energy using ${useBalance}₱ balance`
   updateUI()
 }
 
@@ -470,7 +470,7 @@ th,td{border-bottom:1px solid #334155;padding:6px;text-align:center}
 <input id="transferUser" placeholder="Recipient Username">
 <input id="transferAmount" placeholder="Balance to use (₱)">
 <button onclick="transferEnergy()">Send Energy</button>
-<p id="transferMsg"></p>
+<p id="transferMsg1"></p>
 
 
 <!---- <div class="card">
