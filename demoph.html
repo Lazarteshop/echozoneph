@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WATCH & EARN PRO DEMO</title>
+<style>
+body{margin:0;padding:20px;font-family:Arial;background:#0f172a;color:white}
+.card{background:#1e293b;padding:15px;border-radius:12px;margin-bottom:15px}
+button{background:#22c55e;border:none;padding:10px;border-radius:8px;color:white;font-weight:bold;margin:4px}
+input{padding:10px;width:100%;margin:5px 0;border:none;border-radius:6px}
+.energybar{height:14px;background:#334155;border-radius:10px;overflow:hidden}
+.energyfill{height:100%;background:#22c55e}
+.center{text-align:center}
+.hidden{display:none}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{border-bottom:1px solid #334155;padding:6px;text-align:center}
+.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
+.popup-content{background:#000;padding:20px;border-radius:16px;width:90%;max-width:320px;text-align:center}
+</style>
+</head>
+<body>
+
+<div id="login" class="center">
+<h2>WATCH & EARN PRO DEMO</h2>
+<input id="user" placeholder="Username">
+<input id="pass" type="password" placeholder="Password">
+<button onclick="login()">Login / Register</button>
+</div>
+
+<div id="app" class="hidden">
+<div class="card center">
+<div class="energybar"><div id="energyFill" class="energyfill"></div></div>
+Energy: <span id="energy"></span><br>
+Daily Used: <span id="daily"></span><br>
+Points: <span id="points"></span><br>
+Balance: ₱<span id="balance"></span>
+</div>
+
+<div class="card center">
+<button onclick="watch()">🎥 Watch Video Reward</button>
+<button onclick="game()">🎮 Play Game Reward</button>
+</div>
+
+<div class="card">
+<h3>Transfer Balance</h3>
+<input id="toUser" placeholder="Recipient username">
+<input id="amount" placeholder="Amount ₱">
+<button onclick="transfer()">Send</button>
+<p id="transferMsg"></p>
+<h4>Transfer History</h4>
+<table>
+<thead><tr><th>Date</th><th>User</th><th>Amount</th></tr></thead>
+<tbody id="transferHistory"></tbody>
+</table>
+</div>
+
+<div class="card">
+<h3>Convert Balance → Energy</h3>
+<input id="energyUser" placeholder="Recipient">
+<input id="energyAmount" placeholder="Balance ₱">
+<button onclick="sendEnergy()">Send Energy</button>
+</div>
+
+<div class="card">
+<h3>History</h3>
+<div id="history"></div>
+</div>
+
+<div id="adminPanel" class="card hidden">
+<h3>Admin Dashboard</h3>
+<div id="adminUsers"></div>
+</div>
+
+<button onclick="logout()">Logout</button>
+
+<div id="miniGamePopup" class="popup">
+<div class="popup-content">
+<h3>Click Chick 5x</h3>
+<p><span id="miniClicks">0</span>/5</p>
+<button onclick="miniClick()" style="font-size:40px">🐥</button><br><br>
+<button onclick="closeMiniGame()">Cancel</button>
+</div>
+</div>
+
+</div>
+
+<script>
+let users={},current=null,miniCount=0
+const DAILY_LIMIT=1800
+
+function save(){localStorage.setItem("demoUsers",JSON.stringify(users))}
+function load(){let d=localStorage.getItem("demoUsers");if(d)users=JSON.parse(d)}
+
+function login(){
+load()
+let u=user.value.trim(),p=pass.value.trim()
+if(!u||!p)return alert("Enter credentials")
+if(!users[u]){users[u]={pass:p,points:0,energy:1800,daily:0,history:[],banned:false}}
+if(users[u].banned)return alert("Account banned")
+if(users[u].pass!==p)return alert("Wrong password")
+current=u
+login.style.display="none";app.classList.remove("hidden")
+if(u=="admin")adminPanel.classList.remove("hidden")
+update()
+}
+
+function logout(){location.reload()}
+
+function update(){
+let u=users[current]
+points.innerText=u.points
+balance.innerText=Math.floor(u.points/1000)
+energy.innerText=u.energy
+daily.innerText=u.daily
+energyFill.style.width=(u.energy/DAILY_LIMIT*100)+"%"
+loadHistory();loadTransfer()
+save()
+}
+
+function addHistory(text){users[current].history.push(text)}
+
+function loadHistory(){
+history.innerHTML=""
+users[current].history.slice().reverse().forEach(h=>history.innerHTML+="<div>"+h+"</div>")
+}
+
+function watch(){
+let u=users[current]
+if(u.energy<10)return alert("No energy")
+let reward=Math.floor(Math.random()*40)+30
+u.points+=reward;u.energy-=10;u.daily+=10
+addHistory("🎥 Watch +"+reward+" pts")
+update()
+}
+
+function game(){
+let u=users[current]
+if(u.energy<10)return alert("No energy")
+miniCount=0;document.getElementById("miniClicks").innerText=0
+miniGamePopup.style.display="flex"
+}
+
+function miniClick(){
+miniCount++
+document.getElementById("miniClicks").innerText=miniCount
+if(miniCount>=5){
+let reward=Math.floor(Math.random()*30)+20
+users[current].points+=reward
+users[current].energy-=10
+users[current].daily+=10
+addHistory("🎮 Game +"+reward+" pts")
+miniGamePopup.style.display="none"
+update()
+}}
+
+function closeMiniGame(){miniGamePopup.style.display="none"}
+
+function transfer(){
+let to=toUser.value.trim(),amt=parseFloat(amount.value)
+if(!users[to])return transferMsg.innerText="User not found"
+let sender=users[current]
+let balance=Math.floor(sender.points/1000)
+if(balance<amt)return transferMsg.innerText="Insufficient balance"
+let fee=amt*0.05,receive=amt-fee
+sender.points-=amt*1000
+users[to].points+=receive*1000
+addHistory("💸 Sent ₱"+amt+" to "+to)
+transferMsg.innerText="Transfer successful (5% fee)"
+update()
+}
+
+function sendEnergy(){
+let to=energyUser.value.trim(),amt=parseFloat(energyAmount.value)
+if(!users[to])return alert("User not found")
+let sender=users[current]
+let balance=Math.floor(sender.points/1000)
+if(balance<amt)return alert("Insufficient balance")
+let energy=Math.floor((54000/250)*amt)
+sender.points-=amt*1000
+users[to].energy+=energy
+addHistory("⚡ Sent "+energy+" energy to "+to)
+update()
+}
+
+function loadTransfer(){
+transferHistory.innerHTML=""
+Object.keys(users).forEach(u=>{
+users[u].history.filter(h=>h.includes("Sent")||h.includes("Received")).forEach(h=>{
+let tr=document.createElement("tr")
+tr.innerHTML=`<td>${new Date().toLocaleString()}</td><td>${u}</td><td>${h}</td>`
+transferHistory.appendChild(tr)
+})
+})
+}
+
+function loadAdmin(){
+adminUsers.innerHTML=""
+Object.keys(users).forEach(u=>{
+let div=document.createElement("div")
+div.innerHTML=`<strong>${u}</strong> - Points: ${users[u].points} | Energy: ${users[u].energy}
+<input placeholder="Add Energy" id="addE_${u}">
+<button onclick="addEnergy('${u}')">Add</button>`
+adminUsers.appendChild(div)
+})
+}
+
+function addEnergy(u){
+let val=parseInt(document.getElementById("addE_"+u).value)
+if(!val)return alert("Enter energy")
+users[u].energy+=val
+update()
+}
+
+</script>
+</body>
+</html>
