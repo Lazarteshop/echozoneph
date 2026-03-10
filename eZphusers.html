@@ -297,7 +297,7 @@ async function transferEnergy(){
   const toUser = $('transferUser').value.trim()
   const useBalance = parseFloat($('transferAmount').value) // yung balance amount na gagamitin
 
-  if(!toUser || !useBalance) return $('transferMsg1').textContent='Enter recipient and balance amount'
+  if(!toUser || !useBalance) return $('transferMsg1').textContent='Enter and check recipient and balance amount or insufficient balance'
   if(!users[toUser]) return $('transferMsg1').textContent='User not found'
   if(toUser === currentUser) return $('transferMsg1').textContent='Cannot send to yourself'
 
