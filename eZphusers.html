@@ -255,7 +255,7 @@ async function transferBalance(){
  const amount=parseFloat($('transferAmount').value)
 
  if(!toUser||!amount)return $('transferMsg').textContent='Enter username and amount'
- if(!users[toUser])return $('transferMsg').textContent='User not found'
+ if(!users[toUser])return $('transferMsg').textContent='User not found or user exceed the limit'
  if(toUser===currentUser)return $('transferMsg').textContent='Cannot send to yourself'
 
  const sender=users[currentUser]
