@@ -311,7 +311,6 @@ function loadTransferHistory(){
   tr.innerHTML=`
   <td>${date}</td>
   <td>${sender}</td>
-  <td>${receiver}</td>
   <td>${amount}</td>
   <td>${ref}</td>
   `
@@ -321,51 +320,38 @@ function loadTransferHistory(){
 }
 
 function loadAdmin(){
-  const box=$('adminUsers');
-  box.innerHTML='';
-  if(Object.keys(users).length===0){ box.innerHTML='<p>No users found</p>'; return; }
+ const box=$('adminUsers')
+ box.innerHTML=''
 
-  for(let username in users){
-    const u=users[username];
-    box.innerHTML+=`
-    <div class="admin-card">
-      <h3>${username}</h3>
-      <p>Status: ${u.banned ? '🚫 BANNED' : '✅ Active'}</p>
-      <p>Points: ${u.points}</p>
-      <p>Energy: ${u.energy}</p>
-      <p>GCash: ${u.gcash || 'Not Set'}</p>
-      <input id="energy_${username}" type="number" placeholder="Add Energy">
-      <button onclick="addEnergy('${username}')">Add Energy</button>
-      <button onclick="banUser('${username}')">🚫 Ban</button>
-      <button onclick="unbanUser('${username}')">✅ Unban</button>
-      <hr>
-      <strong>Withdraw Requests</strong>
-      ${(u.history||[]).map((h,i)=>h.status==='Pending'?`<div>${h.points} pts <button onclick="approveWithdraw('${username}',${i})">Approve</button></div>`:'').join('')}
-      <hr>
-      <strong>Set GCash Number</strong>
-      <input id="gcash_${username}" type="text" placeholder="Enter GCash Number" value="${u.gcash||''}">
-      <button onclick="addGcash('${username}')">Save GCash</button>
-    </div>`;
-  }
+ for(let username in users){
+  const u=users[username]
+  box.innerHTML+=`<div class='admin-box'>
+   <strong>${username}</strong><br>
+   Points:${u.points} | Energy:${u.energy}<br>
+   <input id='energy_${username}' placeholder='Add Energy'>
+   <button onclick="addEnergy('${username}')">Add Energy</button>
+  </div>`
+ }
 }
 
+function addEnergy(username){
+ const input=$('energy_'+username)
+ const val=parseInt(input.value)
+ if(!val) return alert('Enter energy amount')
+ users[username].energy+=val
+ saveAndUpdate(username)
+}
 
-function addEnergy(username){ const val=parseInt($('energy_'+username).value); if(!val) return alert('Enter energy amount'); users[username].energy+=val; saveAndUpdate(username); alert('Energy added'); }
-function approveWithdraw(username,index){ if(!users[username].history[index]) return; users[username].history[index].status='Approved'; saveAndUpdate(username); }
-function addGcash(username){ const number=$('gcash_'+username).value.trim(); if(!number) return alert('Enter GCash number'); users[username].gcash=number; saveAndUpdate(username); alert('GCash number saved'); }
-function banUser(username){ users[username].banned=true; saveAndUpdate(username); alert(username+' banned from earning'); }
-function unbanUser(username){ users[username].banned=false; saveAndUpdate(username); alert(username+' unbanned'); }
-function banByUsername(){ const u=$('banUsername').value.trim(); if(!u) return alert('Enter username'); if(!users[u]) return alert('User not found'); users[u].banned=true; saveAndUpdate(u); alert(u+' banned successfully'); }
-
-
-window.loginUser=loginUser;
-window.logoutUser=logoutUser;
-window.addEnergy=addEnergy;
-window.approveWithdraw=approveWithdraw;
-window.addGcash=addGcash;
-window.banUser=banUser;
-window.unbanUser=unbanUser;
-window.banByUsername=banByUsername;
+window.loginUser=loginUser
+window.logoutUser=logoutUser
+window.watchAd=watchAd
+window.playGame=playGame
+window.miniClick=miniClick
+window.closeMiniGame=closeMiniGame
+window.setFilter=setFilter
+window.withdrawPoints=withdrawPoints
+window.transferBalance=transferBalance
+window.addEnergy=addEnergy
 </script>
 
 <style>
