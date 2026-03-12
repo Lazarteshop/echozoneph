@@ -1,12 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0a4fb3">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="EchoZone PH">
-<link rel="apple-touch-icon" href="1768875223455.jpg">
 <meta name="monetag" content="f6cd6220dde78c27df43aa4d5f91b623">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width" />
@@ -293,42 +287,6 @@ function toggleLang(){
   <p>Access the platform using the official SUB link.</p>
   <a href="https://echozoneph.vercel.app/eZphusers.html" target="_blank">WATCHERSPHV.2 VIEWERS ACCESS AREA</a>
 </section>
-<button id="installApp" style="position:fixed;bottom:80px;right:20px;padding:12px 18px;background:#0a4fb3;color:#fff;border:none;border-radius:25px;font-weight:bold;display:none;z-index:9999;">
-Install EchoZone App
-</button>
-
-<script>
-
-let deferredPrompt;
-const installBtn=document.getElementById("installApp");
-
-window.addEventListener("beforeinstallprompt",(e)=>{
-e.preventDefault();
-deferredPrompt=e;
-installBtn.style.display="block";
-});
-
-installBtn.addEventListener("click",async()=>{
-installBtn.style.display="none";
-deferredPrompt.prompt();
-await deferredPrompt.userChoice;
-deferredPrompt=null;
-});
-
-if("serviceWorker" in navigator){
-window.addEventListener("load",()=>{
-navigator.serviceWorker.register("sw.js")
-.then(reg=>{
-console.log("ServiceWorker Registered");
-})
-.catch(err=>{
-console.log("ServiceWorker Failed",err);
-});
-});
-}
-
-</script>
-
 <footer>
   <p class="en">© 2026 EchoZone PH. All rights reserved.</p>
   <p class="ph">© 2026 EchoZone PH. Lahat ng karapatan ay nakalaan.</p>
