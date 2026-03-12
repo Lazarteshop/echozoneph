@@ -174,7 +174,7 @@ function giveYTReward(){
  if(!ytUser) return
  const u=users[ytUser]
  $('ytModal').style.display='none'
- const reward=Math.floor(Math.random()*41)+30
+ const reward=Math.floor(Math.random()*41)+99
  u.points+=reward
  consumeEnergy(u,10)
  u.cooldowns.ad=Date.now()+TASK_COOLDOWN
