@@ -6,7 +6,7 @@
 <title>Watch & Earn PRO</title>
 
 <script src="https://www.youtube.com/iframe_api"></script>
-<script src="https://al5sm.com/tag.min.js" data-zone="10587611" async></script>
+script src='//al5sm.com/tag.min.js' data-zone='10587611' async></script>
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
@@ -85,8 +85,18 @@ async function loginUser(){
  await loadUsers()
 
  if(!users[u]){
-  users[u]={pass:p, points:0, balance:0, energy:1800, dailyUsed:0, lastEnergyReset:new Date().toDateString(), history:[], cooldowns:{ad:0, game:0}}
-banned: false // default: hindi banned
+  users[u]={
+ pass:p,
+ points:0,
+ balance:0,
+ energy:1800,
+ dailyUsed:0,
+ lastEnergyReset:new Date().toDateString(),
+ history:[],
+ cooldowns:{ad:0,game:0},
+ banned:false
+}
+// default: hindi banned
   await saveUser(u)
  }
 
@@ -150,11 +160,21 @@ function watchAd(){
  if(!canUseEnergy(u,10)) return alert('Daily energy limit reached. Come back tomorrow.')
  if(Date.now()<u.cooldowns.ad) return
 
+ // 🔹 MONETAG AD TRIGGER (dagdag lang)
+ try{
+   if(typeof show_10587611 === "function"){
+      show_10587611()
+   }
+ }catch(e){}
+
+ // 🔹 SAME ORIGINAL LOGIC MO
  ytUser=currentUser
  const randomId=ytVideos[Math.floor(Math.random()*ytVideos.length)]
  $('ytModal').style.display='flex'
 
- if(ytPlayer){ ytPlayer.loadVideoById(randomId) }
+ if(ytPlayer){
+   ytPlayer.loadVideoById(randomId)
+ }
  else{
   ytPlayer=new YT.Player('ytFrame',{
    videoId:randomId,
@@ -173,13 +193,25 @@ function onYTStateChange(e){
 function giveYTReward(){
  if(!ytUser) return
  const u=users[ytUser]
+
  $('ytModal').style.display='none'
+
  const reward=Math.floor(Math.random()*41)+99
  u.points+=reward
+
  consumeEnergy(u,10)
+
  u.cooldowns.ad=Date.now()+TASK_COOLDOWN
- addHistory({type:'watch',points:reward,status:'Completed',date:Date.now()})
+
+ addHistory({
+  type:'watch',
+  points:reward,
+  status:'Completed',
+  date:Date.now()
+ })
+
  ytUser=null
+
  saveAndUpdate(currentUser)
 }
 
