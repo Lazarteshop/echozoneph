@@ -86,6 +86,14 @@ async function loginUser(){
  await loadUsers()
 
  if(!users[u]){
+const deviceID = getDeviceID()
+
+ const used = await deviceAlreadyUsed(deviceID)
+
+ if(used){
+   alert("Only ONE account allowed per device")
+   return
+ }
   users[u]={
  pass:p,
  points:0,
@@ -96,6 +104,7 @@ async function loginUser(){
  history:[],
  cooldowns:{ad:0,game:0},
  banned:false
+deviceID:deviceID
 }
 // default: hindi banned
   await saveUser(u)
@@ -408,6 +417,42 @@ function addEnergy(username){
  if(!val) return alert('Enter energy amount')
  users[username].energy+=val
  saveAndUpdate(username)
+}
+
+function getDeviceID(){
+
+ let id = localStorage.getItem("device_id")
+
+ if(!id){
+   id = btoa(
+     navigator.userAgent +
+     screen.width +
+     screen.height +
+     navigator.language +
+     new Date().getTimezoneOffset()
+   ).replace(/=/g,'')
+
+   localStorage.setItem("device_id",id)
+ }
+
+ return id
+}
+
+async function deviceAlreadyUsed(deviceID){
+
+ const {data,error} = await supabase
+   .from("pin77_users")
+   .select("username,data")
+
+ if(error) return false
+
+ for(const u of data){
+   if(u.data?.deviceID === deviceID){
+     return true
+   }
+ }
+
+ return false
 }
 
 window.loginUser=loginUser
