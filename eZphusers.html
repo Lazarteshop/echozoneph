@@ -86,14 +86,11 @@ async function loginUser(){
  await loadUsers()
 
  if(!users[u]){
-const deviceID = getDeviceID()
 
- const used = await deviceAlreadyUsed(deviceID)
+ const deviceID = await checkDeviceBeforeRegister()
 
- if(used){
-   alert("Only ONE account allowed per device")
-   return
- }
+ if(!deviceID) return
+
   users[u]={
  pass:p,
  points:0,
@@ -421,40 +418,64 @@ function addEnergy(username){
 
 function getDeviceID(){
 
- let id = localStorage.getItem("device_id")
+ const raw =
+ navigator.userAgent +
+ navigator.language +
+ screen.width +
+ screen.height +
+ screen.colorDepth +
+ navigator.hardwareConcurrency +
+ new Date().getTimezoneOffset()
 
- if(!id){
-   id = btoa(
-     navigator.userAgent +
-     screen.width +
-     screen.height +
-     navigator.language +
-     new Date().getTimezoneOffset()
-   ).replace(/=/g,'')
+ let hash = 0
 
-   localStorage.setItem("device_id",id)
+ for(let i=0;i<raw.length;i++){
+  hash = ((hash<<5)-hash)+raw.charCodeAt(i)
+  hash |= 0
  }
 
- return id
+ return "DEV"+Math.abs(hash)
 }
 
+// CHECK kung nagamit na ang device
 async function deviceAlreadyUsed(deviceID){
 
- const {data,error} = await supabase
+ try{
+
+  const { data, error } = await supabase
    .from("pin77_users")
-   .select("username,data")
+   .select("username")
+   .eq("data->>deviceID", deviceID)
 
- if(error) return false
+  if(error){
+   console.error("Device check error:", error)
+   return false
+  }
 
- for(const u of data){
-   if(u.data?.deviceID === deviceID){
-     return true
-   }
+  return data.length > 0
+
+ }catch(err){
+  console.error("Device check failed:", err)
+  return false
  }
 
- return false
 }
 
+
+// FUNCTION para i-check device bago gumawa ng account
+async function checkDeviceBeforeRegister(){
+
+ const deviceID = getDeviceID()
+
+ const used = await deviceAlreadyUsed(deviceID)
+
+ if(used){
+  alert("Only ONE account allowed per device")
+  return false
+ }
+
+ return deviceID
+}
 window.loginUser=loginUser
 window.logoutUser=logoutUser
 window.watchAd=watchAd
