@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>CASHECHO WALLET PRO</title>
+<title>CASHECHO WALLET ULTRA</title>
 
 <script type="module">
 
@@ -15,187 +15,202 @@ const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 
 const supabase=createClient(SUPABASE_URL,SUPABASE_KEY)
 
-let currentUser=localStorage.getItem("username")
+let username=localStorage.getItem("username")
 let userData=null
 let spins=20
 
 function $(id){return document.getElementById(id)}
 
-const products=[
-
-{name:"iPhone 17 Pro",price:70390,inventory:61,img:"https://i.imgur.com/W0JmF9S.png"},
-{name:"VIVO Phone",price:25600,inventory:46,img:"https://i.imgur.com/t7y9s7Y.png"},
-{name:"₱5000 eVoucher",price:4000,inventory:24243,img:"https://i.imgur.com/9S3sYvG.png"}
-
-]
-
 async function loadUser(){
 
- const {data}=await supabase
- .from("pin77_users")
- .select("*")
- .eq("username",currentUser)
- .single()
+const {data}=await supabase
+.from("pin77_users")
+.select("*")
+.eq("username",username)
+.single()
 
- userData=data.data
+userData=data.data
 
- if(!userData.walletHistory) userData.walletHistory=[]
+if(!userData.walletHistory)
+userData.walletHistory=[]
 
- updateUI()
- loadProducts()
+updateUI()
+loadHistory()
+
 }
 
 async function saveUser(){
 
- await supabase
- .from("pin77_users")
- .update({data:userData})
- .eq("username",currentUser)
+await supabase
+.from("pin77_users")
+.update({data:userData})
+.eq("username",username)
 
- updateUI()
+updateUI()
+
 }
 
 function updateUI(){
 
- $("balance").innerText="₱"+userData.balance.toFixed(2)
- $("spinLeft").innerText=spins
+$("balance").innerText="₱"+userData.balance.toFixed(2)
+$("spinLeft").innerText=spins
 
 }
 
 function showTab(tab){
 
- document.querySelectorAll(".tab").forEach(t=>t.style.display="none")
+document.querySelectorAll(".tab")
+.forEach(t=>t.style.display="none")
 
- $(tab).style.display="block"
+$(tab).style.display="block"
+
 }
 
 function spin(){
 
- if(spins<=0) return alert("No free spins")
+if(spins<=0) return alert("No spins left")
 
- if(userData.balance<1) return alert("Not enough balance")
+if(userData.balance<1) return alert("Not enough balance")
 
- spins--
+spins--
 
- userData.balance-=1
+userData.balance-=1
 
- const reels=["🍒","🍋","💎","7️⃣","⭐"]
+const icons=["🍒","🍋","💎","7️⃣","⭐"]
 
- let r1=reels[Math.floor(Math.random()*reels.length)]
- let r2=reels[Math.floor(Math.random()*reels.length)]
- let r3=reels[Math.floor(Math.random()*reels.length)]
+let r1=icons[Math.floor(Math.random()*5)]
+let r2=icons[Math.floor(Math.random()*5)]
+let r3=icons[Math.floor(Math.random()*5)]
 
- $("slot").innerText=r1+" "+r2+" "+r3
+$("slot").innerText=r1+" "+r2+" "+r3
 
- let reward=0
+let reward=0
 
- if(r1==r2 && r2==r3) reward=10
- else if(r1==r2 || r2==r3) reward=3
+if(r1===r2 && r2===r3) reward=15
+else if(r1===r2 || r2===r3) reward=5
 
- userData.balance+=reward
+userData.balance+=reward
 
- if(reward>0){
+if(reward>0){
 
- alert("You won ₱"+reward)
+alert("WIN ₱"+reward)
 
- userData.walletHistory.push({
- type:"slotwin",
- amount:reward,
- date:Date.now()
- })
+userData.walletHistory.push({
+type:"slot",
+amount:reward,
+date:Date.now()
+})
 
- }
-
- saveUser()
 }
 
-function loadProducts(){
+saveUser()
+loadHistory()
 
- const box=$("store")
+}
 
- box.innerHTML=""
+const products=[
 
- products.forEach(p=>{
+{name:"iPhone 17 Pro",price:70390,inventory:61},
+{name:"VIVO Phone",price:25600,inventory:46},
+{name:"₱5000 Voucher",price:4000,inventory:24243}
 
- box.innerHTML+=`
+]
 
- <div class="product">
+function loadStore(){
 
- <img src="${p.img}">
+let html=""
 
- <h3>${p.name}</h3>
+products.forEach(p=>{
 
- <p>💎 ${p.price}</p>
+html+=`
+<div class="product">
 
- <p>Inventory: ${p.inventory}</p>
+<h3>${p.name}</h3>
 
- <button onclick="buy('${p.name}',${p.price})">
- Redeem
- </button>
+<p>Price: ₱${p.price}</p>
 
- </div>
+<p>Inventory: ${p.inventory}</p>
 
- `
+<button onclick="buy('${p.name}',${p.price})">
+Redeem
+</button>
 
- })
+</div>
+`
+
+})
+
+$("store").innerHTML=html
 
 }
 
 function buy(name,price){
 
- if(userData.balance<price){
+if(userData.balance<price)
+return alert("Insufficient balance")
 
- alert("Insufficient balance")
+userData.balance-=price
 
- return
- }
+userData.walletHistory.push({
+type:"purchase",
+item:name,
+price:price,
+date:Date.now()
+})
 
- userData.balance-=price
+alert("Redeemed "+name)
 
- userData.walletHistory.push({
-
- type:"purchase",
- item:name,
- price:price,
- date:Date.now()
-
- })
-
- alert("Redeemed "+name)
-
- saveUser()
+saveUser()
+loadHistory()
 
 }
 
 function claimInterest(){
 
- const today=new Date().toDateString()
+const today=new Date().toDateString()
 
- if(userData.lastInterest===today){
+if(userData.lastInterest===today)
+return alert("Already claimed today")
 
- alert("Already claimed today")
+const interest=userData.balance*0.0005
 
- return
+userData.balance+=interest
+userData.lastInterest=today
 
- }
+userData.walletHistory.push({
+type:"interest",
+amount:interest,
+date:Date.now()
+})
 
- const interest=userData.balance*0.0005
+alert("Interest ₱"+interest.toFixed(2))
 
- userData.balance+=interest
+saveUser()
+loadHistory()
 
- userData.lastInterest=today
+}
 
- userData.walletHistory.push({
+function loadHistory(){
 
- type:"interest",
- amount:interest,
- date:Date.now()
+let html=""
 
- })
+userData.walletHistory
+.slice()
+.reverse()
+.forEach(h=>{
 
- alert("Interest earned ₱"+interest.toFixed(2))
+if(h.type==="slot")
+html+="<div>🎰 Slot Win ₱"+h.amount+"</div>"
 
- saveUser()
+if(h.type==="purchase")
+html+="<div>🎁 Purchase "+h.item+"</div>"
+
+if(h.type==="interest")
+html+="<div>🪙 Interest ₱"+h.amount.toFixed(2)+"</div>"
+
+})
+
+$("history").innerHTML=html
 
 }
 
@@ -205,9 +220,9 @@ window.showTab=showTab
 window.claimInterest=claimInterest
 
 loadUser()
+loadStore()
 
 </script>
-
 
 <style>
 
@@ -215,20 +230,15 @@ body{
 background:#0f172a;
 color:white;
 font-family:Arial;
-margin:0;
 padding:20px
-}
-
-h1,h2,h3{
-margin:5px
 }
 
 .wallet{
 background:#1e293b;
 padding:20px;
-border-radius:12px;
-margin-bottom:15px;
-text-align:center
+border-radius:14px;
+text-align:center;
+margin-bottom:15px
 }
 
 .balance{
@@ -252,45 +262,25 @@ color:white;
 font-weight:bold
 }
 
-.tab{
-display:none
-}
+.tab{display:none}
 
 .slot{
-font-size:40px;
+font-size:45px;
 margin:20px
-}
-
-.spinbtn{
-padding:15px;
-background:#22c55e;
-border:none;
-border-radius:10px;
-font-size:18px
-}
-
-.store{
-display:grid;
-grid-template-columns:1fr;
-gap:15px
 }
 
 .product{
 background:#1e293b;
 padding:15px;
 border-radius:12px;
-text-align:center
+margin-bottom:10px
 }
 
-.product img{
-width:100px
-}
-
-.product button{
-background:#a855f7;
-border:none;
+button{
 padding:10px;
+border:none;
 border-radius:8px;
+background:#22c55e;
 color:white
 }
 
@@ -304,12 +294,11 @@ color:white
 
 <div class="wallet">
 
-<div>Total Cash Balance</div>
+<div>Total Balance</div>
 
 <div id="balance" class="balance">₱0</div>
 
 </div>
-
 
 <div class="menu">
 
@@ -327,44 +316,43 @@ Lucky Coins
 
 </div>
 
-
 <div id="slotTab" class="tab">
 
-<h3>🎰 Bet ₱1 Deal</h3>
+<h3>🎰 Slot Casino</h3>
 
 <p>Free Spins: <span id="spinLeft">20</span></p>
 
 <div id="slot" class="slot">
-🍒 🍒 🍒
+🍒 🍋 💎
 </div>
 
-<button class="spinbtn" onclick="spin()">
-SPIN
-</button>
+<button onclick="spin()">SPIN</button>
 
 </div>
-
 
 <div id="storeTab" class="tab">
 
-<h3>🎁 Physical Gift Store</h3>
+<h3>🎁 Gift Store</h3>
 
-<div id="store" class="store"></div>
+<div id="store"></div>
 
 </div>
-
 
 <div id="luckyTab" class="tab">
 
 <h3>🪙 Lucky Coins</h3>
 
-<p>Daily Interest: 0.05%</p>
+<p>Daily Interest 0.05%</p>
 
 <button onclick="claimInterest()">
-Claim Daily Interest
+Claim Interest
 </button>
 
 </div>
+
+<h3>Wallet History</h3>
+
+<div id="history"></div>
 
 </body>
 </html>
