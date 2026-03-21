@@ -363,6 +363,13 @@ async function transferEnergy(){
   updateUI()
 }
 
+function openWallet(){
+
+localStorage.setItem("username",currentUser)
+
+window.location="cashecho-wallet-pro.html"
+
+}
 
 function loadTransferHistory(){
  const u=users[currentUser]
@@ -437,13 +444,6 @@ function getDeviceID(){
  return "DEV"+Math.abs(hash)
 }
 
-function openWallet(){
-
-localStorage.setItem("username",currentUser)
-
-window.location="cashecho-wallet-pro.html"
-
-}
 
 // CHECK kung nagamit na ang device
 async function deviceAlreadyUsed(deviceID){
