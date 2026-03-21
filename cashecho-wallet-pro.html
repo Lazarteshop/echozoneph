@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CASHECHO WALLET PRO</title>
+
+<script type="module">
+
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+const SUPABASE_URL="https://pbwaozztfclanvplpmvm.supabase.co"
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBid2Fvenp0ZmNsYW52cGxwbXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjQ1NzIsImV4cCI6MjA4NzgwMDU3Mn0.bbY-C4legzoHwQEiL3-IHwp8D6_hrL53GJPa78li1aY"
+
+const supabase=createClient(SUPABASE_URL,SUPABASE_KEY)
+
+let currentUser=localStorage.getItem("username")
+let userData=null
+let spins=20
+
+function $(id){return document.getElementById(id)}
+
+const products=[
+
+{name:"iPhone 17 Pro",price:70390,inventory:61,img:"https://i.imgur.com/W0JmF9S.png"},
+{name:"VIVO Phone",price:25600,inventory:46,img:"https://i.imgur.com/t7y9s7Y.png"},
+{name:"₱5000 eVoucher",price:4000,inventory:24243,img:"https://i.imgur.com/9S3sYvG.png"}
+
+]
+
+async function loadUser(){
+
+ const {data}=await supabase
+ .from("pin77_users")
+ .select("*")
+ .eq("username",currentUser)
+ .single()
+
+ userData=data.data
+
+ if(!userData.walletHistory) userData.walletHistory=[]
+
+ updateUI()
+ loadProducts()
+}
+
+async function saveUser(){
+
+ await supabase
+ .from("pin77_users")
+ .update({data:userData})
+ .eq("username",currentUser)
+
+ updateUI()
+}
+
+function updateUI(){
+
+ $("balance").innerText="₱"+userData.balance.toFixed(2)
+ $("spinLeft").innerText=spins
+
+}
+
+function showTab(tab){
+
+ document.querySelectorAll(".tab").forEach(t=>t.style.display="none")
+
+ $(tab).style.display="block"
+}
+
+function spin(){
+
+ if(spins<=0) return alert("No free spins")
+
+ if(userData.balance<1) return alert("Not enough balance")
+
+ spins--
+
+ userData.balance-=1
+
+ const reels=["🍒","🍋","💎","7️⃣","⭐"]
+
+ let r1=reels[Math.floor(Math.random()*reels.length)]
+ let r2=reels[Math.floor(Math.random()*reels.length)]
+ let r3=reels[Math.floor(Math.random()*reels.length)]
+
+ $("slot").innerText=r1+" "+r2+" "+r3
+
+ let reward=0
+
+ if(r1==r2 && r2==r3) reward=10
+ else if(r1==r2 || r2==r3) reward=3
+
+ userData.balance+=reward
+
+ if(reward>0){
+
+ alert("You won ₱"+reward)
+
+ userData.walletHistory.push({
+ type:"slotwin",
+ amount:reward,
+ date:Date.now()
+ })
+
+ }
+
+ saveUser()
+}
+
+function loadProducts(){
+
+ const box=$("store")
+
+ box.innerHTML=""
+
+ products.forEach(p=>{
+
+ box.innerHTML+=`
+
+ <div class="product">
+
+ <img src="${p.img}">
+
+ <h3>${p.name}</h3>
+
+ <p>💎 ${p.price}</p>
+
+ <p>Inventory: ${p.inventory}</p>
+
+ <button onclick="buy('${p.name}',${p.price})">
+ Redeem
+ </button>
+
+ </div>
+
+ `
+
+ })
+
+}
+
+function buy(name,price){
+
+ if(userData.balance<price){
+
+ alert("Insufficient balance")
+
+ return
+ }
+
+ userData.balance-=price
+
+ userData.walletHistory.push({
+
+ type:"purchase",
+ item:name,
+ price:price,
+ date:Date.now()
+
+ })
+
+ alert("Redeemed "+name)
+
+ saveUser()
+
+}
+
+function claimInterest(){
+
+ const today=new Date().toDateString()
+
+ if(userData.lastInterest===today){
+
+ alert("Already claimed today")
+
+ return
+
+ }
+
+ const interest=userData.balance*0.0005
+
+ userData.balance+=interest
+
+ userData.lastInterest=today
+
+ userData.walletHistory.push({
+
+ type:"interest",
+ amount:interest,
+ date:Date.now()
+
+ })
+
+ alert("Interest earned ₱"+interest.toFixed(2))
+
+ saveUser()
+
+}
+
+window.spin=spin
+window.buy=buy
+window.showTab=showTab
+window.claimInterest=claimInterest
+
+loadUser()
+
+</script>
+
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial;
+margin:0;
+padding:20px
+}
+
+h1,h2,h3{
+margin:5px
+}
+
+.wallet{
+background:#1e293b;
+padding:20px;
+border-radius:12px;
+margin-bottom:15px;
+text-align:center
+}
+
+.balance{
+font-size:40px;
+font-weight:bold
+}
+
+.menu{
+display:flex;
+gap:10px;
+margin-bottom:15px
+}
+
+.menu button{
+flex:1;
+padding:12px;
+border:none;
+border-radius:10px;
+background:#6366f1;
+color:white;
+font-weight:bold
+}
+
+.tab{
+display:none
+}
+
+.slot{
+font-size:40px;
+margin:20px
+}
+
+.spinbtn{
+padding:15px;
+background:#22c55e;
+border:none;
+border-radius:10px;
+font-size:18px
+}
+
+.store{
+display:grid;
+grid-template-columns:1fr;
+gap:15px
+}
+
+.product{
+background:#1e293b;
+padding:15px;
+border-radius:12px;
+text-align:center
+}
+
+.product img{
+width:100px
+}
+
+.product button{
+background:#a855f7;
+border:none;
+padding:10px;
+border-radius:8px;
+color:white
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>CASHECHO WALLET</h2>
+
+<div class="wallet">
+
+<div>Total Cash Balance</div>
+
+<div id="balance" class="balance">₱0</div>
+
+</div>
+
+
+<div class="menu">
+
+<button onclick="showTab('slotTab')">
+Bet ₱1 Deal
+</button>
+
+<button onclick="showTab('storeTab')">
+Physical Gift
+</button>
+
+<button onclick="showTab('luckyTab')">
+Lucky Coins
+</button>
+
+</div>
+
+
+<div id="slotTab" class="tab">
+
+<h3>🎰 Bet ₱1 Deal</h3>
+
+<p>Free Spins: <span id="spinLeft">20</span></p>
+
+<div id="slot" class="slot">
+🍒 🍒 🍒
+</div>
+
+<button class="spinbtn" onclick="spin()">
+SPIN
+</button>
+
+</div>
+
+
+<div id="storeTab" class="tab">
+
+<h3>🎁 Physical Gift Store</h3>
+
+<div id="store" class="store"></div>
+
+</div>
+
+
+<div id="luckyTab" class="tab">
+
+<h3>🪙 Lucky Coins</h3>
+
+<p>Daily Interest: 0.05%</p>
+
+<button onclick="claimInterest()">
+Claim Daily Interest
+</button>
+
+</div>
+
+</body>
+</html>
