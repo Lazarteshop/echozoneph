@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+
+
+<html>
+
+
+<head>
+
+
+<meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+
+<title>CASHECHO WALLET</title>
+
+
+
+<script type="module">
+
+
+
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+
+
+const SUPABASE_URL="https://pbwaozztfclanvplpmvm.supabase.co"
+
+
+const SUPABASE_KEY="YOUR_SUPABASE_ANON_KEY"
+
+
+
+const supabase=createClient(SUPABASE_URL,SUPABASE_KEY)
+
+
+
+let currentUser=null
+
+
+let users={}
+
+
+
+function $(id){return document.getElementById(id)}
+
+
+
+async function loadUsers(){
+
+
+
+
