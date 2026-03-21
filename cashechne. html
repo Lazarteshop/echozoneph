@@ -25,11 +25,8 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 
 
-const SUPABASE_URL="https://pbwaozztfclanvplpmvm.supabase.co"
-
-
-const SUPABASE_KEY="YOUR_SUPABASE_ANON_KEY"
-
+const SUPABASE_URL = 'https://pbwaozztfclanvplpmvm.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBid2Fvenp0ZmNsYW52cGxwbXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjQ1NzIsImV4cCI6MjA4NzgwMDU3Mn0.bbY-C4legzoHwQEiL3-IHwp8D6_hrL53GJPa78li1aY'
 
 
 const supabase=createClient(SUPABASE_URL,SUPABASE_KEY)
