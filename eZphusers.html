@@ -437,6 +437,14 @@ function getDeviceID(){
  return "DEV"+Math.abs(hash)
 }
 
+function openWallet(){
+
+localStorage.setItem("username",currentUser)
+
+window.location="cashecho-wallet-pro.html"
+
+}
+
 // CHECK kung nagamit na ang device
 async function deviceAlreadyUsed(deviceID){
 
@@ -523,6 +531,8 @@ th,td{border-bottom:1px solid #334155;padding:6px;text-align:center}
 
 <div class="card center">
 <div style="font-size:60px">🐥</div>
+
+<button onclick="openWallet()">CASHECHO WALLET</button>
 
 <div class="energy-bar"><div id="energyFill" class="energy-fill"></div></div>
 
