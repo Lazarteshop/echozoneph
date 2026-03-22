@@ -38,6 +38,28 @@ updateUI()
 loadHistory()
 
 }
+supabase
+.channel('balance-watch')
+.on(
+'postgres_changes',
+{
+event:'UPDATE',
+schema:'public',
+table:'pin77_users'
+},
+(payload)=>{
+
+if(payload.new.username === username){
+
+userData = payload.new.data
+
+updateUI()
+
+}
+
+}
+)
+.subscribe()
 
 async function saveUser(){
 
