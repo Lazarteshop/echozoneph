@@ -51,19 +51,31 @@ updateUI()
 }
 
 function updateUI(){
+
+const u=users[currentUser]
+
+$("balance").innerText=u.balance.toFixed(2)
+$("spins").innerText=u.spins
+
 let invHTML=""
 
-users[currentUser].inventory.forEach(i=>{
+u.inventory.forEach(i=>{
 invHTML+="<div>"+i+"</div>"
 })
 
-document.getElementById("inventoryList").innerHTML=invHTML
-
-
-$("balance").innerText="₱"+userData.balance.toFixed(2)
-$("spinLeft").innerText=spins
+$("inventoryList").innerHTML=invHTML
 
 }
+
+window.openTab=function(tab){
+
+document.querySelectorAll(".section")
+.forEach(s=>s.classList.remove("active"))
+
+$(tab).classList.add("active")
+
+}
+
 
 function showTab(tab){
 
@@ -226,14 +238,6 @@ window.spin=spin
 window.buy=buy
 window.showTab=showTab
 window.claimInterest=claimInterest
-window.openTab=function(tab){
-
-document.querySelectorAll(".section")
-.forEach(s=>s.classList.remove("active"))
-
-document.getElementById(tab).classList.add("active")
-
-}
 
 loadUser()
 loadStore()
