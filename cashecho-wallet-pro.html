@@ -104,8 +104,8 @@ function spin(){
 const now = new Date()
 const hour = now.getHours()
 
-if(hour !== 18){
-alert("Slot spin is available only at 6:00 PM")
+if(hour !== 19){
+alert("Slot spin is available only at 7:00 PM")
 return
 }
 
@@ -239,7 +239,7 @@ const now = new Date()
 
 const target = new Date()
 
-target.setHours(18,0,0,0)
+target.setHours(19,0,0,0)
 
 if(now > target){
 target.setDate(target.getDate()+1)
