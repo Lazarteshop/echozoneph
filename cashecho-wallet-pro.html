@@ -37,7 +37,6 @@ userData.walletHistory=[]
 updateUI()
 loadHistory()
 
-}
 supabase
 .channel('balance-watch')
 .on(
@@ -60,6 +59,8 @@ updateUI()
 }
 )
 .subscribe()
+
+} 
 
 async function saveUser(){
 
