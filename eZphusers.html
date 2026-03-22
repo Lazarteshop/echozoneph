@@ -39,6 +39,29 @@ async function loadUsers(){
  if(error){console.error(error);return}
  users={}
  data.forEach(u=>users[u.username]=u.data)
+
+supabase
+.channel('wallet-sync')
+.on(
+'postgres_changes',
+{
+event:'UPDATE',
+schema:'public',
+table:'pin77_users'
+},
+(payload)=>{
+
+if(payload.new.username === username){
+
+userData = payload.new.data
+
+updateUI()
+
+}
+
+}
+)
+.subscribe()
 }
 
 async function saveUser(username){
