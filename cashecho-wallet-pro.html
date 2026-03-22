@@ -51,6 +51,14 @@ updateUI()
 }
 
 function updateUI(){
+let invHTML=""
+
+users[currentUser].inventory.forEach(i=>{
+invHTML+="<div>"+i+"</div>"
+})
+
+document.getElementById("inventoryList").innerHTML=invHTML
+
 
 $("balance").innerText="₱"+userData.balance.toFixed(2)
 $("spinLeft").innerText=spins
@@ -218,141 +226,224 @@ window.spin=spin
 window.buy=buy
 window.showTab=showTab
 window.claimInterest=claimInterest
+window.openTab=function(tab){
+
+document.querySelectorAll(".section")
+.forEach(s=>s.classList.remove("active"))
+
+document.getElementById(tab).classList.add("active")
+
+}
 
 loadUser()
 loadStore()
 
 </script>
-
 <style>
 
 body{
-background:#0f172a;
-color:white;
+margin:0;
 font-family:Arial;
-padding:20px
+background:#0b1220;
+color:white;
 }
 
-.wallet{
-background:#1e293b;
+.header{
+background:linear-gradient(90deg,#7c3aed,#2563eb);
 padding:20px;
+border-bottom-left-radius:20px;
+border-bottom-right-radius:20px;
+}
+
+.balanceCard{
+background:#111827;
 border-radius:14px;
-text-align:center;
-margin-bottom:15px
+padding:16px;
+margin-top:10px;
 }
 
 .balance{
-font-size:40px;
-font-weight:bold
+font-size:28px;
+font-weight:bold;
+color:#22c55e;
 }
 
-.menu{
+.tabs{
 display:flex;
-gap:10px;
-margin-bottom:15px
+margin-top:15px;
+gap:6px;
 }
 
-.menu button{
+.tabs button{
 flex:1;
 padding:12px;
 border:none;
 border-radius:10px;
-background:#6366f1;
+background:#1e293b;
 color:white;
-font-weight:bold
+font-weight:bold;
 }
 
-.tab{display:none}
+.section{
+display:none;
+padding:15px;
+}
+
+.section.active{
+display:block;
+}
+
+.card{
+background:#1e293b;
+padding:14px;
+border-radius:12px;
+margin-bottom:12px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
 
 .slot{
-font-size:45px;
-margin:20px
+font-size:50px;
+text-align:center;
+margin:20px 0;
 }
 
-.product{
-background:#1e293b;
-padding:15px;
-border-radius:12px;
-margin-bottom:10px
-}
-
-button{
-padding:10px;
+.spinBtn{
+width:100%;
+padding:14px;
 border:none;
-border-radius:8px;
+border-radius:12px;
 background:#22c55e;
-color:white
+font-size:18px;
+font-weight:bold;
+}
+
+.buyBtn{
+background:#6366f1;
+border:none;
+padding:8px 12px;
+border-radius:8px;
+color:white;
+}
+
+.inventory{
+background:#020617;
+padding:10px;
+border-radius:10px;
+margin-top:15px;
 }
 
 </style>
-
 </head>
 
 <body>
 
+<div id="login" style="padding:30px;text-align:center">
+
 <h2>CASHECHO WALLET</h2>
 
-<div class="wallet">
+<input id="user" placeholder="Username"><br><br>
+<input id="pass" type="password" placeholder="Password"><br><br>
 
-<div>Total Balance</div>
-
-<div id="balance" class="balance">₱0</div>
-
-</div>
-
-<div class="menu">
-
-<button onclick="showTab('slotTab')">
-Bet ₱1 Deal
-</button>
-
-<button onclick="showTab('storeTab')">
-Physical Gift
-</button>
-
-<button onclick="showTab('luckyTab')">
-Lucky Coins
-</button>
+<button onclick="loginUser()">Login / Register</button>
 
 </div>
 
-<div id="slotTab" class="tab">
 
-<h3>🎰 Slot Casino</h3>
+<div id="wallet" style="display:none">
 
-<p>Free Spins: <span id="spinLeft">20</span></p>
+<div class="header">
 
-<div id="slot" class="slot">
-🍒 🍋 💎
-</div>
+<h2>CASHECHO WALLET</h2>
 
-<button onclick="spin()">SPIN</button>
+<div class="balanceCard">
 
-</div>
+Balance<br>
 
-<div id="storeTab" class="tab">
+<div class="balance">₱<span id="balance"></span></div>
 
-<h3>🎁 Gift Store</h3>
-
-<div id="store"></div>
+Free Spins: <span id="spins"></span>
 
 </div>
 
-<div id="luckyTab" class="tab">
+<div class="tabs">
+
+<button onclick="openTab('bet')">Bet ₱1 Deal</button>
+<button onclick="openTab('gift')">Physical Gift</button>
+<button onclick="openTab('coins')">Lucky Coins</button>
+
+</div>
+
+</div>
+
+
+<!-- SLOT -->
+
+<div id="bet" class="section active">
+
+<h3>🎰 Slot Machine</h3>
+
+<div class="slot" id="slot">🍒 🍒 🍒</div>
+
+<button class="spinBtn" onclick="spin()">SPIN ₱1</button>
+
+<p id="result"></p>
+
+</div>
+
+
+<!-- SHOP -->
+
+<div id="gift" class="section">
+
+<h3>🎁 EchozonePH Shop</h3>
+
+<div class="card">
+Iphone 17 Pro
+<button class="buyBtn" onclick="buy(70390,'Iphone 17 Pro')">Buy ₱70390</button>
+</div>
+
+<div class="card">
+Vivo Phone
+<button class="buyBtn" onclick="buy(25600,'Vivo Phone')">Buy ₱25600</button>
+</div>
+
+<div class="card">
+₱5000 Voucher
+<button class="buyBtn" onclick="buy(4000,'Voucher')">Buy ₱4000</button>
+</div>
+
+<div class="inventory">
+
+<h4>My Inventory</h4>
+
+<div id="inventoryList"></div>
+
+</div>
+
+</div>
+
+
+<!-- INTEREST -->
+
+<div id="coins" class="section">
 
 <h3>🪙 Lucky Coins</h3>
 
-<p>Daily Interest 0.05%</p>
+Daily Interest: **0.05%**
 
-<button onclick="claimInterest()">
+<br><br>
+
+<button onclick="claimInterest()" class="spinBtn">
+
 Claim Interest
+
 </button>
 
 </div>
 
-<h3>Wallet History</h3>
 
-<div id="history"></div>
-
+</div>
 </body>
 </html>
