@@ -68,6 +68,14 @@ $(tab).style.display="block"
 
 function spin(){
 
+const now = new Date()
+const hour = now.getHours()
+
+if(hour !== 21){
+alert("Slot spin is available only at 9:00 PM")
+return
+}
+
 if(spins<=0) return alert("No spins left")
 
 if(userData.balance<1) return alert("Not enough balance")
@@ -190,6 +198,35 @@ loadHistory()
 
 }
 
+function startCountdown(){
+
+setInterval(()=>{
+
+const now = new Date()
+
+const target = new Date()
+
+target.setHours(21,0,0,0)
+
+if(now > target){
+target.setDate(target.getDate()+1)
+}
+
+const diff = target - now
+
+const h = Math.floor(diff/3600000)
+const m = Math.floor(diff%3600000/60000)
+const s = Math.floor(diff%60000/1000)
+
+$("countdown").innerText =
+h.toString().padStart(2,'0')+":"
++m.toString().padStart(2,'0')+":"
++s.toString().padStart(2,'0')
+
+},1000)
+
+}
+
 function loadHistory(){
 
 let html=""
@@ -221,6 +258,7 @@ window.claimInterest=claimInterest
 
 loadUser()
 loadStore()
+startCountdown()
 
 </script>
 
@@ -319,8 +357,9 @@ Lucky Coins
 <div id="slotTab" class="tab">
 
 <h3>🎰 Slot Casino</h3>
-
 <p>Free Spins: <span id="spinLeft">20</span></p>
+
+<p>Next Spin Time: <span id="countdown">--:--:--</span></p>
 
 <div id="slot" class="slot">
 🍒 🍋 💎
