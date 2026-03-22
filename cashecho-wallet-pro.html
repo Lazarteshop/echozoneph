@@ -29,6 +29,11 @@ const {data}=await supabase
 .eq("username",username)
 .single()
 
+if(!data){
+alert("User not found")
+return
+}
+
 userData=data.data
 
 if(!userData.walletHistory)
@@ -48,11 +53,16 @@ table:'pin77_users'
 },
 (payload)=>{
 
+
 if(payload.new.username === username){
 
 userData = payload.new.data
 
+if(!userData.walletHistory)
+userData.walletHistory=[]
+
 updateUI()
+loadHistory()
 
 }
 
@@ -60,7 +70,7 @@ updateUI()
 )
 .subscribe()
 
-} 
+}
 
 async function saveUser(){
 
