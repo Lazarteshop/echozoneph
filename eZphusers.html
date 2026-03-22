@@ -55,6 +55,9 @@ if(payload.new.username === username){
 
 userData = payload.new.data
 
+if(!userData.walletHistory)
+userData.walletHistory=[]
+
 updateUI()
 
 }
