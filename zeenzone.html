@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Watch & Earn PRO Demo</title>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<style>
+body{margin:0;font-family:Arial;background:#0f172a;color:white}
+.screen{display:none;padding:20px}
+.active{display:block}
+.card{background:#1e293b;border-radius:14px;padding:16px;margin:10px 0}
+button{padding:10px;border-radius:8px;border:none;background:#22c55e;color:white;font-weight:bold;margin:4px}
+input{padding:10px;border-radius:8px;border:none;width:100%;margin:5px 0}
+.center{text-align:center}
+.energy-bar{height:14px;background:#334155;border-radius:10px;overflow:hidden}
+.energy-fill{height:100%;background:#22c55e;width:100%}
+.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
+.popup-content{background:#000;padding:20px;border-radius:16px;width:90%;max-width:320px;text-align:center}
+</style>
+
+</head>
+
+<body>
+
+<!-- LOGIN -->
+
+<div id="loginScreen" class="screen active center">
+
+<h2>Login</h2>
+
+<input id="userInput" placeholder="Username">
+<input id="passInput" type="password" placeholder="Password">
+
+<button onclick="loginUser()">Login / Register</button>
+
+</div>
+
+<!-- GAME -->
+
+<div id="gameScreen" class="screen">
+
+<h2 class="center">Watch & Earn</h2>
+
+<div class="card center">
+
+<div class="energy-bar">
+<div id="energyFill" class="energy-fill"></div>
+</div>
+
+<p>Energy: <span id="energyText"></span></p>
+<p>Points: <span id="pointsText"></span></p>
+<p>Balance: ₱<span id="balanceText"></span></p>
+
+</div>
+
+<div class="card center">
+
+<button onclick="watchAd()">Watch Video</button>
+<button onclick="playGame()">Play Game</button>
+
+</div>
+
+<div class="card">
+
+<h3>Transfer Balance</h3>
+
+<input id="transferUser" placeholder="Recipient Username">
+<input id="transferAmount" placeholder="Amount ₱">
+
+<button onclick="transferBalance()">Send</button>
+
+<p id="transferMsg"></p>
+
+</div>
+
+<div class="card">
+
+<h3>Send Energy</h3>
+
+<input id="energyUser" placeholder="Recipient Username">
+<input id="energyAmount" placeholder="Balance to use ₱">
+
+<button onclick="transferEnergy()">Send Energy</button>
+
+<p id="transferMsg1"></p>
+
+</div>
+
+<div class="card">
+
+<h3>History</h3>
+
+<div id="historyBox"></div>
+
+</div>
+
+<button onclick="logoutUser()">Logout</button>
+
+</div>
+
+<!-- MINI GAME -->
+
+<div id="miniGamePopup" class="popup">
+
+<div class="popup-content">
+
+<h3>Click 5x</h3>
+
+<p><span id="miniClicks">0</span>/5</p>
+
+<button onclick="miniClick()">🐥</button>
+
+</div>
+
+</div>
+
+<!-- YOUTUBE -->
+
+<div id="ytModal" class="popup">
+
+<div class="popup-content">
+
+<h3>Watch Full Video</h3>
+
+<div id="ytFrame"></div>
+
+</div>
+
+</div>
+
+<script>
+
+const POINT_RATE=1000
+
+let users={}
+let currentUser=null
+let ytPlayer=null
+let ytUser=null
+let miniCounter=0
+
+function $(id){return document.getElementById(id)}
+
+const ytVideos=["fjy1wYj2Nh8","x9OuXv_GEmc","6bbqMf6xoOc"]
+
+/* DATABASE */
+
+function loadUsers(){
+
+const data=localStorage.getItem("pin77_users")
+
+if(data){
+users=JSON.parse(data)
+}else{
+users={}
+}
+
+}
+
+function saveUsers(){
+
+localStorage.setItem("pin77_users",JSON.stringify(users))
+
+}
+
+/* LOGIN */
+
+function loginUser(){
+
+const u=$("userInput").value.trim()
+const p=$("passInput").value.trim()
+
+if(!u||!p){
+alert("Enter credentials")
+return
+}
+
+loadUsers()
+
+if(!users[u]){
+
+users[u]={
+pass:p,
+points:0,
+energy:100,
+history:[]
+}
+
+saveUsers()
+
+}
+
+if(users[u].pass!==p){
+alert("Wrong password")
+return
+}
+
+currentUser=u
+
+$("loginScreen").classList.remove("active")
+$("gameScreen").classList.add("active")
+
+updateUI()
+
+}
+
+/* UI */
+
+function updateUI(){
+
+const u=users[currentUser]
+
+$("pointsText").innerText=u.points
+$("energyText").innerText=u.energy
+$("balanceText").innerText=(u.points/POINT_RATE).toFixed(2)
+
+$("energyFill").style.width=u.energy+"%"
+
+loadHistory()
+
+}
+
+/* WATCH VIDEO */
+
+function watchAd(){
+
+const u=users[currentUser]
+
+if(u.energy<=0){
+alert("No energy")
+return
+}
+
+ytUser=currentUser
+
+const randomId=ytVideos[Math.floor(Math.random()*ytVideos.length)]
+
+$("ytModal").style.display="flex"
+
+if(ytPlayer){
+
+ytPlayer.loadVideoById(randomId)
+
+}else{
+
+ytPlayer=new YT.Player("ytFrame",{
+videoId:randomId,
+playerVars:{autoplay:1},
+events:{onStateChange:onYTStateChange}
+})
+
+}
+
+}
+
+function onYTStateChange(e){
+
+if(e.data===0){
+
+const u=users[currentUser]
+
+$("ytModal").style.display="none"
+
+const reward=Math.floor(Math.random()*50)+50
+
+u.points+=reward
+u.energy-=10
+
+u.history.push("Watch +"+reward)
+
+saveUsers()
+updateUI()
+
+}
+
+}
+
+/* MINI GAME */
+
+function playGame(){
+
+miniCounter=0
+$("miniClicks").innerText=0
+$("miniGamePopup").style.display="flex"
+
+}
+
+function miniClick(){
+
+miniCounter++
+
+$("miniClicks").innerText=miniCounter
+
+if(miniCounter>=5){
+
+$("miniGamePopup").style.display="none"
+
+const u=users[currentUser]
+
+const reward=Math.floor(Math.random()*30)+10
+
+u.points+=reward
+
+u.history.push("Game +"+reward)
+
+saveUsers()
+updateUI()
+
+}
+
+}
+
+/* TRANSFER BALANCE */
+
+function transferBalance(){
+
+const to=$("transferUser").value.trim()
+const amount=parseFloat($("transferAmount").value)
+
+if(!to||!amount) return $("transferMsg").innerText="Enter username and amount"
+
+if(!users[to]) return $("transferMsg").innerText="User not found"
+
+const sender=users[currentUser]
+const receiver=users[to]
+
+const senderBalance=sender.points/POINT_RATE
+
+if(senderBalance<amount) return $("transferMsg").innerText="Insufficient balance"
+
+const senderPoints=Math.floor(amount*POINT_RATE)
+
+sender.points-=senderPoints
+receiver.points+=senderPoints
+
+sender.history.push("Sent ₱"+amount+" to "+to)
+receiver.history.push("Received ₱"+amount+" from "+currentUser)
+
+saveUsers()
+
+$("transferMsg").innerText="Transfer successful"
+
+updateUI()
+
+}
+
+/* TRANSFER ENERGY */
+
+function transferEnergy(){
+
+const to=$("energyUser").value.trim()
+const useBalance=parseFloat($("energyAmount").value)
+
+if(!to||!useBalance) return $("transferMsg1").innerText="Enter username and amount"
+
+if(!users[to]) return $("transferMsg1").innerText="User not found"
+
+const sender=users[currentUser]
+const receiver=users[to]
+
+const senderBalance=sender.points/POINT_RATE
+
+if(senderBalance<useBalance) return $("transferMsg1").innerText="Insufficient balance"
+
+const energySent=Math.floor((54000/250)*useBalance)
+
+sender.points-=Math.floor(useBalance*POINT_RATE)
+
+receiver.energy+=energySent
+
+sender.history.push("Energy sent "+energySent)
+receiver.history.push("Energy received "+energySent)
+
+saveUsers()
+
+$("transferMsg1").innerText="Energy sent"
+
+updateUI()
+
+}
+
+/* HISTORY */
+
+function loadHistory(){
+
+const u=users[currentUser]
+const box=$("historyBox")
+
+box.innerHTML=""
+
+u.history.slice().reverse().forEach(h=>{
+
+box.innerHTML+="<div>"+h+"</div>"
+
+})
+
+}
+
+/* LOGOUT */
+
+function logoutUser(){
+location.reload()
+}
+
+</script>
+
+</body>
+</html>
