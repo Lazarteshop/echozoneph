@@ -36,8 +36,20 @@ return
 
 userData=data.data
 
+// create wallet history if missing
 if(!userData.walletHistory)
 userData.walletHistory=[]
+
+// create spin reset record
+if(!userData.lastSpinReset)
+userData.lastSpinReset=""
+
+// create spin storage
+if(!userData.spins)
+userData.spins=20
+
+// load spins from database
+spins=userData.spins
 
 updateUI()
 loadHistory()
@@ -103,15 +115,33 @@ function spin(){
 
 const now = new Date()
 const hour = now.getHours()
+const minute = now.getMinutes()
 
-if(hour !== 22){
-alert("Slot spin is available only at 10:00 PM")
+// Available only 10:00:00 - 10:00:59 PM
+if(!(hour === 22 && minute === 0)){
+alert("Slot spin is available ONLY at exactly 10:00 PM")
 return
 }
 
-if(spins<=0) return alert("No spins left")
+// Reset spins every day at 10PM
+const today = new Date().toDateString()
 
-if(userData.balance<1) return alert("Not enough balance")
+if(userData.lastSpinReset !== today){
+
+spins = 20
+userData.lastSpinReset = today
+
+}
+
+if(spins <= 0){
+alert("No spins left")
+return
+}
+
+if(userData.balance < 1){
+alert("Not enough balance")
+return
+}
 
 spins--
 
