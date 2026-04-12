@@ -51,8 +51,13 @@ userData.spins=20
 // load spins from database
 spins=userData.spins
 
+// browser reward system
+if(!userData.lastBrowseReward)
+userData.lastBrowseReward = 0
+
 updateUI()
 loadHistory()
+
 
 supabase
 .channel('balance-watch')
@@ -109,6 +114,35 @@ document.querySelectorAll(".tab")
 
 $(tab).style.display="block"
 
+}
+
+function rewardBrowse(){
+
+const now = Date.now()
+
+// 30 seconds cooldown
+if(now - userData.lastBrowseReward < 30000){
+return
+}
+// random reward 1-50
+const reward = Math.floor(Math.random()*50)+1
+
+userData.balance += reward
+userData.lastBrowseReward = now
+
+userData.walletHistory.push({
+type:"browse",
+amount:reward,
+date:Date.now()
+})
+
+alert("🌐 Browse Reward ₱"+reward)
+
+saveUser()
+loadHistory()
+
+if(h.type==="browse")
+html+="<div>🌐 Browse Earn ₱"+h.amount+"</div>"
 }
 
 function spin(){
@@ -262,6 +296,24 @@ saveUser()
 loadHistory()
 
 }
+
+function openSite(){
+
+let url = $("urlInput").value
+
+if(!url.startsWith("http")){
+url = "https://" + url
+}
+
+$("browserFrame").src = url
+
+// reward after loading
+setTimeout(()=>{
+rewardBrowse()
+},3000)
+
+}
+
 
 function startCountdown(){
 
@@ -454,9 +506,27 @@ Claim Interest
 
 </div>
 
+<button onclick="showTab('browserTab')">
+🌐 Browse & Earn
+</button>
+
 <h3>Wallet History</h3>
 
 <div id="history"></div>
+
+<div id="browserTab" class="tab">
+
+<h3>🌐 Browse & Earn</h3>
+
+<input id="urlInput" placeholder="Enter URL (ex: https://google.com)" style="width:100%;padding:10px;border-radius:8px;margin-bottom:10px">
+
+<button onclick="openSite()">OPEN SITE</button>
+
+<iframe id="browserFrame"
+style="width:100%;height:400px;margin-top:10px;border-radius:10px;background:white">
+</iframe>
+
+</div>
 
 </body>
 </html>
