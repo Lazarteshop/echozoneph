@@ -103,31 +103,6 @@ url = "https://" + url
 }
 
 const frame = $("browserFrame")
-
-// show loading state
-frame.src = "about:blank"
-
-let loaded = false
-
-frame.onload = () => {
-loaded = true
-rewardBrowse()
-}
-
-// try to load site
-frame.src = url
-
-// detect blocked / failed load
-setTimeout(()=>{
-if(!loaded){
-alert("⚠️ Site cannot be loaded. Try another website.")
-frame.src = "about:blank"
-}
-},5000)
-
-}
-
-const frame = $("browserFrame")
 frame.src = url
 
 frame.onload = () => {
