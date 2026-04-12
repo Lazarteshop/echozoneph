@@ -100,17 +100,16 @@ if(!input) return alert("Enter keyword or URL")
 
 let url = ""
 
-// ✅ Detect kung URL or keyword
+// Detect URL or keyword
 if(input.includes(".") && !input.includes(" ")){
-// Mukhang URL
 if(!input.startsWith("http")){
 url = "https://" + input
 }else{
 url = input
 }
 }else{
-// ✅ Keyword → Google search
-url = "https://www.google.com/search?q=" + encodeURIComponent(input)
+// 🔥 Use DuckDuckGo (iframe friendly)
+url = "https://duckduckgo.com/?q=" + encodeURIComponent(input)
 }
 
 const frame = $("browserFrame")
@@ -118,38 +117,52 @@ const frame = $("browserFrame")
 frame.src = "about:blank"
 
 let loaded = false
+let rewarded = false
 
+// Timeout (fail safe)
 let timeout = setTimeout(()=>{
 if(!loaded){
-frame.src = "data:text/html,<h2 style='text-align:center'>⚠️ Failed to load search</h2>"
-alert("❌ Failed to load. No reward.")
+frame.src = "data:text/html,<h2 style='text-align:center'>⚠️ Site blocked or failed</h2><p style='text-align:center'>Try another search</p>"
+alert("❌ No reward. Site not loaded.")
 }
 },8000)
 
 frame.onload = () => {
-try{
-const currentURL = frame.contentWindow.location.href
-
-if(currentURL && currentURL !== "about:blank"){
 loaded = true
 clearTimeout(timeout)
 
+// Try to verify (some sites blocked)
+let canAccess = true
+
+try{
+frame.contentWindow.location.href
+}catch(e){
+canAccess = false
+}
+
+// ❌ If blocked → fallback search
+if(!canAccess){
+frame.src = "https://duckduckgo.com/?q=" + encodeURIComponent(input)
+alert("⚠️ Site blocked. Showing search results instead.")
+return
+}
+
+// ✅ Reward only once
+if(!rewarded){
+rewarded = true
+setTimeout(()=>{
+rewarded = true
 setTimeout(()=>{
 rewardBrowse()
 },3000)
-
-}else{
-throw "Invalid load"
-}
-
-}catch(err){
-frame.src = "data:text/html,<h2 style='text-align:center'>⚠️ Cannot verify</h2>"
-alert("❌ No reward.")
 }
 }
 
+// Load URL
 frame.src = url
 }
+
+
 
 function spin(){
 const now = new Date()
