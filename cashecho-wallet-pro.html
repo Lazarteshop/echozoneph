@@ -94,26 +94,35 @@ loadHistory()
 }
 
 function openSite(){
-let url = $("urlInput").value.trim()
+let input = $("urlInput").value.trim()
 
-if(!url) return alert("Enter URL first")
+if(!input) return alert("Enter keyword or URL")
 
-if(!url.startsWith("http")){
-url = "https://" + url
+let url = ""
+
+// ✅ Detect kung URL or keyword
+if(input.includes(".") && !input.includes(" ")){
+// Mukhang URL
+if(!input.startsWith("http")){
+url = "https://" + input
+}else{
+url = input
+}
+}else{
+// ✅ Keyword → Google search
+url = "https://www.google.com/search?q=" + encodeURIComponent(input)
 }
 
 const frame = $("browserFrame")
 
-// Reset muna
 frame.src = "about:blank"
 
 let loaded = false
 
-// Timeout check (kung hindi nag load in 8 seconds = failed)
 let timeout = setTimeout(()=>{
 if(!loaded){
-frame.src = "data:text/html,<h2 style='text-align:center'>⚠️ Failed to load site</h2><p style='text-align:center'>Try another website</p>"
-alert("❌ Site failed to load. No reward given.")
+frame.src = "data:text/html,<h2 style='text-align:center'>⚠️ Failed to load search</h2>"
+alert("❌ Failed to load. No reward.")
 }
 },8000)
 
@@ -121,28 +130,24 @@ frame.onload = () => {
 try{
 const currentURL = frame.contentWindow.location.href
 
-// Check kung legit loaded page
 if(currentURL && currentURL !== "about:blank"){
 loaded = true
 clearTimeout(timeout)
 
-// Delay bago reward (anti-cheat)
 setTimeout(()=>{
 rewardBrowse()
-},2000)
+},3000)
 
 }else{
 throw "Invalid load"
 }
 
 }catch(err){
-// Cross-origin or error = treat as failed
-frame.src = "data:text/html,<h2 style='text-align:center'>⚠️ Cannot verify site load</h2><p style='text-align:center'>No reward given</p>"
-alert("❌ Unable to verify site. No reward.")
+frame.src = "data:text/html,<h2 style='text-align:center'>⚠️ Cannot verify</h2>"
+alert("❌ No reward.")
 }
 }
 
-// Load actual URL
 frame.src = url
 }
 
