@@ -103,13 +103,47 @@ url = "https://" + url
 }
 
 const frame = $("browserFrame")
-frame.src = url
+
+// Reset muna
+frame.src = "about:blank"
+
+let loaded = false
+
+// Timeout check (kung hindi nag load in 8 seconds = failed)
+let timeout = setTimeout(()=>{
+if(!loaded){
+frame.src = "data:text/html,<h2 style='text-align:center'>⚠️ Failed to load site</h2><p style='text-align:center'>Try another website</p>"
+alert("❌ Site failed to load. No reward given.")
+}
+},8000)
 
 frame.onload = () => {
+try{
+const currentURL = frame.contentWindow.location.href
+
+// Check kung legit loaded page
+if(currentURL && currentURL !== "about:blank"){
+loaded = true
+clearTimeout(timeout)
+
+// Delay bago reward (anti-cheat)
 setTimeout(()=>{
 rewardBrowse()
 },2000)
+
+}else{
+throw "Invalid load"
 }
+
+}catch(err){
+// Cross-origin or error = treat as failed
+frame.src = "data:text/html,<h2 style='text-align:center'>⚠️ Cannot verify site load</h2><p style='text-align:center'>No reward given</p>"
+alert("❌ Unable to verify site. No reward.")
+}
+}
+
+// Load actual URL
+frame.src = url
 }
 
 function spin(){
