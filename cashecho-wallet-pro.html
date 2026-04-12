@@ -36,131 +36,154 @@ return
 
 userData=data.data
 
-if(!userData.walletHistory) userData.walletHistory=[]
-if(!userData.lastSpinReset) userData.lastSpinReset=""
-if(!userData.spins) userData.spins=20
-if(!userData.lastBrowseReward) userData.lastBrowseReward=0
+if(!userData.walletHistory)
+userData.walletHistory=[]
+
+if(!userData.lastSpinReset)
+userData.lastSpinReset=""
+
+if(!userData.spins)
+userData.spins=20
 
 spins=userData.spins
+
+updateUI()
+loadHistory()
+loadShoutouts()
+
+supabase
+.channel('balance-watch')
+.on(
+'postgres_changes',
+{
+event:'UPDATE',
+schema:'public',
+table:'pin77_users'
+},
+(payload)=>{
+
+if(payload.new.username === username){
+
+userData = payload.new.data
+
+if(!userData.walletHistory)
+userData.walletHistory=[]
 
 updateUI()
 loadHistory()
 
 }
 
+}
+)
+.subscribe()
+
+// realtime shoutouts
+supabase
+.channel('shoutouts')
+.on('postgres_changes',{
+event:'INSERT',
+schema:'public',
+table:'shoutouts'
+},()=>{
+loadShoutouts()
+})
+.subscribe()
+
+}
+
 async function saveUser(){
+
 await supabase
 .from("pin77_users")
 .update({data:userData})
 .eq("username",username)
 
 updateUI()
+
 }
 
 function updateUI(){
+
 $("balance").innerText="₱"+userData.balance.toFixed(2)
 $("spinLeft").innerText=spins
+
 }
 
 function showTab(tab){
-document.querySelectorAll(".tab").forEach(t=>t.style.display="none")
+
+document.querySelectorAll(".tab")
+.forEach(t=>t.style.display="none")
+
 $(tab).style.display="block"
+
 }
 
-// ✅ FIXED BROWSE REWARD
-function rewardBrowse(){
-const now = Date.now()
+// ================= SHOUTOUT SYSTEM =================
 
-if(now - userData.lastBrowseReward < 60000){
-alert("⏳ Wait 1 minute before earning again")
-return
-}
+async function sendShoutout(){
+let msg = $("shoutInput").value.trim()
 
-const reward = Math.floor(Math.random()*50)+1
+if(!msg) return alert("Enter message")
 
+// reward 0.05 - 0.95
+let reward = (Math.random()*0.9 + 0.05)
+reward = parseFloat(reward.toFixed(2))
+
+// save shoutout to DB
+await supabase.from("shoutouts").insert({
+username: username,
+message: msg,
+date: Date.now()
+})
+
+// give reward
 userData.balance += reward
-userData.lastBrowseReward = now
 
 userData.walletHistory.push({
-type:"browse",
+type:"shout",
 amount:reward,
 date:Date.now()
 })
 
-alert("🌐 Browse Reward ₱"+reward)
+alert("📢 Shoutout sent! Reward ₱"+reward)
+
+$("shoutInput").value=""
 
 saveUser()
 loadHistory()
+loadShoutouts()
 }
 
-function openSite(){
-let input = $("urlInput").value.trim()
+async function loadShoutouts(){
 
-if(!input) return alert("Enter keyword or URL")
+const {data}=await supabase
+.from("shoutouts")
+.select("*")
+.order("date",{ascending:false})
+.limit(50)
 
-let url = ""
+let html=""
 
-// Detect URL or keyword
-if(input.includes(".") && !input.includes(" ")){
-if(!input.startsWith("http")){
-url = "https://" + input
-}else{
-url = input
-}
-}else{
-// Use DuckDuckGo (iframe friendly)
-url = "https://duckduckgo.com/?q=" + encodeURIComponent(input)
-}
-
-const frame = $("browserFrame")
-
-frame.src = "about:blank"
-
-let loaded = false
-let rewarded = false
-
-// Timeout (fail safe)
-let timeout = setTimeout(()=>{
-if(!loaded){
-frame.src = "data:text/html,<h2 style='text-align:center'>⚠️ Site failed to load</h2>"
-alert("❌ No reward. Site not loaded.")
-}
-},8000)
-
-frame.onload = () => {
-loaded = true
-clearTimeout(timeout)
-
-// Try access (detect blocked iframe)
-let blocked = false
-
-try{
-frame.contentWindow.location.href
-}catch(e){
-blocked = true
+if(data){
+data.forEach(s=>{
+html+=`<div style="background:#1e293b;padding:10px;border-radius:10px;margin-bottom:8px">
+<b>${s.username}</b><br>
+<span>${s.message}</span>
+</div>`
+})
 }
 
-// If blocked → fallback search
-if(blocked){
-frame.src = "https://duckduckgo.com/?q=" + encodeURIComponent(input)
-alert("⚠️ Site blocked. Showing search instead.")
-return
+$("shoutList").innerHTML=html
+
 }
 
-// Reward once only
-if(!rewarded){
-rewarded = true
-setTimeout(()=>{
-rewardBrowse()
-},3000)
-}
-}
+window.sendShoutout=sendShoutout
 
-// Load URL
-frame.src = url
-}
+// ================= EXISTING SYSTEM =================
 
 function spin(){
+
 const now = new Date()
 const hour = now.getHours()
 const minute = now.getMinutes()
@@ -173,8 +196,10 @@ return
 const today = new Date().toDateString()
 
 if(userData.lastSpinReset !== today){
+
 spins = 20
 userData.lastSpinReset = today
+
 }
 
 if(spins <= 0){
@@ -188,6 +213,7 @@ return
 }
 
 spins--
+
 userData.balance-=1
 
 const icons=["🍒","🍋","💎","7️⃣","⭐"]
@@ -206,6 +232,7 @@ else if(r1===r2 || r2===r3) reward=5
 userData.balance+=reward
 
 if(reward>0){
+
 alert("WIN ₱"+reward)
 
 userData.walletHistory.push({
@@ -213,36 +240,54 @@ type:"slot",
 amount:reward,
 date:Date.now()
 })
+
 }
 
 saveUser()
 loadHistory()
+
 }
 
 const products=[
+
 {name:"iPhone 17 Pro",price:70390,inventory:61},
 {name:"VIVO Phone",price:25600,inventory:46},
 {name:"₱5000 Voucher",price:4000,inventory:500},
 {name:"₱500 Voucher",price:750,inventory:5}, 
 {name:"₱300 Voucher",price:450,inventory:10}
+
 ]
 
 function loadStore(){
+
 let html=""
 
 products.forEach(p=>{
-html+=`<div class="product">
+
+html+=`
+<div class="product">
+
 <h3>${p.name}</h3>
+
 <p>Price: ₱${p.price}</p>
+
 <p>Inventory: ${p.inventory}</p>
-<button onclick="buy('${p.name}',${p.price})">Redeem</button>
-</div>`
+
+<button onclick="buy('${p.name}',${p.price})">
+Redeem
+</button>
+
+</div>
+`
+
 })
 
 $("store").innerHTML=html
+
 }
 
 function buy(name,price){
+
 if(userData.balance<price)
 return alert("Insufficient balance")
 
@@ -259,9 +304,11 @@ alert("Redeemed "+name)
 
 saveUser()
 loadHistory()
+
 }
 
 function claimInterest(){
+
 const today=new Date().toDateString()
 
 if(userData.lastInterest===today)
@@ -282,11 +329,15 @@ alert("Interest ₱"+interest.toFixed(2))
 
 saveUser()
 loadHistory()
+
 }
 
 function startCountdown(){
+
 setInterval(()=>{
+
 const now = new Date()
+
 const target = new Date()
 
 target.setHours(22,0,0,0)
@@ -302,31 +353,45 @@ const m = Math.floor(diff%3600000/60000)
 const s = Math.floor(diff%60000/1000)
 
 $("countdown").innerText =
-h.toString().padStart(2,'0')+":"+
-m.toString().padStart(2,'0')+":"+
-s.toString().padStart(2,'0')
+h.toString().padStart(2,'0')+":"
++m.toString().padStart(2,'0')+":"
++s.toString().padStart(2,'0')
 
 },1000)
+
 }
 
 function loadHistory(){
+
 let html=""
 
-userData.walletHistory.slice().reverse().forEach(h=>{
-if(h.type==="slot") html+="<div>🎰 Slot Win ₱"+h.amount+"</div>"
-if(h.type==="purchase") html+="<div>🎁 Purchase "+h.item+"</div>"
-if(h.type==="interest") html+="<div>🪙 Interest ₱"+h.amount.toFixed(2)+"</div>"
-if(h.type==="browse") html+="<div>🌐 Browse Earn ₱"+h.amount+"</div>"
+userData.walletHistory
+.slice()
+.reverse()
+.forEach(h=>{
+
+if(h.type==="slot")
+html+="<div>🎰 Slot Win ₱"+h.amount+"</div>"
+
+if(h.type==="purchase")
+html+="<div>🎁 Purchase "+h.item+"</div>"
+
+if(h.type==="interest")
+html+="<div>🪙 Interest ₱"+h.amount.toFixed(2)+"</div>"
+
+if(h.type==="shout")
+html+="<div>📢 Shout Reward ₱"+h.amount+"</div>"
+
 })
 
 $("history").innerHTML=html
+
 }
 
 window.spin=spin
 window.buy=buy
 window.showTab=showTab
 window.claimInterest=claimInterest
-window.openSite=openSite
 
 loadUser()
 loadStore()
@@ -335,16 +400,65 @@ startCountdown()
 </script>
 
 <style>
-body{background:#0f172a;color:white;font-family:Arial;padding:20px}
-.wallet{background:#1e293b;padding:20px;border-radius:14px;text-align:center;margin-bottom:15px}
-.balance{font-size:40px;font-weight:bold}
-.menu{display:flex;gap:10px;margin-bottom:15px}
-.menu button{flex:1;padding:12px;border:none;border-radius:10px;background:#6366f1;color:white;font-weight:bold}
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial;
+padding:20px
+}
+
+.wallet{
+background:#1e293b;
+padding:20px;
+border-radius:14px;
+text-align:center;
+margin-bottom:15px
+}
+
+.balance{
+font-size:40px;
+font-weight:bold
+}
+
+.menu{
+display:flex;
+gap:10px;
+margin-bottom:15px
+}
+
+.menu button{
+flex:1;
+padding:12px;
+border:none;
+border-radius:10px;
+background:#6366f1;
+color:white;
+font-weight:bold
+}
+
 .tab{display:none}
-.slot{font-size:45px;margin:20px}
-.product{background:#1e293b;padding:15px;border-radius:12px;margin-bottom:10px}
-button{padding:10px;border:none;border-radius:8px;background:#22c55e;color:white}
-iframe{width:100%;height:400px;border-radius:10px;background:white;margin-top:10px}
+
+.slot{
+font-size:45px;
+margin:20px
+}
+
+.product{
+background:#1e293b;
+padding:15px;
+border-radius:12px;
+margin-bottom:10px
+}
+
+button{
+padding:10px;
+border:none;
+border-radius:8px;
+background:#22c55e;
+color:white
+}
+
 </style>
 
 </head>
@@ -354,44 +468,80 @@ iframe{width:100%;height:400px;border-radius:10px;background:white;margin-top:10
 <h2>CASHECHO WALLET</h2>
 
 <div class="wallet">
+
 <div>CASHECHO Total Balance</div>
+
 <div id="balance" class="balance">₱0</div>
+
 </div>
 
 <div class="menu">
-<button onclick="showTab('slotTab')">Bet ₱1 Deal</button>
-<button onclick="showTab('storeTab')">Physical Gift</button>
-<button onclick="showTab('luckyTab')">Lucky Coins</button>
-<button onclick="showTab('browserTab')">🌐 Browse & Earn</button>
+
+<button onclick="showTab('slotTab')">
+Bet ₱1 Deal
+</button>
+
+<button onclick="showTab('storeTab')">
+Physical Gift
+</button>
+
+<button onclick="showTab('luckyTab')">
+Lucky Coins
+</button>
+
+<button onclick="showTab('shoutTab')">
+📢 Shoutout
+</button>
+
 </div>
 
 <div id="slotTab" class="tab">
+
 <h3>🎰 Slot Casino</h3>
 <p>Free Spins: <span id="spinLeft">20</span></p>
+
 <p>Next Spin Time: <span id="countdown">--:--:--</span></p>
-<div id="slot" class="slot">🍒 🍋 💎</div>
+
+<div id="slot" class="slot">
+🍒 🍋 💎
+</div>
+
 <button onclick="spin()">SPIN</button>
+
 </div>
 
 <div id="storeTab" class="tab">
+
 <h3>🎁 Gift Store</h3>
+
 <div id="store"></div>
+
 </div>
 
 <div id="luckyTab" class="tab">
+
 <h3>🪙 Lucky Coins</h3>
+
 <p>Daily Interest 0.05%</p>
-<button onclick="claimInterest()">Claim Interest</button>
+
+<button onclick="claimInterest()">
+Claim Interest
+</button>
+
 </div>
 
-<div id="browserTab" class="tab">
-<h3>🌐 Browse & Earn</h3>
-<input id="urlInput" placeholder="Enter URL (example.com)" style="width:100%;padding:10px;border-radius:8px;margin-bottom:10px">
-<button onclick="openSite()">OPEN SITE</button>
-<iframe id="browserFrame"></iframe>
+<!-- SHOUTOUT UI -->
+<div id="shoutTab" class="tab">
+<h3>📢 Shoutout Wall</h3>
+
+<input id="shoutInput" placeholder="Type your message..." style="width:100%;padding:10px;border-radius:8px;margin-bottom:10px">
+<button onclick="sendShoutout()">SEND SHOUTOUT</button>
+
+<div id="shoutList" style="margin-top:15px"></div>
 </div>
 
 <h3>Wallet History</h3>
+
 <div id="history"></div>
 
 </body>
