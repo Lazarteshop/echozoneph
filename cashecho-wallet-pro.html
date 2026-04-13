@@ -60,7 +60,8 @@ radio.play().then(()=>{
 radio.pause()
 radio.currentTime = 0
 }).catch(()=>{})
-} 
+}
+}, { once:true })
 
 supabase
 .channel('balance-watch')
