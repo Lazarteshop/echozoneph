@@ -170,6 +170,13 @@ date:Date.now()
 
 alert("📢 Shoutout sent! Reward ₱"+reward)
 
+// 🔊 AUTO PLAY RADIO
+const radio = document.getElementById("radioPlayer")
+if(radio){
+radio.currentTime = 0
+radio.play().catch(()=>{})
+}
+
 $("shoutInput").value=""
 
 saveUser()
@@ -611,5 +618,6 @@ Claim Interest
 
 <div id="history"></div>
 
+<audio id="radioPlayer" src="https://sw.run/sdtvradio?" preload="auto"></audio>
 </body>
 </html>
