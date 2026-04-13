@@ -168,9 +168,15 @@ amount:reward,
 date:Date.now()
 })
 
-alert("📢 Shoutout sent! Reward ₱"+reward)
+// 🔊 AUTO PLAY RADIO + SOUND
 
-// 🔊 AUTO PLAY RADIO
+// instant sound (SIGURADO)
+const click = document.getElementById("clickSound")
+if(click){
+click.currentTime = 0
+click.play().catch(()=>{})
+}
+
 const radio = document.getElementById("radioPlayer")
 if(radio){
 radio.pause()
@@ -180,6 +186,8 @@ radio.play().then(()=>{}).catch(e=>{
 console.log("Autoplay blocked:", e)
 })
 }
+
+alert("📢 Shoutout sent! Reward ₱"+reward)
 
 $("shoutInput").value=""
 
@@ -623,5 +631,7 @@ Claim Interest
 <div id="history"></div>
 
 <audio id="radioPlayer" src="https://stream.zeno.fm/f3h9n8m5k3vtv" preload="auto" playsinline></audio>
+
+<audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
 </body>
 </html>
