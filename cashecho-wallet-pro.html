@@ -53,6 +53,16 @@ updateUI()
 loadHistory()
 loadShoutouts()
 
+// 🔓 UNLOCK AUDIO ON FIRST TOUCH
+document.body.addEventListener("click", ()=>{
+const radio = document.getElementById("radioPlayer")
+if(radio){
+radio.play().then(()=>{
+radio.pause()
+radio.currentTime = 0
+}).catch(()=>{})
+} 
+
 supabase
 .channel('balance-watch')
 .on(
