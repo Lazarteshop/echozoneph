@@ -18,6 +18,8 @@ const supabase=createClient(SUPABASE_URL,SUPABASE_KEY)
 let username=localStorage.getItem("username")
 let userData=null
 let spins=20
+let shoutCooldown = 0
+let shoutInterval = null
 
 function $(id){return document.getElementById(id)}
 
@@ -122,6 +124,12 @@ $(tab).style.display="block"
 // ================= SHOUTOUT SYSTEM =================
 
 async function sendShoutout(){
+
+if(shoutCooldown > 0){
+alert("Wait "+shoutCooldown+" seconds before sending again")
+return
+}
+
 let msg = $("shoutInput").value.trim()
 
 if(!msg) return alert("Enter message")
@@ -153,6 +161,9 @@ $("shoutInput").value=""
 saveUser()
 loadHistory()
 loadShoutouts()
+
+// ===== START COOLDOWN =====
+startShoutCooldown()
 }
 
 async function loadShoutouts(){
