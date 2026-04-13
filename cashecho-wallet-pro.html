@@ -173,8 +173,12 @@ alert("📢 Shoutout sent! Reward ₱"+reward)
 // 🔊 AUTO PLAY RADIO
 const radio = document.getElementById("radioPlayer")
 if(radio){
+radio.pause()
 radio.currentTime = 0
-radio.play().catch(()=>{})
+radio.muted = false
+radio.play().then(()=>{}).catch(e=>{
+console.log("Autoplay blocked:", e)
+})
 }
 
 $("shoutInput").value=""
@@ -618,6 +622,6 @@ Claim Interest
 
 <div id="history"></div>
 
-<audio id="radioPlayer" src="https://sw.run/sdtvradio?" preload="auto"></audio>
+<audio id="radioPlayer" src="https://stream.zeno.fm/f3h9n8m5k3vtv" preload="auto" playsinline></audio>
 </body>
 </html>
