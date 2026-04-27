@@ -314,7 +314,7 @@ const today=new Date().toDateString()
 if(userData.lastInterest===today)
 return alert("Already claimed today")
 
-const interest=userData.balance*0.0005
+const interest=userData.cashechobalance*0.0005
 
 userData.cashechobalance+=interest
 userData.lastInterest=today
