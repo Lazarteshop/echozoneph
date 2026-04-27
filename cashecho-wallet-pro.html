@@ -151,6 +151,7 @@ alert("📢 Shoutout sent! Reward ₱"+reward)
 $("shoutInput").value=""
 
 saveUser()
+await forceSyncBalance()
 loadHistory()
 loadShoutouts()
 }
@@ -244,6 +245,7 @@ date:Date.now()
 }
 
 saveUser()
+await forceSyncBalance()
 loadHistory()
 
 }
@@ -303,6 +305,7 @@ date:Date.now()
 alert("Redeemed "+name)
 
 saveUser()
+await forceSyncBalance()
 loadHistory()
 
 }
@@ -328,8 +331,18 @@ date:Date.now()
 alert("Interest ₱"+interest.toFixed(2))
 
 saveUser()
+await forceSyncBalance()
 loadHistory()
 
+}
+
+async function forceSyncBalance(){
+await supabase
+.from("pin77_users")
+.update({
+data:userData
+})
+.eq("username",username)
 }
 
 function startCountdown(){
