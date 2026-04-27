@@ -182,7 +182,7 @@ if(u.balance >= 10 && !u.cashechoActivated){
  loadTransferHistory()
 
 // 🔹 Wallet button control (ADD ONLY)
-. const walletBtn = $('walletBtn')
+const walletBtn = $('walletBtn')
 if(walletBtn){
   walletBtn.disabled = u.balance < 10
   walletBtn.innerText = u.balance < 10 
