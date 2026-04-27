@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -52,14 +51,15 @@ table:'pin77_users'
 },
 (payload)=>{
 
-if(payload.new.username === currentUser){
+if(payload.new.username === username){
 
-users[payload.new.username] = payload.new.data
+userData = payload.new.data
 
-if(!users[payload.new.username].walletHistory)
-users[payload.new.username].walletHistory = []
+if(!userData.walletHistory)
+userData.walletHistory=[]
 
 updateUI()
+
 }
 
 }
@@ -127,13 +127,8 @@ async function loginUser(){
  history:[],
  cooldowns:{ad:0,game:0},
  banned:false,
- deviceID:deviceID,
-
- // NEW
- cashechoBalance:0,
- cashechoActivated:false
+deviceID:deviceID
 }
-
 // default: hindi banned
   await saveUser(u)
  }
@@ -154,13 +149,6 @@ function updateUI(){
  resetDaily(u)
  autoConvertBalance(u)
 
-if(u.balance >= 10 && !u.cashechoActivated){
-     u.cashechoBalance = 10
-     u.cashechoActivated = true
-
-     saveUser(currentUser)
- }
-
  $('pointsText').textContent=u.points
  $('balanceText').textContent=u.balance.toFixed(2)
  $('energyText').textContent=u.energy
@@ -168,15 +156,6 @@ if(u.balance >= 10 && !u.cashechoActivated){
  $('energyFill').style.width=Math.min(100,u.energy)+'%'
  $('watchBtn').disabled=u.energy<=0 || u.dailyUsed>=DAILY_ENERGY_LIMIT
  $('playBtn').disabled=u.energy<=0 || u.dailyUsed>=DAILY_ENERGY_LIMIT
-
-// 🔥 CASHECHO WALLET BUTTON RULE (STEP 3)
- const walletBtn = $('walletBtn')
- if(walletBtn){
-   walletBtn.disabled = !u.cashechoActivated
-   walletBtn.innerText = u.cashechoActivated
-     ? "CASHECHO WALLET"
-     : "Unlock at ₱10 balance"
- }
 
  loadHistory()
  loadTransferHistory()
@@ -421,8 +400,11 @@ async function transferEnergy(){
 }
 
 function openWallet(){
- localStorage.setItem("username",currentUser)
- window.location="https://echozoneph.vercel.app/cashecho-wallet-pro.html"
+
+localStorage.setItem("username",currentUser)
+
+window.location="https://echozoneph.vercel.app/cashecho-wallet-pro.html"
+
 }
 
 function loadTransferHistory(){
