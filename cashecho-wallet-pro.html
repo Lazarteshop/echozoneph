@@ -34,7 +34,10 @@ alert("User not found")
 return
 }
 
-userData=data.data
+userData = {
+  ...userData,
+  ...data.data
+}
 
 if(!userData.balance) userData.balance=0 
 
@@ -98,7 +101,12 @@ async function saveUser(){
 
 await supabase
 .from("pin77_users")
-.update({data:userData})
+.update({
+  data:{
+    ...userData,
+    points: userData.balance * POINT_RATE
+  }
+})
 .eq("username",username)
 
 updateUI()
