@@ -494,14 +494,15 @@ loadStore()
 startCountdown()
 
 
-// ================= AUTO SYNC CASHECHO ↔ PIN77 =================
+// ================= PERFECT SYNC CASHECHO ↔ PIN77 =================
 
-// auto check every 2 minutes
+let isSyncing = false // para iwas loop
+
 setInterval(async () => {
 
-if(!username) return
+if(!username || !userData) return
+if(isSyncing) return
 
-// kunin latest data
 const {data,error} = await supabase
 .from("pin77_users")
 .select("*")
@@ -511,38 +512,41 @@ const {data,error} = await supabase
 if(error || !data) return
 
 let dbData = data.data
-
-if(!dbData) return
-
-let dbData = data.data
-
 if(!dbData) return
 
 let pin77Balance = dbData.balance || 0
 let cashechoBalance = userData.balance || 0
 
-// 🔹 RULE 1: kung Cashecho = 45 → gawing 45 ang PIN77
-if(cashechoBalance === 45 && pin77Balance !== 45){
+// 🔥 kung magkaiba → i-sync kung alin ang latest
+if(pin77Balance !== cashechoBalance){
 
-dbData.balance = 45
+isSyncing = true
+
+// 👉 RULE: kung sino ang huling nagbago, yun ang masusunod
+// dito simple approach: mas mataas ang value = updated
+if(cashechoBalance > pin77Balance){
+
+// update PIN77
+dbData.balance = cashechoBalance
 
 await supabase
 .from("pin77_users")
 .update({ data: dbData })
 .eq("username", username)
 
-}
+}else{
 
-// 🔹 RULE 2: kung mas mataas ang PIN77 → i-sync sa Cashecho
-if(pin77Balance > cashechoBalance){
-
+// update CASHECHO
 userData.balance = pin77Balance
-
 await saveUser()
 
 }
 
-}, 1000) // every 2 minutes
+isSyncing = false
+
+}
+
+}, 3000) // every 3 seconds (real-time feel)
 
 </script>
 
