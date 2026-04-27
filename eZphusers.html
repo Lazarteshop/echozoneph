@@ -59,14 +59,40 @@ if(!dbData) return
 let cashechoBalance = dbData.balance || 0
 let localBalance = users[currentUser].balance || 0
 
-// 🔥 RULE: kung mas mataas Cashecho → update PIN77
-if(cashechoBalance > localBalance){
+let isSyncing = false
 
-users[currentUser].points = cashechoBalance * POINT_RATE
+supabase
+.channel('wallet-sync')
+.on(
+'postgres_changes',
+{
+event:'UPDATE',
+schema:'public',
+table:'pin77_users'
+},
+(payload)=>{
+
+if(payload.new.username !== currentUser) return
+if(isSyncing) return
+
+const dbData = payload.new.data
+if(!dbData) return
+
+let cashechoBalance = dbData.balance || 0
+let localBalance = users[currentUser].balance || 0
+
+if(cashechoBalance !== localBalance){
+
+isSyncing = true
+
+// sync both sides
 users[currentUser].balance = cashechoBalance
+users[currentUser].points = cashechoBalance * POINT_RATE
 
 saveUser(currentUser)
 updateUI()
+
+isSyncing = false
 
 }
 
