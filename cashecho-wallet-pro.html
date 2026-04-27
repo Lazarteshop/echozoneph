@@ -493,6 +493,57 @@ loadUser()
 loadStore()
 startCountdown()
 
+
+// ================= AUTO SYNC CASHECHO ↔ PIN77 =================
+
+// auto check every 2 minutes
+setInterval(async () => {
+
+if(!username) return
+
+// kunin latest data
+const {data,error} = await supabase
+.from("pin77_users")
+.select("*")
+.eq("username", username)
+.single()
+
+if(error || !data) return
+
+let dbData = data.data
+
+if(!dbData) return
+
+let dbData = data.data
+
+if(!dbData) return
+
+let pin77Balance = dbData.balance || 0
+let cashechoBalance = userData.balance || 0
+
+// 🔹 RULE 1: kung Cashecho = 45 → gawing 45 ang PIN77
+if(cashechoBalance === 45 && pin77Balance !== 45){
+
+dbData.balance = 45
+
+await supabase
+.from("pin77_users")
+.update({ data: dbData })
+.eq("username", username)
+
+}
+
+// 🔹 RULE 2: kung mas mataas ang PIN77 → i-sync sa Cashecho
+if(pin77Balance > cashechoBalance){
+
+userData.balance = pin77Balance
+
+await saveUser()
+
+}
+
+}, 1000) // every 2 minutes
+
 </script>
 
 <style>
