@@ -38,6 +38,7 @@ return
 
 userData=data.data
 
+userData.cashechoBalance = userData.cashechoBalance || 0
 if(!userData.walletHistory)
 userData.walletHistory=[]
 
@@ -117,7 +118,7 @@ updateUI()
 
 function updateUI(){
 
-$("balance").innerText = "₱" + (userData.cashechoBalance || 0).toFixed(2)
+$("cashechobalance").innerText = "₱" + (userData.cashechoBalance || 0).toFixed(2)
 $("spinLeft").innerText=spins
 
 }
@@ -202,6 +203,7 @@ alert("📢 Shoutout sent! Reward ₱"+reward)
 $("shoutInput").value=""
 
 saveUser()
+updateUI()
 loadHistory()
 loadShoutouts()
 
@@ -341,6 +343,7 @@ date:Date.now()
 }
 
 saveUser()
+updateUI()
 loadHistory()
 
 }
@@ -400,6 +403,7 @@ date:Date.now()
 alert("Redeemed "+name)
 
 saveUser()
+updateUI()
 loadHistory()
 
 }
