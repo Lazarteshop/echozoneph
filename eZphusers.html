@@ -51,13 +51,21 @@ table:'pin77_users'
 },
 (payload)=>{
 
-if(payload.new.username === username){
+if(payload.new.username !== currentUser) return
 
-userData = payload.new.data
+const dbData = payload.new.data
+if(!dbData) return
 
-if(!userData.walletHistory)
-userData.walletHistory=[]
+let cashechoBalance = dbData.balance || 0
+let localBalance = users[currentUser].balance || 0
 
+// 🔥 RULE: kung mas mataas Cashecho → update PIN77
+if(cashechoBalance > localBalance){
+
+users[currentUser].points = cashechoBalance * POINT_RATE
+users[currentUser].balance = cashechoBalance
+
+saveUser(currentUser)
 updateUI()
 
 }
