@@ -18,9 +18,7 @@ const supabase=createClient(SUPABASE_URL,SUPABASE_KEY)
 let username=localStorage.getItem("username")
 let userData=null
 let spins=20
-let shoutCooldown = 0
-let shoutInterval = null
-let isSendingShout = false // 🔥 ADD THIS
+
 function $(id){return document.getElementById(id)}
 
 async function loadUser(){
@@ -52,16 +50,6 @@ spins=userData.spins
 updateUI()
 loadHistory()
 loadShoutouts()
-// 🔓 UNLOCK AUDIO ON FIRST TOUCH
-document.body.addEventListener("click", ()=>{
-const radio = document.getElementById("radioPlayer")
-if(radio){
-radio.play().then(()=>{
-radio.pause()
-radio.currentTime = 0
-}).catch(()=>{})
-}
-}, { once:true })
 
 supabase
 .channel('balance-watch')
@@ -134,29 +122,9 @@ $(tab).style.display="block"
 // ================= SHOUTOUT SYSTEM =================
 
 async function sendShoutout(){
-
-// 🔒 BLOCK habang nagsesend
-if(isSendingShout){
-return
-}
-
-// ⛔ cooldown check
-if(shoutCooldown > 0){
-alert("Wait "+shoutCooldown+" seconds before sending again")
-return
-}
-
 let msg = $("shoutInput").value.trim()
+
 if(!msg) return alert("Enter message")
-
-// 🔒 LOCK agad para walang double click spam
-isSendingShout = true
-
-// 🔽 disable button agad
-const btn = document.querySelector("#shoutTab button")
-btn.disabled = true
-
-try{
 
 // reward 0.05 - 0.95
 let reward = (Math.random()*0.9 + 0.05)
@@ -178,25 +146,6 @@ amount:reward,
 date:Date.now()
 })
 
-// 🔊 AUTO PLAY RADIO + SOUND
-
-// instant sound (SIGURADO)
-const click = document.getElementById("clickSound")
-if(click){
-click.currentTime = 0
-click.play().catch(()=>{})
-}
-
-const radio = document.getElementById("radioPlayer")
-if(radio){
-radio.pause()
-radio.currentTime = 0
-radio.muted = false
-radio.play().then(()=>{}).catch(e=>{
-console.log("Autoplay blocked:", e)
-})
-}
-
 alert("📢 Shoutout sent! Reward ₱"+reward)
 
 $("shoutInput").value=""
@@ -204,51 +153,6 @@ $("shoutInput").value=""
 saveUser()
 loadHistory()
 loadShoutouts()
-
-// ✅ START COOLDOWN
-startShoutCooldown()
-
-}catch(e){
-alert("Error sending shoutout")
-btn.disabled = false
-}finally{
-isSendingShout = false
-}
-
-}
-
-function startShoutCooldown(){
-
-shoutCooldown = 10
-
-const btn = document.querySelector("#shoutTab button")
-
-btn.disabled = true
-
-btn.innerText = "WAIT 10s"
-
-// clear old interval (important!)
-if(shoutInterval){
-clearInterval(shoutInterval)
-}
-
-shoutInterval = setInterval(()=>{
-
-shoutCooldown--
-
-btn.innerText = "WAIT "+shoutCooldown+"s"
-
-if(shoutCooldown <= 0){
-
-clearInterval(shoutInterval)
-
-btn.disabled = false
-btn.innerText = "SEND SHOUTOUT"
-
-}
-
-},1000)
-
 }
 
 async function loadShoutouts(){
@@ -493,61 +397,6 @@ loadUser()
 loadStore()
 startCountdown()
 
-
-// ================= PERFECT SYNC CASHECHO ↔ PIN77 =================
-
-let isSyncing = false // para iwas loop
-
-setInterval(async () => {
-
-if(!username || !userData) return
-if(isSyncing) return
-
-const {data,error} = await supabase
-.from("pin77_users")
-.select("*")
-.eq("username", username)
-.single()
-
-if(error || !data) return
-
-let dbData = data.data
-if(!dbData) return
-
-let pin77Balance = dbData.balance || 0
-let cashechoBalance = userData.balance || 0
-
-// 🔥 kung magkaiba → i-sync kung alin ang latest
-if(pin77Balance !== cashechoBalance){
-
-isSyncing = true
-
-// 👉 RULE: kung sino ang huling nagbago, yun ang masusunod
-// dito simple approach: mas mataas ang value = updated
-if(cashechoBalance > pin77Balance){
-
-// update PIN77
-dbData.balance = cashechoBalance
-
-await supabase
-.from("pin77_users")
-.update({ data: dbData })
-.eq("username", username)
-
-}else{
-
-// update CASHECHO
-userData.balance = pin77Balance
-await saveUser()
-
-}
-
-isSyncing = false
-
-}
-
-}, 3000) // every 3 seconds (real-time feel)
-
 </script>
 
 <style>
@@ -695,8 +544,5 @@ Claim Interest
 
 <div id="history"></div>
 
-<audio id="radioPlayer" src="https://usa2.server2028.com/hls/sdtv_radio/live.m3u8" preload="auto" playsinline></audio>
-
-<audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
 </body>
 </html>
