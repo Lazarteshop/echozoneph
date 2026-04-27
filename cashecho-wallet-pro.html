@@ -135,12 +135,8 @@ $(tab).style.display="block"
 
 async function sendShoutout(){
 
-// 🔒 BLOCK habang nagsesend
-if(isSendingShout){
-return
-}
+if(isSendingShout) return
 
-// ⛔ cooldown check
 if(shoutCooldown > 0){
 alert("Wait "+shoutCooldown+" seconds before sending again")
 return
@@ -149,27 +145,30 @@ return
 let msg = $("shoutInput").value.trim()
 if(!msg) return alert("Enter message")
 
-// 🔒 LOCK agad para walang double click spam
 isSendingShout = true
 
-// 🔽 disable button agad
 const btn = document.querySelector("#shoutTab button")
 btn.disabled = true
 
 try{
 
-// reward 0.05 - 0.95
 let reward = (Math.random()*0.9 + 0.05)
 reward = parseFloat(reward.toFixed(2))
 
-// save shoutout to DB
-await supabase.from("shoutouts").insert({
+// ✅ CHECK ERROR PROPERLY
+const { error } = await supabase
+.from("shoutouts")
+.insert({
 username: username,
 message: msg,
 date: Date.now()
 })
 
-// give reward
+if(error){
+throw error
+}
+
+// ✅ reward ONLY if success
 userData.cashechobalance += reward
 
 userData.walletHistory.push({
@@ -178,9 +177,7 @@ amount:reward,
 date:Date.now()
 })
 
-// 🔊 AUTO PLAY RADIO + SOUND
-
-// instant sound (SIGURADO)
+// sounds
 const click = document.getElementById("clickSound")
 if(click){
 click.currentTime = 0
@@ -192,9 +189,7 @@ if(radio){
 radio.pause()
 radio.currentTime = 0
 radio.muted = false
-radio.play().then(()=>{}).catch(e=>{
-console.log("Autoplay blocked:", e)
-})
+radio.play().catch(()=>{})
 }
 
 alert("📢 Shoutout sent! Reward ₱"+reward)
@@ -205,12 +200,15 @@ saveUser()
 loadHistory()
 loadShoutouts()
 
-// ✅ START COOLDOWN
+// ✅ ALWAYS START COOLDOWN AFTER SUCCESS
 startShoutCooldown()
 
 }catch(e){
+console.error(e)
 alert("Error sending shoutout")
+
 btn.disabled = false
+
 }finally{
 isSendingShout = false
 }
