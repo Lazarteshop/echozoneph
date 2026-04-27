@@ -36,6 +36,8 @@ return
 
 userData=data.data
 
+if(!userData.balance) userData.balance=0 
+
 if(!userData.walletHistory)
 userData.walletHistory=[]
 
@@ -183,7 +185,7 @@ window.sendShoutout=sendShoutout
 
 // ================= EXISTING SYSTEM =================
 
-function spin(){
+async function spin(){
 
 const now = new Date()
 const hour = now.getHours()
@@ -288,7 +290,7 @@ $("store").innerHTML=html
 
 }
 
-function buy(name,price){
+async function buy(name,price){
 
 if(userData.balance<price)
 return alert("Insufficient balance")
@@ -310,7 +312,7 @@ loadHistory()
 
 }
 
-function claimInterest(){
+async function claimInterest(){
 
 const today=new Date().toDateString()
 
