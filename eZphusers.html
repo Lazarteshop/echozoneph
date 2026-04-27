@@ -38,14 +38,7 @@ async function loadUsers(){
  const {data,error}=await supabase.from('pin77_users').select('*')
  if(error){console.error(error);return}
  users={}
- data.forEach(u=>users[u.username]=u.data || {
-  pass:"",
-  points:0,
-  balance:0,
-  energy:0,
-  history:[],
-  banned:false
-}
+ data.forEach(u=>users[u.username]=u.data)
 
 supabase
 .channel('wallet-sync')
@@ -58,48 +51,14 @@ table:'pin77_users'
 },
 (payload)=>{
 
-if(payload.new.username !== currentUser) return
+if(payload.new.username === username){
 
-const dbData = payload.new.data
-if(!dbData) return
+userData = payload.new.data
 
-let cashechoBalance = dbData.balance || 0
-let localBalance = users[currentUser].balance || 0
+if(!userData.walletHistory)
+userData.walletHistory=[]
 
-let isSyncing = false
-
-supabase
-.channel('wallet-sync')
-.on(
-'postgres_changes',
-{
-event:'UPDATE',
-schema:'public',
-table:'pin77_users'
-},
-(payload)=>{
-
-if(payload.new.username !== currentUser) return
-if(isSyncing) return
-
-const dbData = payload.new.data
-if(!dbData) return
-
-let cashechoBalance = dbData.balance || 0
-let localBalance = users[currentUser].balance || 0
-
-if(cashechoBalance !== localBalance){
-
-isSyncing = true
-
-// sync both sides
-users[currentUser].balance = cashechoBalance
-users[currentUser].points = cashechoBalance * POINT_RATE
-
-saveUser(currentUser)
 updateUI()
-
-isSyncing = false
 
 }
 
@@ -176,13 +135,7 @@ deviceID:deviceID
 
 if(users[u].banned) return alert('Your account is banned')
 
- if(!users[u] || !users[u].pass){
-  return alert("Account corrupted. Contact admin")
-}
-
-if(users[u].pass !== p){
-  return alert("Wrong password")
-}
+ if(users[u].pass!==p)return alert('Wrong password')
 
  currentUser=u
  showGame()
@@ -629,8 +582,8 @@ th,td{border-bottom:1px solid #334155;padding:6px;text-align:center}
 </div>
 
 <div class="card center">
-<button id="watchBtn" onclick="watchAd()">▶️ Watch Video Reward</button> 
-<button id="playBtn" onclick="playGame()">🎮 Play Game Reward</button> 
+<button id="watchBtn" onclick="watchAd()">▶️ Watch Video Reward</button>
+<button id="playBtn" onclick="playGame()">🎮 Play Game Reward</button>
 </div>
 
 <div class="card">
