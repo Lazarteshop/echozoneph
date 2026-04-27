@@ -18,9 +18,7 @@ const supabase=createClient(SUPABASE_URL,SUPABASE_KEY)
 let username=localStorage.getItem("username")
 let userData=null
 let spins=20
-let shoutCooldown = 0
-let shoutInterval = null
-let isSendingShout = false // 🔥 ADD THIS
+
 function $(id){return document.getElementById(id)}
 
 async function loadUser(){
@@ -38,7 +36,6 @@ return
 
 userData=data.data
 
-userData.cashechoBalance = userData.cashechoBalance ?? 0
 if(!userData.walletHistory)
 userData.walletHistory=[]
 
@@ -53,16 +50,6 @@ spins=userData.spins
 updateUI()
 loadHistory()
 loadShoutouts()
-// 🔓 UNLOCK AUDIO ON FIRST TOUCH
-document.body.addEventListener("click", ()=>{
-const radio = document.getElementById("radioPlayer")
-if(radio){
-radio.play().then(()=>{
-radio.pause()
-radio.currentTime = 0
-}).catch(()=>{})
-}
-}, { once:true })
 
 supabase
 .channel('balance-watch')
@@ -77,10 +64,10 @@ table:'pin77_users'
 
 if(payload.new.username === username){
 
-userData = payload.new.data || {}
+userData = payload.new.data
 
-userData.cashechoBalance = userData.cashechoBalance ?? 0
-userData.walletHistory = userData.walletHistory ?? []
+if(!userData.walletHistory)
+userData.walletHistory=[]
 
 updateUI()
 loadHistory()
@@ -118,8 +105,7 @@ updateUI()
 
 function updateUI(){
 
-$("cashechoBalance").innerText = "₱" + (userData.cashechoBalance || 0).toFixed(2)
-
+$("cashechobalance").innerText="₱"+userData.cashechobalance.toFixed(2)
 $("spinLeft").innerText=spins
 
 }
@@ -136,29 +122,9 @@ $(tab).style.display="block"
 // ================= SHOUTOUT SYSTEM =================
 
 async function sendShoutout(){
-
-// 🔒 BLOCK habang nagsesend
-if(isSendingShout){
-return
-}
-
-// ⛔ cooldown check
-if(shoutCooldown > 0){
-alert("Wait "+shoutCooldown+" seconds before sending again")
-return
-}
-
 let msg = $("shoutInput").value.trim()
+
 if(!msg) return alert("Enter message")
-
-// 🔒 LOCK agad para walang double click spam
-isSendingShout = true
-
-// 🔽 disable button agad
-const btn = document.querySelector("#shoutTab button")
-btn.disabled = true
-
-try{
 
 // reward 0.05 - 0.95
 let reward = (Math.random()*0.9 + 0.05)
@@ -172,9 +138,7 @@ date: Date.now()
 })
 
 // give reward
-userData.cashechoBalance += reward
-await saveUser()
-updateUI()
+userData.cashechobalance += reward
 
 userData.walletHistory.push({
 type:"shout",
@@ -182,78 +146,13 @@ amount:reward,
 date:Date.now()
 })
 
-// 🔊 AUTO PLAY RADIO + SOUND
-
-// instant sound (SIGURADO)
-const click = document.getElementById("clickSound")
-if(click){
-click.currentTime = 0
-click.play().catch(()=>{})
-}
-
-const radio = document.getElementById("radioPlayer")
-if(radio){
-radio.pause()
-radio.currentTime = 0
-radio.muted = false
-radio.play().then(()=>{}).catch(e=>{
-console.log("Autoplay blocked:", e)
-})
-}
-
 alert("📢 Shoutout sent! Reward ₱"+reward)
 
 $("shoutInput").value=""
 
 saveUser()
-updateUI()
 loadHistory()
 loadShoutouts()
-
-// ✅ START COOLDOWN
-startShoutCooldown()
-
-}catch(e){
-alert("Error sending shoutout")
-btn.disabled = false
-}finally{
-isSendingShout = false
-}
-
-}
-
-function startShoutCooldown(){
-
-shoutCooldown = 10
-
-const btn = document.querySelector("#shoutTab button")
-
-btn.disabled = true
-
-btn.innerText = "WAIT 10s"
-
-// clear old interval (important!)
-if(shoutInterval){
-clearInterval(shoutInterval)
-}
-
-shoutInterval = setInterval(()=>{
-
-shoutCooldown--
-
-btn.innerText = "WAIT "+shoutCooldown+"s"
-
-if(shoutCooldown <= 0){
-
-clearInterval(shoutInterval)
-
-btn.disabled = false
-btn.innerText = "SEND SHOUTOUT"
-
-}
-
-},1000)
-
 }
 
 async function loadShoutouts(){
@@ -308,14 +207,14 @@ alert("No spins left")
 return
 }
 
-if((userData.cashechoBalance || 0) < 1){
+if(userData.cashechobalance < 1){
 alert("Not enough balance")
 return
 }
 
 spins--
 
-userData.cashechoBalance-=1
+userData.cashechobalance-=1
 
 const icons=["🍒","🍋","💎","7️⃣","⭐"]
 
@@ -330,7 +229,7 @@ let reward=0
 if(r1===r2 && r2===r3) reward=15
 else if(r1===r2 || r2===r3) reward=5
 
-userData.cashechoBalance = (userData.cashechoBalance || 0) + reward
+userData.cashechobalance+=reward
 
 if(reward>0){
 
@@ -339,14 +238,12 @@ alert("WIN ₱"+reward)
 userData.walletHistory.push({
 type:"slot",
 amount:reward,
-balanceBefore: (userData.cashechoBalance || 0) - reward,
 date:Date.now()
 })
 
 }
 
-await saveUser()
-updateUI()
+saveUser()
 loadHistory()
 
 }
@@ -391,10 +288,10 @@ $("store").innerHTML=html
 
 function buy(name,price){
 
-if(userData.cashechoBalance<price)
+if(userData.cashechobalance<price)
 return alert("Insufficient balance")
 
-userData.cashechoBalance-=price
+userData.cashechobalance-=price
 
 userData.walletHistory.push({
 type:"purchase",
@@ -406,7 +303,6 @@ date:Date.now()
 alert("Redeemed "+name)
 
 saveUser()
-updateUI()
 loadHistory()
 
 }
@@ -418,9 +314,9 @@ const today=new Date().toDateString()
 if(userData.lastInterest===today)
 return alert("Already claimed today")
 
-const interest=userData.cashechoBalance*0.0005
+const interest=userData.balance*0.0005
 
-userData.cashechoBalance+=interest
+userData.cashechobalance+=interest
 userData.lastInterest=today
 
 userData.walletHistory.push({
@@ -466,9 +362,6 @@ h.toString().padStart(2,'0')+":"
 }
 
 function loadHistory(){
-
-const u = userData
-if(!u || !u.walletHistory) return
 
 let html=""
 
@@ -523,7 +416,7 @@ text-align:center;
 margin-bottom:15px
 }
 
-.cashechoBalance{
+.cashechobalance{
 font-size:40px;
 font-weight:bold
 }
@@ -578,7 +471,7 @@ color:white
 
 <div>CASHECHO Total Balance</div>
 
-<div id="cashechoBalance" class="cashechoBalance">₱0</div>
+<div id="cashechobalance" class="cashechobalance">₱0</div>
 
 </div>
 
@@ -651,8 +544,5 @@ Claim Interest
 
 <div id="history"></div>
 
-<audio id="radioPlayer" src="https://usa2.server2028.com/hls/sdtv_radio/live.m3u8" preload="auto" playsinline></audio>
-
-<audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
 </body>
 </html>
