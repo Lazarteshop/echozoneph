@@ -52,15 +52,14 @@ table:'pin77_users'
 },
 (payload)=>{
 
-if(payload.new.username === username){
+if(payload.new.username === currentUser){
 
-userData = payload.new.data
+users[payload.new.username] = payload.new.data
 
-if(!userData.walletHistory)
-userData.walletHistory=[]
+if(!users[payload.new.username].walletHistory)
+users[payload.new.username].walletHistory = []
 
 updateUI()
-
 }
 
 }
