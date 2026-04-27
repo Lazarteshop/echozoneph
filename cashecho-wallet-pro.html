@@ -303,7 +303,7 @@ alert("No spins left")
 return
 }
 
-if(userData.cashechoBalance < 1){
+if((userData.cashechoBalance || 0) < 1){
 alert("Not enough balance")
 return
 }
@@ -325,7 +325,7 @@ let reward=0
 if(r1===r2 && r2===r3) reward=15
 else if(r1===r2 || r2===r3) reward=5
 
-userData.cashechoBalance+=reward
+userData.cashechoBalance = (userData.cashechoBalance || 0) + reward
 
 if(reward>0){
 
@@ -334,6 +334,7 @@ alert("WIN ₱"+reward)
 userData.walletHistory.push({
 type:"slot",
 amount:reward,
+balanceBefore: (userData.cashechoBalance || 0) - reward,
 date:Date.now()
 })
 
@@ -458,6 +459,9 @@ h.toString().padStart(2,'0')+":"
 }
 
 function loadHistory(){
+
+const u = userData
+if(!u || !u.walletHistory) return
 
 let html=""
 
