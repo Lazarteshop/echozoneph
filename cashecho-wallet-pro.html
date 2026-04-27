@@ -38,7 +38,7 @@ return
 
 userData=data.data
 
-userData.cashechoBalance = userData.cashechoBalance || 0
+userData.cashechoBalance = userData.cashechoBalance ?? 0
 if(!userData.walletHistory)
 userData.walletHistory=[]
 
@@ -77,10 +77,10 @@ table:'pin77_users'
 
 if(payload.new.username === username){
 
-userData = payload.new.data
+userData = payload.new.data || {}
 
-if(!userData.walletHistory)
-userData.walletHistory=[]
+userData.cashechoBalance = userData.cashechoBalance ?? 0
+userData.walletHistory = userData.walletHistory ?? []
 
 updateUI()
 loadHistory()
@@ -118,7 +118,8 @@ updateUI()
 
 function updateUI(){
 
-$("cashechobalance").innerText = "₱" + (userData.cashechoBalance || 0).toFixed(2)
+$("cashechoBalance").innerText = "₱" + (userData.cashechoBalance || 0).toFixed(2)
+
 $("spinLeft").innerText=spins
 
 }
@@ -172,6 +173,8 @@ date: Date.now()
 
 // give reward
 userData.cashechoBalance += reward
+await saveUser()
+updateUI()
 
 userData.walletHistory.push({
 type:"shout",
@@ -342,7 +345,7 @@ date:Date.now()
 
 }
 
-saveUser()
+await saveUser()
 updateUI()
 loadHistory()
 
