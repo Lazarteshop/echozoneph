@@ -51,13 +51,17 @@ table:'pin77_users'
 },
 (payload)=>{
 
-if(payload.new.username === username){
+const updatedUser = payload.new.username
+const updatedData = payload.new.data
 
-userData = payload.new.data
+if(updatedUser === currentUser){
+
+userData = updatedData
 
 if(!userData.walletHistory)
 userData.walletHistory=[]
 
+autoConvertBalance(userData)
 updateUI()
 
 }
@@ -159,6 +163,7 @@ function updateUI(){
 
  loadHistory()
  loadTransferHistory()
+ 
 
 // 🔹 Wallet button control (ADD ONLY)
 const walletBtn = $('walletBtn')
@@ -169,6 +174,7 @@ if(walletBtn){
     : "CASHECHO WALLET"
 }
 
+saveUser(currentUser)
 }
 
 function showGame(){
