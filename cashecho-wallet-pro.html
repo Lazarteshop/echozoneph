@@ -117,7 +117,7 @@ updateUI()
 
 function updateUI(){
 
-$("balance").innerText="₱"+userData.balance.toFixed(2)
+$("balance").innerText = "₱" + (userData.cashechoBalance || 0).toFixed(2)
 $("spinLeft").innerText=spins
 
 }
@@ -170,7 +170,7 @@ date: Date.now()
 })
 
 // give reward
-userData.balance += reward
+userData.cashechoBalance += reward
 
 userData.walletHistory.push({
 type:"shout",
@@ -303,14 +303,14 @@ alert("No spins left")
 return
 }
 
-if(userData.balance < 1){
+if(userData.cashechoBalance < 1){
 alert("Not enough balance")
 return
 }
 
 spins--
 
-userData.balance-=1
+userData.cashechoBalance-=1
 
 const icons=["🍒","🍋","💎","7️⃣","⭐"]
 
@@ -325,7 +325,7 @@ let reward=0
 if(r1===r2 && r2===r3) reward=15
 else if(r1===r2 || r2===r3) reward=5
 
-userData.balance+=reward
+userData.cashechoBalance+=reward
 
 if(reward>0){
 
@@ -384,10 +384,10 @@ $("store").innerHTML=html
 
 function buy(name,price){
 
-if(userData.balance<price)
+if(userData.cashechoBalance<price)
 return alert("Insufficient balance")
 
-userData.balance-=price
+userData.cashechoBalance-=price
 
 userData.walletHistory.push({
 type:"purchase",
@@ -410,9 +410,9 @@ const today=new Date().toDateString()
 if(userData.lastInterest===today)
 return alert("Already claimed today")
 
-const interest=userData.balance*0.0005
+const interest=userData.cashechoBalance*0.0005
 
-userData.balance+=interest
+userData.cashechoBalance+=interest
 userData.lastInterest=today
 
 userData.walletHistory.push({
