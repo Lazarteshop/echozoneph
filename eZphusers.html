@@ -38,7 +38,14 @@ async function loadUsers(){
  const {data,error}=await supabase.from('pin77_users').select('*')
  if(error){console.error(error);return}
  users={}
- data.forEach(u=>users[u.username]=u.data)
+ data.forEach(u=>users[u.username]=u.data || {
+  pass:"",
+  points:0,
+  balance:0,
+  energy:0,
+  history:[],
+  banned:false
+}
 
 supabase
 .channel('wallet-sync')
@@ -169,7 +176,13 @@ deviceID:deviceID
 
 if(users[u].banned) return alert('Your account is banned')
 
- if(users[u].pass!==p)return alert('Wrong password')
+ if(!users[u] || !users[u].pass){
+  return alert("Account corrupted. Contact admin")
+}
+
+if(users[u].pass !== p){
+  return alert("Wrong password")
+}
 
  currentUser=u
  showGame()
