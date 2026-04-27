@@ -51,15 +51,19 @@ table:'pin77_users'
 },
 (payload)=>{
 
-const updatedUser = payload.new.username
-const updatedData = payload.new.data
+const data = payload.new
 
-if(updatedUser === currentUser){
+if(!data || !data.username) return
 
-userData = updatedData
+if(data.username === currentUser){
+
+userData = data.data
+
+// 🔥 IMPORTANT: sync cache too
+users[currentUser] = data.data
 
 if(!userData.walletHistory)
-userData.walletHistory=[]
+userData.walletHistory = []
 
 autoConvertBalance(userData)
 updateUI()
