@@ -536,13 +536,16 @@ const now = new Date()
 const hour = now.getHours()
 const minute = now.getMinutes()
 
-// 👉 EXACT 8:00 PM
-if(hour === 20 && minute === 0){
+// ✅ 8:00 PM hanggang 8:10 PM
+if(hour === 20 && minute >= 0 && minute <= 10){
 
-document.getElementById("redPacket").style.display = "flex"
+// show only if hidden
+const rp = document.getElementById("redPacket")
 
-// start timer
+if(rp.style.display === "none"){
+rp.style.display = "flex"
 startRedPacket()
+}
 
 }
 
