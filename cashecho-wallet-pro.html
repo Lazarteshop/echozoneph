@@ -26,73 +26,98 @@ function $(id){return document.getElementById(id)}
 
 async function loadUser(){
 
-  if(!username){
-    alert("No login session found. Please login first and maintain ₱10 balance to access this page.")
-    return
-  }
+if(!username){
+  alert("No login session found. Please login first and maintain ₱10 balance to access this page.")
+  return
+}
 
-  const { data, error } = await supabase
-    .from("pin77_users")
-    .select("*")
-    .eq("username", username)
-    .single()
+const {data}=await supabase
+.from("pin77_users")
+.select("*")
+.eq("username",username)
+.single()
 
-  if(error || !data){
-    alert("User not found")
-    return
-  }
+if(!data){
+alert("User not found")
+return
+}
 
-// ✅ SAFE NORMALIZATION (FINAL SOURCE OF TRUTH)
-  userData = normalizeUser(data)
+userData = normalizeUser(data)
 
-  spins = userData.spins
+userData.walletHistory = Array.isArray(userData.walletHistory)
+  ? userData.walletHistory
+  : []
 
-  updateUI()
-  startCountdown()
-  loadHistory()
-  loadShoutouts()
+userData.cashechobalance = Number(userData.cashechobalance)
+  ? userData.cashechobalance
+  : 0
 
-  // 🔓 audio unlock
-  document.body.addEventListener("click", ()=>{
-    const radio = document.getElementById("radioPlayer")
-    if(radio){
-      radio.play().then(()=>{
-        radio.pause()
-        radio.currentTime = 0
-      }).catch(()=>{})
-    }
-  }, { once:true })
+userData.spins = Number(userData.spins)
+  ? userData.spins
+  : 20
 
-supabase
-    .channel('balance-watch')
-    .on('postgres_changes',{
-      event:'UPDATE',
-      schema:'public',
-      table:'pin77_users'
-    },(payload)=>{
+userData.lastSpinReset = userData.lastSpinReset || ""
 
-      if(payload.new.username === username){
+spins = userData.spins
 
-        userData = normalizeUser(payload.new)
-
-        updateUI()
-        startCountdown()
-        loadHistory()
-      }
-
-    })
-    .subscribe()
+updateUI()
+startCountdown()
+loadHistory()
+loadShoutouts()
+// 🔓 UNLOCK AUDIO ON FIRST TOUCH
+document.body.addEventListener("click", ()=>{
+const radio = document.getElementById("radioPlayer")
+if(radio){
+radio.play().then(()=>{
+radio.pause()
+radio.currentTime = 0
+}).catch(()=>{})
+}
+}, { once:true })
 
 supabase
-    .channel('shoutouts')
-    .on('postgres_changes',{
-      event:'INSERT',
-      schema:'public',
-      table:'shoutouts'
-    },()=>{
-      loadShoutouts()
-    })
-    .subscribe()
+.channel('balance-watch')
+.on(
+'postgres_changes',
+{
+event:'UPDATE',
+schema:'public',
+table:'pin77_users'
+},
+(payload)=>{
+
+if(payload.new.username === username){
+
+userData = normalizeUser(payload.new)
+
+userData.walletHistory = Array.isArray(userData.walletHistory)
+  ? userData.walletHistory
+  : []
+
+userData.cashechobalance = Number(userData.cashechobalance) || 0
+
+updateUI()
+startCountdown()
+loadHistory()
+
+}
+
+}
+)
+.subscribe()
+
+// realtime shoutouts
+supabase
+.channel('shoutouts')
+.on('postgres_changes',{
+event:'INSERT',
+schema:'public',
+table:'shoutouts'
+},()=>{
+loadShoutouts()
+})
+.subscribe()
+
 }
 
 async function saveUser(){
