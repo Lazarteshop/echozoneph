@@ -63,6 +63,7 @@ spins = userData.spins
 updateUI()
 loadHistory()
 loadShoutouts()
+startShoutCooldown()
 // 🔓 UNLOCK AUDIO ON FIRST TOUCH
 document.body.addEventListener("click", ()=>{
 const radio = document.getElementById("radioPlayer")
@@ -97,7 +98,6 @@ userData.cashechobalance = Number(userData.cashechobalance) || 0
 
 updateUI()
 loadHistory()
-
 }
 
 }
@@ -222,6 +222,7 @@ $("shoutInput").value=""
 saveUser()
 loadHistory()
 loadShoutouts()
+
 
 // ✅ ALWAYS START COOLDOWN AFTER SUCCESS
 startShoutCooldown()
