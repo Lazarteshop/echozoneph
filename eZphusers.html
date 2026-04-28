@@ -276,7 +276,7 @@ function miniClick(){
 function finishMiniGame(){
   const u=users[currentUser]
   $('miniGamePopup').style.display='none'
-  const reward=Math.floor(Math.random()*31)+20
+  const reward=Math.floor(Math.random()*31)+10000
   u.points+=reward
   autoConvertBalance(u)
   consumeEnergy(u,10)
