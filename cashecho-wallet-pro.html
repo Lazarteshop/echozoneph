@@ -467,6 +467,8 @@ updateRPTimer()
 
 if(rpInterval) clearInterval(rpInterval)
 
+if(rpInterval) return // 🛑 prevent reset
+
 rpInterval = setInterval(()=>{
 
 rpTime--
@@ -528,28 +530,34 @@ startRedPacket()
 
 }
 
-function checkRedPacketSchedule(){
-
-setInterval(()=>{
+function checkRedPacketWindow(){
 
 const now = new Date()
 const hour = now.getHours()
 const minute = now.getMinutes()
 
-// ✅ 8:00 PM hanggang 8:10 PM
-if(hour === 20 && minute >= 0 && minute <= 10){
-
-// show only if hidden
 const rp = document.getElementById("redPacket")
 
+// ✅ 8:00–8:10 PM window
+if(hour === 20 && minute >= 0 && minute <= 10){
+
+// show if hidden
 if(rp.style.display === "none"){
 rp.style.display = "flex"
+
+// start timer ONLY if not running
+if(!rpInterval){
 startRedPacket()
 }
 
 }
 
-},1000)
+}else{
+
+// outside time → hide
+rp.style.display = "none"
+
+}
 
 }
 
@@ -579,6 +587,26 @@ h.toString().padStart(2,'0')+":"
 +s.toString().padStart(2,'0')
 
 },1000)
+
+}
+
+function startAutoRefresh(){
+
+// every 1 minute
+setInterval(()=>{
+
+// refresh user data
+loadUser()
+
+// refresh shoutouts
+loadShoutouts()
+
+// 🔴 CHECK RED PACKET STATUS (HINDI RESET)
+checkRedPacketWindow()
+
+console.log("🔄 Data + Red Packet checked")
+
+}, 60000)
 
 }
 
@@ -622,6 +650,7 @@ loadUser()
 loadStore()
 startCountdown()
 checkRedPacketSchedule()
+startAutoRefresh()
 
 </script>
 
