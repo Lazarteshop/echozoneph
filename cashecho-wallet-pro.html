@@ -458,7 +458,7 @@ loadHistory()
 
 }
 
-function startRedPocket(){
+function startRedPacket(){
 
 rpTime = 600
 rpReady = false
@@ -496,7 +496,7 @@ s.toString().padStart(2,'0')
 
 }
 
-function claimRedPocket(){
+function claimRedPacket(){
 
 if(!rpReady){
 alert("Wait for 10 minutes to claim reward")
@@ -510,18 +510,18 @@ reward = parseFloat(reward.toFixed(2))
 userData.cashechobalance += reward
 
 userData.walletHistory.push({
-type:"redpocket",
+type:"redpacket",
 amount:reward,
 date:Date.now()
 })
 
-alert("🧧 You received ₱"+reward)
+alert("🧧 You received from redpacket ₱"+reward)
 
 saveUser()
 loadHistory()
 
 // restart timer
-startRedPocket()
+startRedPacket()
 
 }
 
@@ -572,8 +572,8 @@ html+="<div>🎁 Purchase "+h.item+"</div>"
 if(h.type==="interest")
 html+="<div>🪙 Interest ₱"+h.amount.toFixed(2)+"</div>"
 
-if(h.type==="redpocket")
-html+="<div>🧧 Red Pocket ₱"+h.amount+"</div>"
+if(h.type==="redpacket")
+html+="<div>🧧 Red Packet ₱"+h.amount+"</div>"
 
 if(h.type==="shout")
 html+="<div>📢 Shout Reward ₱"+h.amount+"</div>"
@@ -588,12 +588,12 @@ window.spin=spin
 window.buy=buy
 window.showTab=showTab
 window.claimInterest=claimInterest
-window.claimRedPocket = claimRedPocket
+window.claimRedPacket = claimRedPacket
 
 loadUser()
 loadStore()
 startCountdown()
-startRedPocket()
+startRedPacket()
 
 </script>
 
@@ -619,7 +619,7 @@ font-size:40px;
 font-weight:bold
 }
 
-#redPocket{
+#redPacket{
 position:fixed;
 bottom:20px;
 right:20px;
@@ -642,7 +642,7 @@ font-size:12px;
 margin-top:2px;
 }
 
-#redPocket small{
+#redPacket small{
 font-size:9px;
 }
 
@@ -774,7 +774,7 @@ Claim Interest
 <audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
 
 <!-- 🔴 FLOATING RED POCKET -->
-<div id="redPocket" onclick="claimRedPocket()">
+<div id="redPacket" onclick="claimRedPacket()">
   🧧
   <div id="rpTimer">10:00</div>
   <small>Up to ₱50</small>
