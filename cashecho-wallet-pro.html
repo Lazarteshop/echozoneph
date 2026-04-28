@@ -42,10 +42,15 @@ alert("User not found")
 return
 }
 
-userData=data.data
+userData = data.data || {}
 
-if(!userData.walletHistory)
-userData.walletHistory=[]
+if(!userData.walletHistory){
+  userData.walletHistory = []
+}
+
+if(!userData.cashechobalance){
+  userData.cashechobalance = 0
+}
 
 if(!userData.lastSpinReset)
 userData.lastSpinReset=""
@@ -167,15 +172,13 @@ let reward = (Math.random()*0.9 + 0.05)
 reward = parseFloat(reward.toFixed(2))
 
 // ✅ CHECK ERROR PROPERLY
-const { data, error } = await supabase
+const { error } = await supabase
 .from("shoutouts")
 .insert({
 username: username,
 message: msg,
 date: Date.now()
 })
-.select()
-.single()
 
 if(error){
 throw error
