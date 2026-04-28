@@ -21,6 +21,9 @@ let spins = 20
 let shoutCooldown = 0
 let shoutInterval = null
 let isSendingShout = false
+let rpTime = 600 // 10 minutes in seconds
+let rpInterval = null
+let rpReady = false
 
 function $(id){return document.getElementById(id)}
 
@@ -455,6 +458,71 @@ loadHistory()
 
 }
 
+function startRedPocket(){
+
+rpTime = 600
+rpReady = false
+
+updateRPTimer()
+
+if(rpInterval) clearInterval(rpInterval)
+
+rpInterval = setInterval(()=>{
+
+rpTime--
+
+updateRPTimer()
+
+if(rpTime <= 0){
+clearInterval(rpInterval)
+rpReady = true
+document.getElementById("rpTimer").innerText = "CLAIM"
+}
+
+},1000)
+
+}
+
+function updateRPTimer(){
+
+let m = Math.floor(rpTime/60)
+let s = rpTime % 60
+
+document.getElementById("rpTimer").innerText =
+m.toString().padStart(2,'0') + ":" +
+s.toString().padStart(2,'0')
+
+}
+
+function claimRedPocket(){
+
+if(!rpReady){
+alert("Wait for 10 minutes to claim reward")
+return
+}
+
+// reward ₱0.10 to ₱2
+let reward = Math.random() * (2 - 0.1) + 0.1
+reward = parseFloat(reward.toFixed(2))
+
+userData.cashechobalance += reward
+
+userData.walletHistory.push({
+type:"redpocket",
+amount:reward,
+date:Date.now()
+})
+
+alert("🧧 You received ₱"+reward)
+
+saveUser()
+loadHistory()
+
+// restart timer
+startRedPocket()
+
+}
+
 function startCountdown(){
 
 setInterval(()=>{
@@ -502,6 +570,9 @@ html+="<div>🎁 Purchase "+h.item+"</div>"
 if(h.type==="interest")
 html+="<div>🪙 Interest ₱"+h.amount.toFixed(2)+"</div>"
 
+if(h.type==="redpocket")
+html+="<div>🧧 Red Pocket ₱"+h.amount+"</div>"
+
 if(h.type==="shout")
 html+="<div>📢 Shout Reward ₱"+h.amount+"</div>"
 
@@ -519,6 +590,7 @@ window.claimInterest=claimInterest
 loadUser()
 loadStore()
 startCountdown()
+startRedPocket()
 
 </script>
 
@@ -542,6 +614,33 @@ margin-bottom:15px
 .cashechobalance{
 font-size:40px;
 font-weight:bold
+}
+
+#redPocket{
+position:fixed;
+bottom:20px;
+right:20px;
+background:#ef4444;
+width:80px;
+height:80px;
+border-radius:50%;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+font-size:28px;
+box-shadow:0 0 15px rgba(0,0,0,0.5);
+cursor:pointer;
+z-index:9999;
+}
+
+#rpTimer{
+font-size:12px;
+margin-top:2px;
+}
+
+#redPocket small{
+font-size:9px;
 }
 
 .menu{
@@ -670,5 +769,12 @@ Claim Interest
 <audio id="radioPlayer" src="https://usa2.server2028.com/hls/sdtv_radio/live.m3u8" preload="auto" playsinline></audio>
 
 <audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
+
+<!-- 🔴 FLOATING RED POCKET -->
+<div id="redPocket" onclick="claimRedPocket()">
+  🧧
+  <div id="rpTimer">10:00</div>
+  <small>Up to ₱50</small>
+</div>
 </body>
 </html>
