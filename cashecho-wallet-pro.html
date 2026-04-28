@@ -476,7 +476,9 @@ updateRPTimer()
 if(rpTime <= 0){
 clearInterval(rpInterval)
 rpReady = true
+
 document.getElementById("rpTimer").innerText = "CLAIM"
+document.getElementById("redPocket").style.boxShadow = "0 0 20px gold"
 }
 
 },1000)
