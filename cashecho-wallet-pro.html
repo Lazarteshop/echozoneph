@@ -167,17 +167,25 @@ let reward = (Math.random()*0.9 + 0.05)
 reward = parseFloat(reward.toFixed(2))
 
 // ✅ CHECK ERROR PROPERLY
-const { error } = await supabase
+const { data, error } = await supabase
 .from("shoutouts")
 .insert({
-username: username || "anonymous",
+username: username,
 message: msg,
 date: Date.now()
 })
+.select()
+.single()
 
 if(error){
 throw error
 }
+
+if(!data){
+throw new Error("Insert failed")
+}
+
+await loadShoutouts() 
 
 // ✅ reward ONLY if success
 userData.cashechobalance += reward
@@ -262,11 +270,16 @@ btn.innerText = "SEND SHOUTOUT"
 
 async function loadShoutouts(){
 
-const {data}=await supabase
+const {data, error}=await supabase
 .from("shoutouts")
 .select("*")
-.order("date",{ascending:false})
+.order("id",{ascending:false})
 .limit(50)
+
+if(error){
+console.log(error)
+return
+}
 
 let html=""
 
