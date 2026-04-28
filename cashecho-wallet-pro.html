@@ -520,8 +520,33 @@ alert("🧧 You received from redpacket ₱"+reward)
 saveUser()
 loadHistory()
 
+// 🔴 hide after claim
+document.getElementById("redPacket").style.display = "none"
+
 // restart timer
 startRedPacket()
+
+}
+
+function checkRedPacketSchedule(){
+
+setInterval(()=>{
+
+const now = new Date()
+const hour = now.getHours()
+const minute = now.getMinutes()
+
+// 👉 EXACT 8:00 PM
+if(hour === 20 && minute === 0){
+
+document.getElementById("redPacket").style.display = "flex"
+
+// start timer
+startRedPacket()
+
+}
+
+},1000)
 
 }
 
@@ -593,7 +618,7 @@ window.claimRedPacket = claimRedPacket
 loadUser()
 loadStore()
 startCountdown()
-startRedPacket()
+checkRedPacketSchedule()
 
 </script>
 
@@ -774,10 +799,11 @@ Claim Interest
 <audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
 
 <!-- 🔴 FLOATING RED POCKET
-<div id="redPacket" onclick="claimRedPacket()">
+<div id="redPacket" onclick="claimRedPacket()" style="display:none;">
   🧧
   <div id="rpTimer">10:00</div>
-  <small>Up to ₱50</small> --->
+  <small>Up to ₱50</small>
+</div>
 </div>
 </body>
 </html>
