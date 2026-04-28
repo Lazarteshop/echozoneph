@@ -460,14 +460,13 @@ loadHistory()
 
 function startRedPacket(){
 
+// 🛑 kung may tumatakbo na, wag na ulit mag start
+if(rpInterval) return
+
 rpTime = 600
 rpReady = false
 
 updateRPTimer()
-
-if(rpInterval) clearInterval(rpInterval)
-
-if(rpInterval) return // 🛑 prevent reset
 
 rpInterval = setInterval(()=>{
 
@@ -477,6 +476,7 @@ updateRPTimer()
 
 if(rpTime <= 0){
 clearInterval(rpInterval)
+rpInterval = null // ✅ important
 rpReady = true
 
 document.getElementById("rpTimer").innerText = "CLAIM"
