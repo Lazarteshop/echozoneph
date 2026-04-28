@@ -539,7 +539,7 @@ const minute = now.getMinutes()
 const rp = document.getElementById("redPacket")
 if(!rp) return
 
-const isWindow = (hour === 19 && minute >= 0 && minute <= 40)
+const isWindow = (hour === 17 && minute >= 0 && minute <= 40)
 
 if(isWindow){
 
@@ -553,7 +553,7 @@ startRedPacket()
 
 }else{
 
-// 🚀 FORCE FULL RESET after 8:10 PM
+// 🚀 FORCE FULL RESET after 7:40 PM
 rp.style.display = "none"
 rpReady = false
 
@@ -563,7 +563,7 @@ rpInterval = null
 }
 
 // reset timer UI
-document.getElementById("rpTimer").innerText = "10:00"
+document.getElementById("rpTimer").innerText = "07:00"
 rpTime = 600
 }
 }
