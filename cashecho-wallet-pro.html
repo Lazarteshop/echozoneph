@@ -15,15 +15,21 @@ const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 
 const supabase=createClient(SUPABASE_URL,SUPABASE_KEY)
 
-let username=localStorage.getItem("username")
-let userData=null
-let spins=20
+let username = localStorage.getItem("username") || null
+let userData = null
+let spins = 20
 let shoutCooldown = 0
 let shoutInterval = null
-let isSendingShout = false // 🔥 ADD THIS
+let isSendingShout = false
+
 function $(id){return document.getElementById(id)}
 
 async function loadUser(){
+
+if(!username){
+  alert("No PIN77 session found. Please login first.")
+  return
+}
 
 const {data}=await supabase
 .from("pin77_users")
@@ -135,9 +141,8 @@ $(tab).style.display="block"
 
 async function sendShoutout(){
 
-// ✅ ILAGAY MO DITO
-if(!username || username.length < 3){
-  alert("Invalid user. Please login again.")
+if(!username){
+  alert("Invalid session. Please login again in and maintain ₱10 balance to access this page.")
   return
 }
 
@@ -165,7 +170,7 @@ reward = parseFloat(reward.toFixed(2))
 const { error } = await supabase
 .from("shoutouts")
 .insert({
-username: username,
+username: username || "anonymous",
 message: msg,
 date: Date.now()
 })
