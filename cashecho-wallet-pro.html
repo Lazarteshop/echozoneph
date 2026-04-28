@@ -42,7 +42,7 @@ alert("User not found")
 return
 }
 
-userData = normalizeUser(data)
+userData = data?.data ?? {}
 
 userData.walletHistory = Array.isArray(userData.walletHistory)
   ? userData.walletHistory
@@ -61,7 +61,6 @@ userData.lastSpinReset = userData.lastSpinReset || ""
 spins = userData.spins
 
 updateUI()
-startCountdown()
 loadHistory()
 loadShoutouts()
 // 🔓 UNLOCK AUDIO ON FIRST TOUCH
@@ -88,7 +87,7 @@ table:'pin77_users'
 
 if(payload.new.username === username){
 
-userData = normalizeUser(payload.new)
+userData = payload.new.data ?? {}
 
 userData.walletHistory = Array.isArray(userData.walletHistory)
   ? userData.walletHistory
@@ -97,7 +96,6 @@ userData.walletHistory = Array.isArray(userData.walletHistory)
 userData.cashechobalance = Number(userData.cashechobalance) || 0
 
 updateUI()
-startCountdown()
 loadHistory()
 
 }
