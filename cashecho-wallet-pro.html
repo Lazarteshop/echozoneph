@@ -135,6 +135,12 @@ $(tab).style.display="block"
 
 async function sendShoutout(){
 
+// ✅ ILAGAY MO DITO
+if(!username || username.length < 3){
+  alert("Invalid user. Please login again.")
+  return
+}
+
 if(isSendingShout) return
 
 if(shoutCooldown > 0){
