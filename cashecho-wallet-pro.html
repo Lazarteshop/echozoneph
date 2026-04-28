@@ -461,7 +461,7 @@ loadHistory()
 function startRedPacket(){
 
 // 🛑 kung may tumatakbo na, wag na ulit mag start
-if(rpInterval) return
+if(rpInterval) clearInterval(rpInterval)
 
 rpTime = 600
 rpReady = false
@@ -551,7 +551,6 @@ startRedPacket()
 
 }else{
 
-// 🔴 FORCE HIDE + RESET
 rp.style.display = "none"
 rpReady = false
 
@@ -560,7 +559,9 @@ clearInterval(rpInterval)
 rpInterval = null
 }
 
-} // ← eto kulang mo
+}
+
+} // ✅ FIXED CLOSING BRACKET
 
 
 function startCountdown(){
