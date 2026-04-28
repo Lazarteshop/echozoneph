@@ -42,28 +42,23 @@ alert("User not found")
 return
 }
 
-userData = data.data || {}
+userData = data?.data ?? {}
 
-userData.walletHistory = userData.walletHistory || []
-userData.cashechobalance = userData.cashechobalance || 0
-userData.spins = userData.spins || 20
+userData.walletHistory = Array.isArray(userData.walletHistory)
+  ? userData.walletHistory
+  : []
+
+userData.cashechobalance = Number(userData.cashechobalance)
+  ? userData.cashechobalance
+  : 0
+
+userData.spins = Number(userData.spins)
+  ? userData.spins
+  : 20
+
 userData.lastSpinReset = userData.lastSpinReset || ""
 
-if(!userData.walletHistory){
-  userData.walletHistory = []
-}
-
-if(!userData.cashechobalance){
-  userData.cashechobalance = 0
-}
-
-if(!userData.lastSpinReset)
-userData.lastSpinReset=""
-
-if(!userData.spins)
-userData.spins=20
-
-spins=userData.spins
+spins = userData.spins
 
 updateUI()
 loadHistory()
@@ -92,13 +87,13 @@ table:'pin77_users'
 
 if(payload.new.username === username){
 
-userData = payload.new.data || {}
+userData = payload.new.data ?? {}
 
-userData.walletHistory = userData.walletHistory || []
-userData.cashechobalance = userData.cashechobalance || 0
+userData.walletHistory = Array.isArray(userData.walletHistory)
+  ? userData.walletHistory
+  : []
 
-if(!userData.walletHistory)
-userData.walletHistory=[]
+userData.cashechobalance = Number(userData.cashechobalance) || 0
 
 updateUI()
 loadHistory()
@@ -189,12 +184,10 @@ date: Date.now()
 })
 
 if(error){
+console.log("Insert error:", error)
 throw error
 }
 
-if(!data){
-throw new Error("Insert failed")
-}
 
 await loadShoutouts() 
 
