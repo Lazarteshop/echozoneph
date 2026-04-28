@@ -42,10 +42,14 @@ alert("User not found")
 return
 }
 
-userData = data.data
+userData = data.data || {}
 
 if(!userData.walletHistory){
   userData.walletHistory = []
+}
+
+if(!userData.cashechobalance){
+  userData.cashechobalance = 0
 }
 
 if(!userData.lastSpinReset)
