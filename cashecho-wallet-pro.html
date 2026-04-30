@@ -141,11 +141,17 @@ $("spinLeft").innerText=spins
 
 function showTab(tab){
 
-document.querySelectorAll(".tab")
-.forEach(t=>t.style.display="none")
+  document.querySelectorAll(".tab")
+  .forEach(t=>t.style.display="none")
 
-$(tab).style.display="block"
+  const el = $(tab)
 
+  if(!el){
+    console.error("Tab not found:", tab)
+    return
+  }
+
+  el.style.display = "block"
 }
 
 // ================= SHOUTOUT SYSTEM =================
@@ -708,6 +714,26 @@ html+=`
 document.getElementById("usersList").innerHTML = html
 }
 
+async function openProfile(){
+  if(!userData){
+    alert("Loading user... wait")
+    return
+  }
+
+  showTab('profileTab')
+  await loadProfile()
+}
+
+async function openUsers(){
+  if(!userData){
+    alert("Loading user... wait")
+    return
+  }
+
+  showTab('usersTab')
+  await loadUsers()
+}
+
 async function sendMessage(){
 
 let msg = document.getElementById("chatInput").value
@@ -947,9 +973,9 @@ Lucky Coins
 📢 Shoutout
 </button>
 
-<button onclick="showTab('profileTab'); loadProfile();">👤 Profile</button>
+<button onclick="openProfile()">👤 Profile</button>
 
-<button onclick="showTab('usersTab'); loadUsers();">👥 Users</button>
+<button onclick="openUsers()">👥 Users</button>
 
 </div>
 
