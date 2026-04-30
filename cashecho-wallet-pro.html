@@ -45,7 +45,7 @@ alert("User not found")
 return
 }
 
-userData = data?.data ?? {}
+userData = data || {}
 
 userData.walletHistory = Array.isArray(userData.walletHistory)
   ? userData.walletHistory
@@ -715,20 +715,19 @@ document.getElementById("usersList").innerHTML = html
 }
 
 async function openProfile(){
-  if(!userData){
-    alert("Loading user... wait")
-    return
-  }
+  await loadProfile()
+  showTab('profileTab')
+}
+
 
   showTab('profileTab')
   await loadProfile()
 }
 
 async function openUsers(){
-  if(!userData){
-    alert("Loading user... wait")
-    return
-  }
+  await loadUsers()
+  showTab('usersTab')
+}
 
   showTab('usersTab')
   await loadUsers()
@@ -919,7 +918,9 @@ color:white;
 font-weight:bold
 }
 
-.tab{display:none}
+.tab{
+  display:none;
+}
 
 .slot{
 font-size:45px;
@@ -975,9 +976,9 @@ Lucky Coins
 📢 Shoutout
 </button>
 
-<button onclick="openProfile()">👤 Profile</button>
+<button onclick="console.log('profile click'); openProfile()">👤 Profile</button>
 
-<button onclick="openUsers()">👥 Users</button>
+<button onclick="console.log('users click'); openUsers()">👥 Users</button
 
 </div>
 
