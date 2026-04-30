@@ -67,6 +67,7 @@ updateUI()
 loadHistory()
 loadShoutouts()
 startShoutCooldown()
+
 // 🔓 UNLOCK AUDIO ON FIRST TOUCH
 document.body.addEventListener("click", ()=>{
 const radio = document.getElementById("radioPlayer")
@@ -205,9 +206,12 @@ date:Date.now()
 
 // sounds
 const click = document.getElementById("clickSound")
+
 if(click){
-click.currentTime = 0
-click.play().catch(()=>{})
+  click.currentTime = 0
+  click.play().catch(err=>{
+    console.log("Click sound blocked:", err)
+  })
 }
 
 const radio = document.getElementById("radioPlayer")
@@ -305,6 +309,27 @@ $("shoutList").innerHTML=html
 }
 
 window.sendShoutout=sendShoutout
+
+// 🔓 AUDIO UNLOCK (STEP 1 FIX)
+function unlockAudio(){
+  const radio = document.getElementById("radioPlayer")
+
+  if(!radio) return
+
+  radio.muted = false
+  radio.volume = 1
+
+  radio.play()
+  .then(()=>{
+    console.log("Audio unlocked")
+  })
+  .catch(err=>{
+    console.log("Blocked autoplay:", err)
+  })
+}
+
+// 👇 IMPORTANT: global click listener
+document.addEventListener("click", unlockAudio, { once:true })
 
 // ================= EXISTING SYSTEM =================
 
@@ -830,9 +855,9 @@ Claim Interest
 
 <div id="history"></div>
 
-<audio id="radioPlayer" src="https://209.126.124.126:8872/stream" preload="auto" playsinline></audio>
+<audio id="radioPlayer" src="https://209.126.124.126:8872/stream" autoplay muted playsinline></audio>
 
-<audio id="clickSound" src="https://209.126.124.126:8872/stream" preload="auto"></audio>
+<audio id="clickSound" src="click.mp3" preload="auto"></audio>
 
 <!-- 🔴 FLOATING RED POCKET -->
 <div id="redPacket" onclick="claimRedPacket()" style="display:none;">
