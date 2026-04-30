@@ -313,7 +313,12 @@ window.sendShoutout=sendShoutout
 // 🔓 AUDIO UNLOCK (STEP 1 FIX)
 function unlockAudio(){
   const radio = document.getElementById("radioPlayer")
+
   if(!radio) return
+
+  console.log("🔍 Audio element:", radio)
+  console.log("🔍 ReadyState:", radio.readyState)
+  console.log("🔍 Error:", radio.error)
 
   radio.muted = false
   radio.volume = 1
@@ -323,9 +328,9 @@ function unlockAudio(){
   if(playPromise !== undefined){
     playPromise
     .then(()=>{
-      console.log("✅ Audio started")
+      console.log("✅ Audio started successfully")
     })
-    .catch(err=>{
+catch(err=>{
       console.log("❌ Play blocked:", err)
     })
   }
@@ -856,6 +861,10 @@ Claim Interest
 <h3>Wallet History</h3>
 
 <div id="history"></div>
+
+<button onclick="unlockAudio()" style="position:fixed;bottom:100px;right:20px;z-index:9999">
+🔊 Enable Sound
+</button> 
 
 <audio id="radioPlayer" src="https://209.126.124.126:8872/stream" autoplay muted playsinline></audio>
 
