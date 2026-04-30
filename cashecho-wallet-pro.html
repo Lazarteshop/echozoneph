@@ -615,6 +615,149 @@ checkRedPacketWindow()
 checkRedPacketWindow()
 }
 
+async function loadProfile(){
+
+const {data} = await supabase
+.from("profiles")
+.select("*")
+.eq("username", username)
+.single()
+
+if(!data){
+  await supabase.from("profiles").insert({
+    username: username,
+    avatar: "",
+  })
+  loadProfile()
+  return
+}
+
+userData.profile = data
+
+document.getElementById("avatar").src =
+data.avatar || "https://i.imgur.com/2DhmtJ4.png"
+
+document.getElementById("followers").innerText = data.followers
+document.getElementById("following").innerText = data.following
+}
+
+async function setAvatar(){
+
+let url = prompt("Enter image URL")
+
+if(!url) return
+
+await supabase
+.from("profiles")
+.update({avatar:url})
+.eq("username",username)
+
+loadProfile()
+}
+
+async function followUser(target){
+
+if(target === username) return alert("You cannot follow yourself")
+
+await supabase.from("follows").insert({
+  follower: username,
+  following: target
+})
+
+// update counters
+await supabase.rpc("increment_follow", {
+  user1: username,
+  user2: target
+})
+
+alert("Followed " + target)
+loadUsers()
+loadProfile()
+}
+
+async function loadUsers(){
+
+const {data} = await supabase
+.from("profiles")
+.select("*")
+
+let html=""
+
+data.forEach(u=>{
+html+=`
+<div style="background:#1e293b;padding:10px;margin:5px;border-radius:10px">
+<img src="${u.avatar || ''}" width="40" style="border-radius:50%">
+<b>${u.username}</b><br>
+<button onclick="followUser('${u.username}')">Follow</button>
+<button onclick="openChat('${u.username}')">Chat</button>
+</div>
+`
+})
+
+document.getElementById("usersList").innerHTML = html
+}
+
+async function sendMessage(){
+
+let msg = document.getElementById("chatInput").value
+
+await supabase.from("messages").insert({
+  sender: username,
+  receiver: currentChat,
+  message: msg,
+  date: Date.now()
+})
+
+document.getElementById("chatInput").value=""
+loadMessages()
+}
+
+let currentChat = null
+
+function openChat(user){
+currentChat = user
+loadMessages()
+}
+
+async function loadMessages(){
+
+const {data} = await supabase
+.from("messages")
+.select("*")
+.or(`sender.eq.${username},receiver.eq.${username}`)
+.order("date",{ascending:true})
+
+let html=""
+
+data
+.filter(m =>
+(m.sender===username && m.receiver===currentChat) ||
+(m.sender===currentChat && m.receiver===username)
+)
+.forEach(m=>{
+html+=`
+<div>
+<b>${m.sender}</b>: ${m.message}
+</div>
+`
+})
+
+document.getElementById("chatBox").innerHTML = html
+}
+
+supabase
+.channel('chat')
+.on('postgres_changes',{
+event:'INSERT',
+schema:'public',
+table:'messages'
+},()=>{
+loadMessages()
+})
+.subscribe()
+
+
+
 function loadHistory(){
 
 let html=""
@@ -833,6 +976,33 @@ Claim Interest
 <audio id="radioPlayer" src="https://stream-288.zeno.fm/536cwdq78heuv?zt=eyJhbGciOiJIUzI1NiJ9.eyJzdHJlYW0iOiI1MzZjd2RxNzhoZXV2IiwiaG9zdCI6InN0cmVhbS0yODguemVuby5mbSIsInRtIjpmYWxzZSwicnR0bCI6NSwianRpIjoiNk51bExLR2JSWTYwa3BTY3RkUXVCQSIsImlhdCI6MTc3NzUzMjU3MSwiZXhwIjoxNzc3NTMyNjMxfQ.Fg8EzgiZJrsb1oIA7gD5Kt495VS_d3jGbnz0rzmdzxk" preload="auto" playsinline></audio>
 
 <audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
+
+<div id="profileTab" class="tab">
+<h3>👤 Profile</h3>
+
+<img id="avatar" width="80" style="border-radius:50%">
+<br><br>
+
+<button onclick="setAvatar()">Change Profile</button>
+
+<p>Followers: <span id="followers">0</span></p>
+<p>Following: <span id="following">0</span></p>
+</div>
+
+<div id="usersTab" class="tab">
+<h3>👥 Users</h3>
+<div id="usersList"></div>
+</div>
+
+<div id="chatTab" class="tab">
+<h3>💬 Private Chat</h3>
+
+<div id="chatBox" style="height:200px;overflow:auto"></div>
+
+<input id="chatInput">
+<button onclick="sendMessage()">Send</button>
+</div>
+
 
 <!-- 🔴 FLOATING RED POCKET -->
 <div id="redPacket" onclick="claimRedPacket()" style="display:none;">
