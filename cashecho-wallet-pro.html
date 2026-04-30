@@ -634,12 +634,13 @@ if(!data){
 
 userData.profile = data
 
-document.getElementById("avatar").src =
-data.avatar || "https://i.imgur.com/2DhmtJ4.png"
+const avatarEl = document.getElementById("avatar")
+const followersEl = document.getElementById("followers")
+const followingEl = document.getElementById("following")
 
-document.getElementById("followers").innerText = data.followers
-document.getElementById("following").innerText = data.following
-}
+if(avatarEl) avatarEl.src = data.avatar || "https://i.imgur.com/2DhmtJ4.png"
+if(followersEl) followersEl.innerText = data.followers
+if(followingEl) followingEl.innerText = data.following
 
 async function setAvatar(){
 
@@ -803,11 +804,15 @@ window.openChat = openChat
 window.sendMessage = sendMessage
 window.setAvatar = setAvatar
 
-loadUser()
-loadProfile()
-loadStore()
-startCountdown()
-startAutoRefresh()
+window.addEventListener("DOMContentLoaded", () => {
+  loadUser()
+  loadProfile()
+  loadStore()
+  startCountdown()
+  startAutoRefresh()
+
+  showTab('slotTab') // default tab
+})k
 
 </script>
 
