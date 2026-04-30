@@ -313,22 +313,24 @@ window.sendShoutout=sendShoutout
 // 🔓 AUDIO UNLOCK (STEP 1 FIX)
 function unlockAudio(){
   const radio = document.getElementById("radioPlayer")
-
   if(!radio) return
 
   radio.muted = false
   radio.volume = 1
 
-  radio.play()
-  .then(()=>{
-    console.log("Audio unlocked")
-  })
-  .catch(err=>{
-    console.log("Blocked autoplay:", err)
-  })
+  const playPromise = radio.play()
+
+  if(playPromise !== undefined){
+    playPromise
+    .then(()=>{
+      console.log("✅ Audio started")
+    })
+    .catch(err=>{
+      console.log("❌ Play blocked:", err)
+    })
+  }
 }
 
-// 👇 IMPORTANT: global click listener
 document.addEventListener("click", unlockAudio, { once:true })
 
 // ================= EXISTING SYSTEM =================
