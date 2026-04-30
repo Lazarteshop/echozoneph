@@ -142,9 +142,9 @@ $("spinLeft").innerText=spins
 function showTab(tab){
 
   document.querySelectorAll(".tab")
-  .forEach(t=>t.style.display="none")
+  .forEach(t => t.style.display = "none")
 
-  const el = $(tab)
+  const el = document.getElementById(tab)
 
   if(!el){
     console.error("Tab not found:", tab)
@@ -841,14 +841,14 @@ window.setAvatar = setAvatar
 window.openProfile = openProfile
 window.openUsers = openUsers
 
-window.addEventListener("DOMContentLoaded", () => {
-  loadUser()
+window.addEventListener("DOMContentLoaded", async () => {
+  await loadUser()
   loadProfile()
   loadStore()
   startCountdown()
   startAutoRefresh()
 
-  showTab('slotTab') // default tab
+  showTab('slotTab')
 })
 
 </script>
@@ -978,7 +978,7 @@ Lucky Coins
 
 <button onclick="console.log('profile click'); openProfile()">👤 Profile</button>
 
-<button onclick="console.log('users click'); openUsers()">👥 Users</button
+<button onclick="console.log('users click'); openUsers()">👥 Users</button>
 
 </div>
 
