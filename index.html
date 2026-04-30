@@ -11,8 +11,9 @@
 <meta name="description" content="EchoZone PH is a digital engagement platform focused on advertising, partnerships, and user participation." />
 
 <!-- PWA PRO -->
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="EchoZone PH">
@@ -359,28 +360,44 @@ function toggleLang(){
 </footer>
 
 <script>
-
 let deferredPrompt;
-const installBtn=document.getElementById("installBtn");
+const installBtn = document.getElementById("installBtn");
 
-window.addEventListener("beforeinstallprompt",(e)=>{
-e.preventDefault();
-deferredPrompt=e;
-installBtn.style.display="block";
+// detect install availability
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = "block";
 });
 
-installBtn.addEventListener("click",()=>{
-installBtn.style.display="none";
-deferredPrompt.prompt();
-deferredPrompt.userChoice.then(()=>{deferredPrompt=null;});
+// install click
+installBtn.addEventListener("click", async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  } else {
+    // fallback for Huawei
+    alert("Tap menu (⋮) then 'Add to Home Screen'");
+  }
 });
 
-if("serviceWorker" in navigator){
-window.addEventListener("load",()=>{
-navigator.serviceWorker.register("sw.js");
+// fallback auto show (Huawei fix)
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    if (!deferredPrompt) {
+      installBtn.style.display = "block";
+      installBtn.innerText = "Install (Use menu ⋮)";
+    }
+  }, 3000);
 });
+
+// register service worker
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js")
+    .then(() => console.log("SW registered"))
+    .catch(err => console.log("SW failed", err));
 }
-
 </script>
 
 </body>
