@@ -716,6 +716,7 @@ let currentChat = null
 
 function openChat(user){
 currentChat = user
+showTab('chatTab') // 👈 ADD THIS
 loadMessages()
 }
 
@@ -795,6 +796,7 @@ window.claimInterest=claimInterest
 window.claimRedPacket = claimRedPacket
 
 loadUser()
+loadProfile()
 loadStore()
 startCountdown()
 startAutoRefresh()
@@ -921,6 +923,10 @@ Lucky Coins
 <button onclick="showTab('shoutTab')">
 📢 Shoutout
 </button>
+
+<button onclick="showTab('profileTab'); loadProfile();">👤 Profile</button>
+
+<button onclick="showTab('usersTab'); loadUsers();">👥 Users</button>
 
 </div>
 
