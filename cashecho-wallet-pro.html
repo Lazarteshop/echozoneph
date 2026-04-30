@@ -67,8 +67,17 @@ updateUI()
 loadHistory()
 loadShoutouts()
 startShoutCooldown()
-
 // 🔓 UNLOCK AUDIO ON FIRST TOUCH
+document.body.addEventListener("click", ()=>{
+const radio = document.getElementById("radioPlayer")
+if(radio){
+radio.play().then(()=>{
+radio.pause()
+radio.currentTime = 0
+}).catch(()=>{})
+}
+}, { once:true })
+
 supabase
 .channel('balance-watch')
 .on(
@@ -196,12 +205,9 @@ date:Date.now()
 
 // sounds
 const click = document.getElementById("clickSound")
-
 if(click){
-  click.currentTime = 0
-  click.play().catch(err=>{
-    console.log("Click sound blocked:", err)
-  })
+click.currentTime = 0
+click.play().catch(()=>{})
 }
 
 const radio = document.getElementById("radioPlayer")
@@ -299,34 +305,6 @@ $("shoutList").innerHTML=html
 }
 
 window.sendShoutout=sendShoutout
-
-// 🔓 AUDIO UNLOCK (STEP 1 FIX)
-function unlockAudio(){
-  const radio = document.getElementById("radioPlayer")
-
-  if(!radio) return
-
-  console.log("🔍 Audio element:", radio)
-  console.log("🔍 ReadyState:", radio.readyState)
-  console.log("🔍 Error:", radio.error)
-
-  radio.muted = false
-  radio.volume = 1
-
-  const playPromise = radio.play()
-
-  if(playPromise !== undefined){
-    playPromise
-      .then(()=>{
-        console.log("✅ Audio started successfully")
-      })
-      .catch(err=>{
-        console.log("❌ Play blocked:", err)
-      })
- }
-}
-
-document.addEventListener("click", unlockAudio, { once:true })
 
 // ================= EXISTING SYSTEM =================
 
@@ -852,13 +830,9 @@ Claim Interest
 
 <div id="history"></div>
 
-<button onclick="unlockAudio()" style="position:fixed;bottom:100px;right:20px;z-index:9999">
-🔊 Enable Sound
-</button> 
+<audio id="radioPlayer" src="https://usa2.server2028.com/hls/sdtv_radio/live.m3u8" preload="auto" playsinline></audio>
 
-<audio id="radioPlayer" src="http://209.126.124.126:8872/stream" autoplay muted playsinline></audio>
-
-<audio id="clickSound" src="click.mp3" preload="auto"></audio>
+<audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
 
 <!-- 🔴 FLOATING RED POCKET -->
 <div id="redPacket" onclick="claimRedPacket()" style="display:none;">
