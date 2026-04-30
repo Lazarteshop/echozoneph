@@ -147,7 +147,7 @@ function showTab(tab){
   const el = document.getElementById(tab)
 
   if(!el){
-    console.error("Tab not found:", tab)
+    console.error("Missing tab:", tab)
     return
   }
 
@@ -719,18 +719,9 @@ async function openProfile(){
   showTab('profileTab')
 }
 
-
-  showTab('profileTab')
-  await loadProfile()
-}
-
 async function openUsers(){
   await loadUsers()
   showTab('usersTab')
-}
-
-  showTab('usersTab')
-  await loadUsers()
 }
 
 async function sendMessage(){
