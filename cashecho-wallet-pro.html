@@ -69,16 +69,6 @@ loadShoutouts()
 startShoutCooldown()
 
 // 🔓 UNLOCK AUDIO ON FIRST TOUCH
-document.body.addEventListener("click", ()=>{
-const radio = document.getElementById("radioPlayer")
-if(radio){
-radio.play().then(()=>{
-radio.pause()
-radio.currentTime = 0
-}).catch(()=>{})
-}
-}, { once:true })
-
 supabase
 .channel('balance-watch')
 .on(
@@ -327,13 +317,13 @@ function unlockAudio(){
 
   if(playPromise !== undefined){
     playPromise
-    .then(()=>{
-      console.log("✅ Audio started successfully")
-    })
-catch(err=>{
-      console.log("❌ Play blocked:", err)
-    })
-  }
+      .then(()=>{
+        console.log("✅ Audio started successfully")
+      })
+      .catch(err=>{
+        console.log("❌ Play blocked:", err)
+      })
+ }
 }
 
 document.addEventListener("click", unlockAudio, { once:true })
