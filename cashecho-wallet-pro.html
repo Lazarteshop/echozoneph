@@ -45,7 +45,7 @@ alert("User not found")
 return
 }
 
-userData = data || {}
+userData = data?.data ?? {}
 
 userData.walletHistory = Array.isArray(userData.walletHistory)
   ? userData.walletHistory
@@ -141,17 +141,11 @@ $("spinLeft").innerText=spins
 
 function showTab(tab){
 
-  document.querySelectorAll(".tab")
-  .forEach(t => t.style.display = "none")
+document.querySelectorAll(".tab")
+.forEach(t=>t.style.display="none")
 
-  const el = document.getElementById(tab)
+$(tab).style.display="block"
 
-  if(!el){
-    console.error("Missing tab:", tab)
-    return
-  }
-
-  el.style.display = "block"
 }
 
 // ================= SHOUTOUT SYSTEM =================
@@ -621,171 +615,6 @@ checkRedPacketWindow()
 checkRedPacketWindow()
 }
 
-async function loadProfile(){
-
-const {data} = await supabase
-.from("profiles")
-.select("*")
-.eq("username", username)
-.single()
-
-if(!data){
-  await supabase.from("profiles").insert({
-    username: username,
-    avatar: "",
-  })
-  loadProfile()
-  return
-}
-
-userData.profile = data
-
-const avatarEl = document.getElementById("avatar")
-const followersEl = document.getElementById("followers")
-const followingEl = document.getElementById("following")
-
-if(avatarEl){
-  avatarEl.src = data.avatar || "https://i.imgur.com/2DhmtJ4.png"
-}
-
-if(followersEl){
-  followersEl.innerText = data.followers || 0
-}
-
-if(followingEl){
-  followingEl.innerText = data.following || 0
-}
-
-} 
-
-async function setAvatar(){
-
-let url = prompt("Enter image URL")
-
-if(!url) return
-
-await supabase
-.from("profiles")
-.update({avatar:url})
-.eq("username",username)
-
-loadProfile()
-}
-
-async function followUser(target){
-
-if(target === username) return alert("You cannot follow yourself")
-
-await supabase.from("follows").insert({
-  follower: username,
-  following: target
-})
-
-// update counters
-await supabase.rpc("increment_follow", {
-  user1: username,
-  user2: target
-})
-
-alert("Followed " + target)
-loadUsers()
-loadProfile()
-}
-
-async function loadUsers(){
-
-const {data} = await supabase
-.from("profiles")
-.select("*")
-
-let html=""
-
-data.forEach(u=>{
-html+=`
-<div style="background:#1e293b;padding:10px;margin:5px;border-radius:10px">
-<img src="${u.avatar || ''}" width="40" style="border-radius:50%">
-<b>${u.username}</b><br>
-<button onclick="followUser('${u.username}')">Follow</button>
-<button onclick="openChat('${u.username}')">Chat</button>
-</div>
-`
-})
-
-document.getElementById("usersList").innerHTML = html
-}
-
-async function openProfile(){
-  await loadProfile()
-  showTab('profileTab')
-}
-
-async function openUsers(){
-  await loadUsers()
-  showTab('usersTab')
-}
-
-async function sendMessage(){
-
-let msg = document.getElementById("chatInput").value
-
-await supabase.from("messages").insert({
-  sender: username,
-  receiver: currentChat,
-  message: msg,
-  date: Date.now()
-})
-
-document.getElementById("chatInput").value=""
-loadMessages()
-}
-
-let currentChat = null
-
-function openChat(user){
-currentChat = user
-showTab('chatTab') // 👈 ADD THIS
-loadMessages()
-}
-
-async function loadMessages(){
-
-const {data} = await supabase
-.from("messages")
-.select("*")
-.or(`sender.eq.${username},receiver.eq.${username}`)
-.order("date",{ascending:true})
-
-let html=""
-
-data
-.filter(m =>
-(m.sender===username && m.receiver===currentChat) ||
-(m.sender===currentChat && m.receiver===username)
-)
-.forEach(m=>{
-html+=`
-<div>
-<b>${m.sender}</b>: ${m.message}
-</div>
-`
-})
-
-document.getElementById("chatBox").innerHTML = html
-}
-
-supabase
-.channel('chat')
-.on('postgres_changes',{
-event:'INSERT',
-schema:'public',
-table:'messages'
-},()=>{
-loadMessages()
-})
-.subscribe()
-
-
-
 function loadHistory(){
 
 let html=""
@@ -821,26 +650,11 @@ window.buy=buy
 window.showTab=showTab
 window.claimInterest=claimInterest
 window.claimRedPacket = claimRedPacket
-// 👇 expose functions to HTML
-window.showTab = showTab
-window.loadProfile = loadProfile
-window.loadUsers = loadUsers
-window.followUser = followUser
-window.openChat = openChat
-window.sendMessage = sendMessage
-window.setAvatar = setAvatar
-window.openProfile = openProfile
-window.openUsers = openUsers
 
-window.addEventListener("DOMContentLoaded", async () => {
-  await loadUser()
-  loadProfile()
-  loadStore()
-  startCountdown()
-  startAutoRefresh()
-
-  showTab('slotTab')
-})
+loadUser()
+loadStore()
+startCountdown()
+startAutoRefresh()
 
 </script>
 
@@ -909,9 +723,7 @@ color:white;
 font-weight:bold
 }
 
-.tab{
-  display:none;
-}
+.tab{display:none}
 
 .slot{
 font-size:45px;
@@ -967,10 +779,6 @@ Lucky Coins
 📢 Shoutout
 </button>
 
-<button onclick="console.log('profile click'); openProfile()">👤 Profile</button>
-
-<button onclick="console.log('users click'); openUsers()">👥 Users</button>
-
 </div>
 
 <div id="slotTab" class="tab">
@@ -1025,33 +833,6 @@ Claim Interest
 <audio id="radioPlayer" src="https://stream-288.zeno.fm/536cwdq78heuv?zt=eyJhbGciOiJIUzI1NiJ9.eyJzdHJlYW0iOiI1MzZjd2RxNzhoZXV2IiwiaG9zdCI6InN0cmVhbS0yODguemVuby5mbSIsInRtIjpmYWxzZSwicnR0bCI6NSwianRpIjoiNk51bExLR2JSWTYwa3BTY3RkUXVCQSIsImlhdCI6MTc3NzUzMjU3MSwiZXhwIjoxNzc3NTMyNjMxfQ.Fg8EzgiZJrsb1oIA7gD5Kt495VS_d3jGbnz0rzmdzxk" preload="auto" playsinline></audio>
 
 <audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
-
-<div id="profileTab" class="tab">
-<h3>👤 Profile</h3>
-
-<img id="avatar" width="80" style="border-radius:50%">
-<br><br>
-
-<button onclick="setAvatar()">Change Profile</button>
-
-<p>Followers: <span id="followers">0</span></p>
-<p>Following: <span id="following">0</span></p>
-</div>
-
-<div id="usersTab" class="tab">
-<h3>👥 Users</h3>
-<div id="usersList"></div>
-</div>
-
-<div id="chatTab" class="tab">
-<h3>💬 Private Chat</h3>
-
-<div id="chatBox" style="height:200px;overflow:auto"></div>
-
-<input id="chatInput">
-<button onclick="sendMessage()">Send</button>
-</div>
-
 
 <!-- 🔴 FLOATING RED POCKET -->
 <div id="redPacket" onclick="claimRedPacket()" style="display:none;">
