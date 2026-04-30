@@ -638,9 +638,17 @@ const avatarEl = document.getElementById("avatar")
 const followersEl = document.getElementById("followers")
 const followingEl = document.getElementById("following")
 
-if(avatarEl) avatarEl.src = data.avatar || "https://i.imgur.com/2DhmtJ4.png"
-if(followersEl) followersEl.innerText = data.followers
-if(followingEl) followingEl.innerText = data.following
+if(avatarEl){
+  avatarEl.src = data.avatar || "https://i.imgur.com/2DhmtJ4.png"
+}
+
+if(followersEl){
+  followersEl.innerText = data.followers || 0
+}
+
+if(followingEl){
+  followingEl.innerText = data.following || 0
+}
 
 async function setAvatar(){
 
