@@ -132,10 +132,7 @@ async function loadPosts(){
     .select("*")
     .order("created_at",{ascending:false});
 
-  const feed=document.getElementById("feed");
-  feed.innerHTML="";
-
-if(error){
+  if(error){
     console.log(error);
     alert(error.message);
     return;
@@ -147,15 +144,15 @@ const feed = document.getElementById("feed");
   data.forEach(p=>{
     let media="";
     if(p.media_url){
-      media=p.media_type==="video"
-      ? `<video src="${p.media_url}" controls width="100%"></video>`
-      : `<img src="${p.media_url}" width="100%">`;
+      media = p.media_type==="video"
+        ? `<video src="${p.media_url}" controls width="100%"></video>`
+        : `<img src="${p.media_url}" width="100%">`;
     }
 
-    feed.innerHTML+=`
+    feed.innerHTML += `
       <div class="card">
         <b>${p.user_id}</b>
-        <p>${p.content||""}</p>
+        <p>${p.content || ""}</p>
         ${media}
       </div>
     `;
