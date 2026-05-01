@@ -1,160 +1,133 @@
 <!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Facebook Fixed</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{font-family:Arial;background:#f0f2f5;margin:0}
+.container{max-width:600px;margin:auto;padding:10px}
+.card{background:white;padding:10px;margin:10px 0;border-radius:10px}
+input,textarea{width:100%;padding:8px;margin:5px 0}
+button{padding:8px}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+<input id="username" placeholder="username">
+<button onclick="createProfile()">Login</button>
+<div id="me"></div>
+</div>
+
+<div class="card">
+<textarea id="postText" placeholder="Post..."></textarea>
+<input type="file" id="media">
+<button onclick="createPost()">Post</button>
+</div>
 
 <div id="feed"></div>
 
-
 </div>
 
-
 <script>
-
-const SUPABASE_URL = "https://pbwaozztfclanvplpmvm.supabase.co";
-
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBid2Fvenp0ZmNsYW52cGxwbXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjQ1NzIsImV4cCI6MjA4NzgwMDU3Mn0.bbY-C4legzoHwQEiL3-IHwp8D6_hrL53GJPa78li1aY";
-
+const SUPABASE_URL="https://pbwaozztfclanvplpmvm.supabase.co";
+const SUPABASE_KEY="YOUR_KEY_HERE";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+let me=null;
 
-let me = null;
-
-
-/* 👤 PROFILE */
-
+/* LOGIN */
 async function createProfile(){
+  const username=document.getElementById("username").value;
+  if(!username) return alert("Enter username");
 
-const username = document.getElementById("username").value;
+  const id=crypto.randomUUID();
 
-if(!username) return alert("Enter username");
+  await supabase.from("profiles").upsert({
+    id,
+    username,
+    online:true
+  });
 
+  me={id,username};
+  document.getElementById("me").innerText="Logged in: "+username;
 
-const user = await supabase.auth.getUser();
-
-const id = user.data.user?.id || crypto.randomUUID();
-
-
-await supabase.from("profiles").upsert({
-
-id,
-
-username,
-
-online:true
-
-});
-
-
-me = { id, username };
-
-document.getElementById("me").innerText = "Logged in as: " + username;
-
-
-loadPosts();
-
-}
-
-
-/* 🖼️ UPLOAD */
-
-async function upload(file){
-
-const path = "posts/" + Date.now() + "_" + file.name;
-
-
-await supabase.storage.from("posts").upload(path, file);
-
-
-const { data } = supabase.storage.from("posts").getPublicUrl(path);
-
-
-return data.publicUrl;
-
-}
-
-
-/* 📝 CREATE POST */
-
-async function createPost(){
-
-if(!me) return alert("Login first");
-
-
-const content = document.getElementById("postText").value;
-
-const file = document.getElementById("media").files[0];
-
-
-let url = null;
-
-let type = null;
-
-
-if(file){
-
-url = await upload(file);
-
-type = file.type.startsWith("video") ? "video" : "image";
-
-}
-
-
-await supabase.from("posts").insert({
-
-user_id: me.id,
-
-content,
-
-media_url: url,
-
-media_type: type
-
-});
-
-
-
-  document.getElementById("postText").value = "";
   loadPosts();
 }
 
-/* 📄 LOAD FEED */
+/* UPLOAD */
+async function upload(file){
+  const path="posts/"+Date.now()+"_"+file.name;
+
+  await supabase.storage.from("posts").upload(path,file);
+
+  const {data}=supabase.storage.from("posts").getPublicUrl(path);
+  return data.publicUrl;
+}
+
+/* POST */
+async function createPost(){
+  if(!me) return alert("Login muna");
+
+  const content=document.getElementById("postText").value;
+  const file=document.getElementById("media").files[0];
+
+  let url=null,type=null;
+
+  if(file){
+    url=await upload(file);
+    type=file.type.startsWith("video")?"video":"image";
+  }
+
+  await supabase.from("posts").insert({
+    user_id:me.id,
+    content,
+    media_url:url,
+    media_type:type
+  });
+
+  document.getElementById("postText").value="";
+  loadPosts();
+}
+
+/* LOAD FEED */
 async function loadPosts(){
-  const { data } = await supabase
+  const {data}=await supabase
     .from("posts")
     .select("*")
     .order("created_at",{ascending:false});
 
-  const feed = document.getElementById("feed");
-  feed.innerHTML = "";
+  const feed=document.getElementById("feed");
+  feed.innerHTML="";
 
-  data.forEach(p => {
-
-    let media = "";
+  data.forEach(p=>{
+    let media="";
     if(p.media_url){
-      media = p.media_type === "video"
-        ? `<video src="${p.media_url}" controls width="100%"></video>`
-        : `<img src="${p.media_url}" width="100%">`;
+      media=p.media_type==="video"
+      ? `<video src="${p.media_url}" controls width="100%"></video>`
+      : `<img src="${p.media_url}" width="100%">`;
     }
 
-    feed.innerHTML += `
+    feed.innerHTML+=`
       <div class="card">
         <b>${p.user_id}</b>
-        <p>${p.content || ""}</p>
+        <p>${p.content||""}</p>
         ${media}
       </div>
     `;
   });
 }
 
-/* 🔄 AUTO STATUS */
-async function setOnline(){
-  if(!me) return;
-
-  await supabase.from("profiles")
-    .update({ online:true, last_seen:new Date() })
-    .eq("id", me.id);
-}
-
-setInterval(setOnline, 5000);
+/* AUTO LOAD */
+loadPosts();
 
 </script>
 
