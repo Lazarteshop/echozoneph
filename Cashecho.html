@@ -49,7 +49,14 @@ async function createProfile(){
   const username=document.getElementById("username").value;
   if(!username) return alert("Enter username");
 
-  const id=crypto.randomUUID();
+  let savedId = localStorage.getItem("uid");
+
+if(!savedId){
+  savedId = crypto.randomUUID();
+  localStorage.setItem("uid", savedId);
+}
+
+const id = savedId;
 
   const { error } = await supabase.from("profiles").upsert({
     id,
