@@ -51,11 +51,16 @@ async function createProfile(){
 
   const id=crypto.randomUUID();
 
-  await supabase.from("profiles").upsert({
+  const { error } = await supabase.from("profiles").upsert({
     id,
     username,
     online:true
   });
+
+if(error){
+  alert(error.message);
+  return;
+}
 
   me={id,username};
   document.getElementById("me").innerText="Logged in: "+username;
@@ -87,26 +92,39 @@ async function createPost(){
     type=file.type.startsWith("video")?"video":"image";
   }
 
-  await supabase.from("posts").insert({
+  const { error } = await supabase.from("posts").insert({
     user_id:me.id,
     content,
     media_url:url,
     media_type:type
   });
 
+if(error){
+  alert(error.message);
+  return;
+} 
   document.getElementById("postText").value="";
   loadPosts();
 }
 
 /* LOAD FEED */
 async function loadPosts(){
-  const {data}=await supabase
+  const {data,error}=await supabase
     .from("posts")
     .select("*")
     .order("created_at",{ascending:false});
 
   const feed=document.getElementById("feed");
   feed.innerHTML="";
+
+if(error){
+    console.log(error);
+    alert(error.message);
+    return;
+  }
+
+const feed = document.getElementById("feed");
+  feed.innerHTML = "";
 
   data.forEach(p=>{
     let media="";
