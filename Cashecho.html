@@ -77,11 +77,22 @@ if(error){
 
 /* UPLOAD */
 async function upload(file){
-  const path="posts/"+Date.now()+"_"+file.name;
+  const path = Date.now() + "_" + file.name;
 
-  await supabase.storage.from("posts").upload(path,file);
+  const { error } = await supabase.storage
+    .from("posts")
+    .upload(path, file);
 
-  const {data}=supabase.storage.from("posts").getPublicUrl(path);
+  if(error){
+    alert("Upload error: " + error.message);
+    console.log(error);
+    return null;
+  }
+
+  const { data } = supabase.storage
+    .from("posts")
+    .getPublicUrl(path);
+
   return data.publicUrl;
 }
 
