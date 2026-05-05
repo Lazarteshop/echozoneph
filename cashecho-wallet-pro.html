@@ -414,10 +414,28 @@ $("store").innerHTML=html
 
 function buy(name,price){
 
-if(userData.cashechobalance<price)
-return alert("Insufficient balance")
+const product = products.find(p => p.name === name)
 
-userData.cashechobalance-=price
+if(!product){
+alert("Product not found")
+return
+}
+
+// ✅ CHECK INVENTORY
+if(product.inventory <= 0){
+alert("Out of stock")
+return
+}
+
+if(userData.cashechobalance < price){
+alert("Insufficient balance")
+return
+}
+
+// ✅ BAWAS INVENTORY
+product.inventory--
+
+userData.cashechobalance -= price
 
 userData.walletHistory.push({
 type:"purchase",
@@ -430,7 +448,7 @@ alert("Redeemed "+name)
 
 saveUser()
 loadHistory()
-
+loadStore() // refresh UI
 }
 
 function claimInterest(){
