@@ -314,7 +314,7 @@ const now = new Date()
 const hour = now.getHours()
 const minute = now.getMinutes()
 
-if(!(hour === 4 && minute === 5)){
+if(!(hour === 4 && minute === 10)){
 alert("Slot spin is available ONLY at exactly 11:00 AM")
 return
 }
@@ -594,7 +594,7 @@ const now = new Date()
 
 const target = new Date()
 
-target.setHours(4,5,0,0)
+target.setHours(4,10,0,0)
 
 if(now > target){
 target.setDate(target.getDate()+1)
