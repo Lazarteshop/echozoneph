@@ -63,6 +63,32 @@ userData.lastSpinReset = userData.lastSpinReset || ""
 
 spins = userData.spins
 
+// ===== FARM DEFAULT DATA =====
+
+if(!userData.farm){
+
+userData.farm={
+
+hasLand:false,
+
+seed:null,
+
+level:0,
+
+progress:0,
+
+fertilizer:0,
+
+lastRain:"",
+
+harvestReady:false,
+
+history:[]
+
+}
+
+}
+
 updateUI()
 loadHistory()
 loadShoutouts()
