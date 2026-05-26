@@ -720,6 +720,7 @@ loadFarmInfo()
 }
 
 window.toggleFarm=toggleFarm
+window.claimFreeLand=claimFreeLand
 
 // ===== CLAIM LAND =====
 
@@ -749,6 +750,14 @@ loadFarmInfo()
 
 alert(
 "🌱 Free land claimed successfully"
+)
+
+}catch(e){
+
+console.log(e)
+
+alert(
+"Error saving land"
 )
 
 }
