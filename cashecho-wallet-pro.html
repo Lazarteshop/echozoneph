@@ -684,6 +684,9 @@ html+="<div>🧧 Red Packet ₱"+h.amount+"</div>"
 if(h.type==="shout")
 html+="<div>📢 Shout Reward ₱"+h.amount+"</div>"
 
+if(h.type==="farm")
+html+="<div>🌾 Farm Harvest ₱"+h.amount+"</div>"
+
 })
 
 $("history").innerHTML=html
@@ -775,6 +778,94 @@ alert(
 }
 
 window.plantBanana=plantBanana
+
+// ===== HARVEST =====
+
+async function harvestFarm(){
+
+if(!userData.farm.seed){
+
+alert(
+"No planted seed"
+)
+
+return
+
+}
+
+if(userData.farm.level<90){
+
+alert(
+"Tree must reach Level 90 first"
+)
+
+return
+
+}
+
+let reward=0
+
+if(
+userData.farm.seed==="banana"
+){
+
+reward=
+
+Math.floor(
+Math.random()*5
+)+1
+
+}
+
+userData.cashechobalance+=reward
+
+userData.walletHistory.push({
+
+type:"farm",
+
+amount:reward,
+
+date:Date.now()
+
+})
+
+userData.farm.history.push({
+
+type:"harvest",
+
+amount:reward,
+
+date:Date.now()
+
+})
+
+userData.farm.seed=null
+
+userData.farm.level=0
+
+userData.farm.progress=0
+
+userData.farm.harvestReady=false
+
+await saveUser()
+
+loadHistory()
+
+loadFarmInfo()
+
+loadTreeView()
+
+alert(
+
+"🌾 Harvest success\n\nReward: ₱"+reward
+
+)
+
+}
+
+window.harvestFarm=
+harvestFarm
+
 
 // ===== TREE GROWTH =====
 
@@ -1295,6 +1386,14 @@ Claim Free Land
 <br>
 
 <div id="treeView"></div>
+
+<br>
+
+<button onclick="harvestFarm()">
+
+🌾 Harvest
+
+</button>
 
 <br><br>
 
