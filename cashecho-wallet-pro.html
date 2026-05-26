@@ -713,11 +713,84 @@ panel.style.display="none"
 
 panel.style.display="block"
 
+loadFarmInfo()
+
 }
 
 }
 
 window.toggleFarm=toggleFarm
+
+// ===== CLAIM LAND =====
+
+async function claimFreeLand(){
+
+if(userData.farm.hasLand){
+
+alert("You already own land")
+
+return
+
+}
+
+userData.farm.hasLand=true
+
+userData.farm.history.push({
+
+type:"land",
+
+date:Date.now()
+
+})
+
+await saveUser()
+
+loadFarmInfo()
+
+alert(
+"🌱 Free land claimed successfully"
+)
+
+}
+
+function loadFarmInfo(){
+
+const info=
+document.getElementById(
+"farmInfo"
+)
+
+if(!info) return
+
+if(
+userData?.farm?.hasLand
+){
+
+info.innerHTML=`
+
+<b>
+Land Status:
+</b>
+
+✅ Owned
+
+`
+
+}else{
+
+info.innerHTML=`
+
+<b>
+Land Status:
+</b>
+
+❌ No land
+
+`
+
+}
+
+}
 
 loadUser()
 loadStore()
@@ -974,9 +1047,17 @@ Claim Interest
 
 <h3>🌱 Cashecho Farm</h3>
 
-<p>
-Farm system loading...
-</p>
+<div id="farmInfo"></div>
+
+<br>
+
+<button onclick="claimFreeLand()">
+
+Claim Free Land
+
+</button>
+
+<br><br>
 
 <button onclick="toggleFarm()">
 
@@ -985,7 +1066,6 @@ Close
 </button>
 
 </div>
-
 
 <audio id="radioPlayer" src="https://stream-288.zeno.fm/536cwdq78heuv?zt=eyJhbGciOiJIUzI1NiJ9.eyJzdHJlYW0iOiI1MzZjd2RxNzhoZXV2IiwiaG9zdCI6InN0cmVhbS0yODguemVuby5mbSIsInRtIjpmYWxzZSwicnR0bCI6NSwianRpIjoiNk51bExLR2JSWTYwa3BTY3RkUXVCQSIsImlhdCI6MTc3NzUzMjU3MSwiZXhwIjoxNzc3NTMyNjMxfQ.Fg8EzgiZJrsb1oIA7gD5Kt495VS_d3jGbnz0rzmdzxk" preload="auto" playsinline></audio>
 
