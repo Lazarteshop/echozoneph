@@ -714,6 +714,7 @@ panel.style.display="none"
 panel.style.display="block"
 
 loadFarmInfo()
+loadTreeView()
 
 }
 
@@ -774,6 +775,142 @@ alert(
 
 window.plantBanana=plantBanana
 
+// ===== TREE GROWTH =====
+
+function getTreeEmoji(level){
+
+if(level<=0)
+return "🟫"
+
+if(level<=10)
+return "🌱"
+
+if(level<=30)
+return "🌿"
+
+if(level<=60)
+return "🌳"
+
+return "🍌"
+
+}
+
+function randomRainType(){
+
+const rains=[
+
+"☀️ Sunny",
+
+"🌦 Light Rain",
+
+"🌧 Normal Rain",
+
+"⛈ Heavy Rain"
+
+]
+
+return rains[
+Math.floor(
+Math.random()*rains.length
+)
+]
+
+}
+
+function loadTreeView(){
+
+const tree=
+document.getElementById(
+"treeView"
+)
+
+const rain=
+document.getElementById(
+"rainStatus"
+)
+
+if(!tree || !rain) return
+
+rain.innerHTML=`
+
+<b>Today's Weather:</b>
+
+<br>
+
+${userData.farm.lastRain || "No weather yet"}
+
+`
+
+tree.innerHTML=`
+
+<div style="font-size:90px;text-align:center">
+
+${getTreeEmoji(
+userData.farm.level
+)}
+
+</div>
+
+<div style="text-align:center">
+
+Level
+${userData.farm.level}
+
+</div>
+
+`
+
+}
+
+async function growFarm(){
+
+if(!userData?.farm?.seed)
+return
+
+const rain=randomRainType()
+
+userData.farm.lastRain=rain
+
+let grow=1
+
+if(rain.includes("Light"))
+grow=2
+
+if(rain.includes("Normal"))
+grow=4
+
+if(rain.includes("Heavy"))
+grow=6
+
+userData.farm.level+=grow
+
+if(userData.farm.level>90){
+
+userData.farm.level=90
+
+}
+
+await saveUser()
+
+loadTreeView()
+
+loadFarmInfo()
+
+console.log(
+"🌱 Farm grew",
+grow
+)
+
+}
+
+// AUTO GROW EVERY day SECONDS
+
+setInterval(()=>{
+
+growFarm()
+
+},1440000 )
+
 
 // ===== CLAIM LAND =====
 
@@ -830,6 +967,12 @@ userData.farm.seed
 :
 "None"
 
+let level=
+userData.farm.level || 0
+
+let rain=
+userData.farm.lastRain || "No weather"
+
 info.innerHTML=`
 
 <b>Land Status:</b>
@@ -838,8 +981,18 @@ ${landText}
 <br><br>
 
 <b>Current Plant:</b>
-
 ${seedText}
+
+<br><br>
+
+<b>Level:</b>
+${level}/90
+
+<br><br>
+
+<b>Today's Weather:</b>
+
+${rain}
 
 `
 
@@ -1117,6 +1270,14 @@ Claim Free Land
 <button onclick="plantBanana()">
 🍌 Banana Seed (FREE)
 </button>
+
+<hr>
+
+<div id="rainStatus"></div>
+
+<br>
+
+<div id="treeView"></div>
 
 <br><br>
 
