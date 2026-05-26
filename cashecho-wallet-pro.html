@@ -722,6 +722,59 @@ loadFarmInfo()
 window.toggleFarm=toggleFarm
 window.claimFreeLand=claimFreeLand
 
+// ===== BANANA PLANT =====
+
+async function plantBanana(){
+
+if(!userData.farm.hasLand){
+
+alert(
+"Claim land first"
+)
+
+return
+
+}
+
+if(userData.farm.seed){
+
+alert(
+"You already planted a seed"
+)
+
+return
+
+}
+
+userData.farm.seed="banana"
+
+userData.farm.level=1
+
+userData.farm.progress=0
+
+userData.farm.history.push({
+
+type:"plant",
+
+seed:"banana",
+
+date:Date.now()
+
+})
+
+await saveUser()
+
+loadFarmInfo()
+
+alert(
+"🍌 Banana planted successfully"
+)
+
+}
+
+window.plantBanana=plantBanana
+
+
 // ===== CLAIM LAND =====
 
 async function claimFreeLand(){
@@ -763,31 +816,30 @@ document.getElementById(
 
 if(!info) return
 
-if(
-userData?.farm?.hasLand
-){
+let landText=
+userData.farm.hasLand
+?
+"✅ Owned"
+:
+"❌ No land"
+
+let seedText=
+userData.farm.seed
+?
+"🌱 "+userData.farm.seed
+:
+"None"
 
 info.innerHTML=`
 
-<b>
-Land Status:
-</b>
+<b>Land Status:</b>
+${landText}
 
-✅ Owned
+<br><br>
 
-`
+<b>Current Plant:</b>
 
-}else{
-
-info.innerHTML=`
-
-<b>
-Land Status:
-</b>
-
-❌ No land
-
-`
+${seedText}
 
 }
 
@@ -1056,6 +1108,14 @@ Claim Interest
 
 Claim Free Land
 
+</button>
+
+<hr>
+
+<h4>🌱 Seeds</h4>
+
+<button onclick="plantBanana()">
+🍌 Banana Seed (FREE)
 </button>
 
 <br><br>
