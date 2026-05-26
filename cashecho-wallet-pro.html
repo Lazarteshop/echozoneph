@@ -24,6 +24,7 @@ let isSendingShout = false
 let rpTime = 600 // 10 minutes in seconds
 let rpInterval = null
 let rpReady = false
+let farmGrowInterval=null
 
 function $(id){return document.getElementById(id)}
 
@@ -903,13 +904,29 @@ grow
 
 }
 
-// AUTO GROW EVERY day SECONDS
+// ===== START FARM GROWTH =====
+
+function startFarmGrowth(){
+
+if(farmGrowInterval){
+
+clearInterval(
+farmGrowInterval
+)
+
+}
+
+farmGrowInterval=
 
 setInterval(()=>{
 
 growFarm()
 
-},1440000 )
+},1440000)
+
+}
+
+startFarmGrowth() 
 
 
 // ===== CLAIM LAND =====
