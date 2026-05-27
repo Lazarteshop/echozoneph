@@ -922,6 +922,128 @@ alert(
 
 window.requestSeed=requestSeed
 
+// ===== APPROVE SEED =====
+
+async function approveSeed(
+requestId,
+requestUser,
+seedType,
+price
+){
+
+if(username!==TEAM_LEADER){
+
+alert(
+"Only Team Leader can approve"
+)
+
+return
+
+}
+
+// kunin user data
+const {data:userRow,error:userError}
+=
+await supabase
+
+.from("pin77_users")
+
+.select("*")
+
+.eq(
+"username",
+requestUser
+)
+
+.single()
+
+if(userError){
+
+console.log(userError)
+
+alert(
+"User not found"
+)
+
+return
+
+}
+
+let targetUser=
+userRow.data ?? {}
+
+// gumawa farm kung wala
+if(!targetUser.farm){
+
+targetUser.farm={
+
+hasLand:true,
+
+seed:null,
+
+level:0,
+
+progress:0,
+
+fertilizer:0,
+
+history:[]
+
+}
+
+}
+
+// ibigay seed
+targetUser.farm.seed=
+seedType
+
+targetUser.farm.level=1
+
+targetUser.farm.progress=0
+
+// save user
+await supabase
+
+.from("pin77_users")
+
+.update({
+
+data:targetUser
+
+})
+
+.eq(
+"username",
+requestUser
+)
+
+// update request status
+await supabase
+
+.from("farm_requests")
+
+.update({
+
+status:"Approved"
+
+})
+
+.eq(
+"id",
+requestId
+)
+
+alert(
+"✅ Seed approved"
+)
+
+loadLeaderPanel()
+
+}
+
+window.approveSeed=
+approveSeed
+
 // ===== LOAD ALL REQUESTS =====
 
 async function loadLeaderPanel(){
