@@ -866,6 +866,63 @@ alert(
 window.harvestFarm=
 harvestFarm
 
+// ===== TEAM LEADER SEED REQUEST =====
+
+async function requestSeed(type,price){
+
+if(!userData.farm.hasLand){
+
+alert(
+"Claim land first"
+)
+
+return
+
+}
+
+if(userData.farm.seed){
+
+alert(
+"You already planted a seed"
+)
+
+return
+
+}
+
+if(!userData.farm.seedRequests){
+
+userData.farm.seedRequests=[]
+
+}
+
+userData.farm.seedRequests.push({
+
+seed:type,
+
+price:price,
+
+status:"Pending",
+
+date:Date.now()
+
+})
+
+await saveUser()
+
+alert(
+
+"📨 Request sent to Team Leader\n\n"+
+type.toUpperCase()+
+"\nPrice: ₱"+
+price
+
+)
+
+}
+
+window.requestSeed=requestSeed
+
 
 // ===== TREE GROWTH =====
 
@@ -1369,6 +1426,24 @@ Claim Interest
 
 Claim Free Land
 
+</button>
+
+<br><br>
+
+<button onclick="requestSeed('mango',100)">
+🥭 Mango ₱100
+</button>
+
+<br><br>
+
+<button onclick="requestSeed('strawberry',500)">
+🍓 Strawberry ₱500
+</button>
+
+<br><br>
+
+<button onclick="requestSeed('apple',1000)">
+🍎 Apple ₱1000
 </button>
 
 <hr>
