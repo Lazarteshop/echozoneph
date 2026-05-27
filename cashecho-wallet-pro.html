@@ -1044,7 +1044,80 @@ loadLeaderPanel()
 window.approveSeed=
 approveSeed
 
-// ===== LOAD ALL REQUESTS =====
+// ===== DAILY RAIN =====
+
+async function claimRain(){
+
+if(!userData.farm.seed){
+
+alert(
+"No planted seed"
+)
+
+return
+
+}
+
+const today=
+new Date()
+.toDateString()
+
+if(
+userData.farm.lastRain===today
+){
+
+alert(
+"Rain already claimed today"
+)
+
+return
+
+}
+
+userData.farm.lastRain=
+today
+
+// increase progress
+
+userData.farm.progress+=10
+
+if(
+userData.farm.progress>=100
+){
+
+userData.farm.progress=0
+
+userData.farm.level++
+
+}
+
+// limit
+
+if(
+userData.farm.level>90
+){
+
+userData.farm.level=90
+
+}
+
+await saveUser()
+
+loadFarmInfo()
+loadTreeView()
+
+alert(
+
+"🌧 Rain applied"
+
+)
+
+}
+
+window.claimRain=
+claimRain
+
+//===== LOAD ALL REQUESTS =====
 
 async function loadLeaderPanel(){
 
@@ -1367,24 +1440,37 @@ userData.farm.lastRain || "No weather"
 
 info.innerHTML=`
 
-<b>Land Status:</b>
-${landText}
+<b>
+Land Status:
+</b>
+
+✅ Owned
 
 <br><br>
 
-<b>Current Plant:</b>
-${seedText}
+🌱 Plant:
 
-<br><br>
+${
+userData.farm.seed || "None"
+}
 
-<b>Level:</b>
-${level}/90
+<br>
 
-<br><br>
+⭐ Level:
 
-<b>Today's Weather:</b>
 
-${rain}
+
+${
+userData.farm.level
+}
+
+<br>
+
+📈 Progress:
+
+${
+userData.farm.progress
+}%
 
 `
 
@@ -1646,6 +1732,24 @@ Claim Interest
 <h3>🌱 Cashecho Farm</h3>
 
 <div id="farmInfo"></div>
+<br>
+
+<div id="rainInfo">
+
+🌧 Rain Status:
+Waiting...
+
+</div>
+
+<br>
+
+<button onclick="claimRain()">
+
+🌧 Claim Rain
+
+</button>
+
+<br><br>
 
 <br>
 
