@@ -685,6 +685,16 @@ html+="<div>🧧 Red Packet ₱"+h.amount+"</div>"
 if(h.type==="shout")
 html+="<div>📢 Shout Reward ₱"+h.amount+"</div>"
 
+if(h.type==="harvest")
+
+html+=
+"<div>🌾 Harvest "
++
+h.seed+
+" ₱"+
+h.amount+
+"</div>"
+
 if(h.type==="farm")
 html+="<div>🌾 Farm Harvest ₱"+h.amount+"</div>"
 
@@ -1099,6 +1109,8 @@ userData.farm.level>90
 
 userData.farm.level=90
 
+userData.farm.harvestReady=true
+
 }
 
 await saveUser()
@@ -1117,7 +1129,105 @@ alert(
 window.claimRain=
 claimRain
 
+async function harvestTree(){
 
+if(
+!userData.farm.harvestReady
+){
+
+alert(
+"Tree not ready"
+)
+
+return
+
+}
+
+let reward=0
+
+switch(
+userData.farm.seed
+){
+
+case "banana":
+
+reward=
+Math.floor(
+Math.random()*5
+)+1
+
+break
+
+case "mango":
+
+reward=
+Math.floor(
+Math.random()*41
+)+10
+
+break
+
+case "strawberry":
+
+reward=
+Math.floor(
+Math.random()*201
+)+100
+
+break
+
+case "apple":
+
+reward=
+Math.floor(
+Math.random()*301
+)+300
+
+break
+
+}
+
+userData.cashechobalance+=reward
+
+userData.walletHistory.push({
+
+type:"harvest",
+
+seed:
+userData.farm.seed,
+
+amount:
+reward,
+
+date:
+Date.now()
+
+})
+
+userData.farm.seed=null
+
+userData.farm.level=0
+
+userData.farm.progress=0
+
+userData.farm.harvestReady=false
+
+await saveUser()
+
+loadHistory()
+loadFarmInfo()
+loadTreeView()
+
+alert(
+
+"🌾 Harvest completed\n\nReward: ₱"+reward
+
+)
+
+}
+
+window.harvestTree=
+harvestTree
 
 //===== LOAD ALL REQUESTS =====
 
@@ -1274,6 +1384,25 @@ const tree=
 document.getElementById(
 "treeView"
 )
+
+const harvestBtn=
+document.getElementById(
+"harvestBtn"
+)
+
+if(
+userData.farm.harvestReady
+){
+
+harvestBtn.style.display=
+"block"
+
+}else{
+
+harvestBtn.style.display=
+"none"
+
+}
 
 const rain=
 document.getElementById(
@@ -1441,6 +1570,18 @@ let rain=
 userData.farm.lastRain || "No weather"
 
 info.innerHTML=`
+
+<br>
+
+🌾 Harvest:
+
+${
+userData.farm.harvestReady
+?
+"✅ Ready"
+:
+"❌ Not Ready"
+}
 
 <b>
 Land Status:
@@ -1612,7 +1753,7 @@ justify-content:center;
 
 align-items:center;
 
-font-size:32px;
+font-size:22px;
 
 cursor:pointer;
 
@@ -1818,6 +1959,16 @@ animation:treeMove 2s infinite;
 ">
 🌱
 </div>
+<br>
+
+<button
+id="harvestBtn"
+onclick="harvestTree()"
+style="display:none;">
+
+🌾 Harvest
+
+</button>
 
 <br>
 
