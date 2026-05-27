@@ -24,6 +24,7 @@ let isSendingShout = false
 let rpTime = 600 // 10 minutes in seconds
 let rpInterval = null
 let rpReady = false
+const TEAM_LEADER="admin"
 let farmGrowInterval=null
 
 function $(id){return document.getElementById(id)}
@@ -718,6 +719,7 @@ panel.style.display="none"
 panel.style.display="block"
 
 loadFarmInfo()
+loadLeaderPanel()
 loadTreeView()
 
 }
@@ -922,6 +924,86 @@ price
 }
 
 window.requestSeed=requestSeed
+
+// ===== TEAM LEADER REQUEST VIEW =====
+
+function loadLeaderPanel(){
+
+const panel=
+document.getElementById(
+"leaderPanel"
+)
+
+const requests=
+document.getElementById(
+"leaderRequests"
+)
+
+if(username!==TEAM_LEADER){
+
+panel.style.display="none"
+
+return
+
+}
+
+panel.style.display="block"
+
+if(
+!userData?.farm?.seedRequests?.length
+){
+
+requests.innerHTML=
+"No pending requests"
+
+return
+
+}
+
+let html=""
+
+userData.farm.seedRequests.forEach(
+
+(r,index)=>{
+
+if(r.status==="Pending"){
+
+html+=`
+
+<div style="
+padding:10px;
+margin-bottom:10px;
+background:#0f172a;
+border-radius:10px;
+">
+
+${r.seed}
+- ₱${r.price}
+
+<br><br>
+
+<button
+onclick="
+approveSeed(${index})
+">
+
+Approve
+
+</button>
+
+</div>
+
+`
+
+}
+
+}
+
+)
+
+requests.innerHTML=html
+
+}
 
 
 // ===== TREE GROWTH =====
@@ -1471,6 +1553,18 @@ Claim Free Land
 </button>
 
 <br><br>
+
+<div id="leaderPanel" style="display:none">
+
+<hr>
+
+<h4>
+👨‍🌾 Team Leader Requests
+</h4>
+
+<div id="leaderRequests"></div>
+
+</div>
 
 <button onclick="toggleFarm()">
 
