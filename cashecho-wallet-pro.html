@@ -868,37 +868,29 @@ alert(
 window.harvestFarm=
 harvestFarm
 
-// ===== TEAM LEADER SEED REQUEST =====
+// ===== SEND REQUEST TO SUPABASE =====
 
 async function requestSeed(type,price){
 
 if(!userData.farm.hasLand){
 
-alert(
-"Claim land first"
-)
-
+alert("Claim land first")
 return
 
 }
 
 if(userData.farm.seed){
 
-alert(
-"You already planted a seed"
-)
-
+alert("You already planted a seed")
 return
 
 }
 
-if(!userData.farm.seedRequests){
+const {error}=await supabase
+.from("farm_requests")
+.insert({
 
-userData.farm.seedRequests=[]
-
-}
-
-userData.farm.seedRequests.push({
+username:username,
 
 seed:type,
 
@@ -906,18 +898,23 @@ price:price,
 
 status:"Pending",
 
-date:Date.now()
+created_at:Date.now()
 
 })
 
-await saveUser()
+if(error){
+
+console.log(error)
+
+alert("Request failed")
+
+return
+
+}
 
 alert(
 
-"📨 Request sent to Team Leader\n\n"+
-type.toUpperCase()+
-"\nPrice: ₱"+
-price
+"📨 Request sent to Team Leader"
 
 )
 
@@ -925,9 +922,9 @@ price
 
 window.requestSeed=requestSeed
 
-// ===== TEAM LEADER REQUEST VIEW =====
+// ===== LOAD ALL REQUESTS =====
 
-function loadLeaderPanel(){
+async function loadLeaderPanel(){
 
 const panel=
 document.getElementById(
@@ -949,11 +946,34 @@ return
 
 panel.style.display="block"
 
-if(
-!userData?.farm?.seedRequests?.length
-){
+const {data,error}=await supabase
+
+.from("farm_requests")
+
+.select("*")
+
+.eq(
+"status",
+"Pending"
+)
+
+.order(
+"id",
+{ascending:false}
+)
+
+if(error){
+
+console.log(error)
+
+return
+
+}
+
+if(!data.length){
 
 requests.innerHTML=
+
 "No pending requests"
 
 return
@@ -962,11 +982,7 @@ return
 
 let html=""
 
-userData.farm.seedRequests.forEach(
-
-(r,index)=>{
-
-if(r.status==="Pending"){
+data.forEach(r=>{
 
 html+=`
 
@@ -977,14 +993,26 @@ background:#0f172a;
 border-radius:10px;
 ">
 
-${r.seed}
-- ₱${r.price}
+👤 ${r.username}
+
+<br>
+
+🌱 ${r.seed}
+
+<br>
+
+💰 ₱${r.price}
 
 <br><br>
 
 <button
 onclick="
-approveSeed(${index})
+approveSeed(
+${r.id},
+'${r.username}',
+'${r.seed}',
+${r.price}
+)
 ">
 
 Approve
@@ -995,16 +1023,11 @@ Approve
 
 `
 
-}
-
-}
-
-)
+})
 
 requests.innerHTML=html
 
 }
-
 
 // ===== TREE GROWTH =====
 
