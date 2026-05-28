@@ -334,178 +334,64 @@ $("shoutList").innerHTML=html
 
 window.sendShoutout=sendShoutout
 
-/* ===== ULTRA REALISTIC WEATHER ===== */
+// ===== WEATHER BACKGROUND FX =====
 
-#weatherOverlay{
+function showWeatherEffect(weather){
 
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-overflow:hidden;
-pointer-events:none;
-z-index:99999;
-display:none;
+const overlay =
+document.getElementById(
+"weatherOverlay"
+)
 
-}
+if(!overlay) return
 
-/* ===== COMMON RAIN ===== */
+overlay.className = ""
+overlay.style.display = "block"
 
-.rainDrop{
+if(weather.includes("Heavy")){
 
-position:absolute;
-bottom:100%;
-width:2px;
-background:linear-gradient(
-transparent,
-rgba(255,255,255,.9)
-);
-
-border-radius:50%;
-opacity:.7;
-
-animation:rainAnim linear infinite;
-
-filter:blur(.4px);
+overlay.classList.add(
+"heavyRain"
+)
 
 }
 
-@keyframes rainAnim{
+else if(weather.includes("Normal")){
 
-0%{
-transform:
-translateY(0)
-translateX(0);
-opacity:0;
+overlay.classList.add(
+"normalRain"
+)
+
 }
 
-10%{
-opacity:1;
-}
+else if(weather.includes("Light")){
 
-100%{
-transform:
-translateY(120vh)
-translateX(-120px);
-opacity:0;
+overlay.classList.add(
+"lightRain"
+)
+
+}else{
+
+overlay.style.display = "none"
+
 }
 
 }
 
-/* ===== LIGHT RAIN ===== */
+function hideWeatherEffect(){
 
-.lightRain{
+const overlay =
+document.getElementById(
+"weatherOverlay"
+)
 
-background:
-linear-gradient(
-to bottom,
-rgba(30,41,59,.15),
-rgba(15,23,42,.35)
-);
+if(!overlay) return
 
-backdrop-filter:blur(1px);
+overlay.style.display = "none"
 
-}
-
-/* ===== NORMAL RAIN ===== */
-
-.normalRain{
-
-background:
-linear-gradient(
-to bottom,
-rgba(15,23,42,.35),
-rgba(2,6,23,.7)
-);
-
-backdrop-filter:blur(2px);
+overlay.className = ""
 
 }
-
-/* ===== HEAVY RAIN ===== */
-
-.heavyRain{
-
-background:
-linear-gradient(
-to bottom,
-rgba(0,0,0,.55),
-rgba(0,0,0,.92)
-);
-
-backdrop-filter:blur(4px);
-
-animation:stormDark 3s infinite;
-
-}
-
-/* ===== LIGHTNING ===== */
-
-.heavyRain::after{
-
-content:"";
-position:absolute;
-top:0;
-left:0;
-width:100%;
-height:100%;
-
-background:white;
-opacity:0;
-
-animation:lightning 5s infinite;
-
-}
-
-@keyframes lightning{
-
-0%{
-opacity:0;
-}
-
-2%{
-opacity:.8;
-}
-
-4%{
-opacity:0;
-}
-
-40%{
-opacity:0;
-}
-
-42%{
-opacity:.5;
-}
-
-44%{
-opacity:0;
-}
-
-100%{
-opacity:0;
-}
-
-}
-
-@keyframes stormDark{
-
-0%{
-filter:brightness(1);
-}
-
-50%{
-filter:brightness(.8);
-}
-
-100%{
-filter:brightness(1);
-}
-
-}
-
 
 // ================= EXISTING SYSTEM =================
 
@@ -1288,17 +1174,17 @@ userData.farm.harvestReady=true
 
 await saveUser()
 
-// ✅ DITO LANG DAPAT
-hideWeatherEffect()
-
 loadFarmInfo()
 loadTreeView()
+
+hideWeatherEffect()
 
 alert(
 "🌧 Rain claimed successfully"
 )
 
 }
+
 window.claimRain=
 claimRain
 
@@ -1533,13 +1419,15 @@ function randomRainType(){
 
 const rains=[
 
+"☀️ Sunny",
+
 "🌦 Light Rain",
+
 "🌧 Normal Rain",
+
 "⛈ Heavy Rain"
 
 ]
-
-// RANDOM WEATHER
 
 return rains[
 Math.floor(
@@ -1923,7 +1811,7 @@ transform:translateY(0px)
 
 }
 
-/* ===== ULTRA REALISTIC WEATHER SYSTEM ===== */
+/* ===== FULLSCREEN WEATHER FX ===== */
 
 #weatherOverlay{
 
@@ -1932,262 +1820,130 @@ top:0;
 left:0;
 width:100%;
 height:100%;
-overflow:hidden;
 pointer-events:none;
 z-index:9998;
 display:none;
-transition:1s;
+overflow:hidden;
 
 }
 
-/* COMMON LAYERS */
-
-#weatherOverlay::before,
-#weatherOverlay::after{
-
-content:"";
-position:absolute;
-top:0;
-left:0;
-width:100%;
-height:100%;
-
-}
-
-/* ================= LIGHT RAIN ================= */
-
-.lightRain{
-
-background:
-linear-gradient(
-to bottom,
-rgba(30,41,59,.15),
-rgba(15,23,42,.35)
-);
-
-backdrop-filter:blur(1px);
-
-}
-
-.lightRain::before{
-
-background-image:
-repeating-linear-gradient(
-to bottom,
-rgba(255,255,255,.18) 0px,
-rgba(255,255,255,.18) 2px,
-transparent 2px,
-transparent 35px
-);
-
-background-size:100% 35px;
-
-animation:lightRainFall 1.2s linear infinite;
-opacity:.5;
-transform:skewX(-10deg);
-
-}
-
-@keyframes lightRainFall{
-
-from{
-transform:translateY(-100%) skewX(-10deg);
-}
-
-to{
-transform:translateY(100%) skewX(-10deg);
-}
-
-}
-
-/* ================= NORMAL RAIN ================= */
-
-.normalRain{
-
-background:
-linear-gradient(
-to bottom,
-rgba(15,23,42,.35),
-rgba(2,6,23,.65)
-);
-
-backdrop-filter:blur(2px);
-
-}
-
-.normalRain::before{
-
-background-image:
-repeating-linear-gradient(
-to bottom,
-rgba(255,255,255,.28) 0px,
-rgba(255,255,255,.28) 3px,
-transparent 3px,
-transparent 22px
-);
-
-background-size:100% 22px;
-
-animation:normalRainFall .55s linear infinite;
-opacity:.75;
-
-transform:skewX(-14deg);
-
-}
-
-.normalRain::after{
-
-background:
-radial-gradient(
-circle at center,
-rgba(255,255,255,.08),
-transparent 70%
-);
-
-animation:flashCloud 5s infinite;
-
-}
-
-@keyframes normalRainFall{
-
-from{
-transform:translateY(-100%) skewX(-14deg);
-}
-
-to{
-transform:translateY(100%) skewX(-14deg);
-}
-
-}
-
-/* ================= HEAVY RAIN ================= */
+/* HEAVY RAIN */
 
 .heavyRain{
 
 background:
 linear-gradient(
 to bottom,
-rgba(0,0,0,.55),
-rgba(0,0,0,.88)
+rgba(0,0,0,0.4),
+rgba(0,0,0,0.7)
 );
-
-backdrop-filter:blur(4px);
-
-animation:stormDark 3s infinite;
 
 }
 
 .heavyRain::before{
 
+content:"";
+position:absolute;
+top:-100%;
+left:0;
+width:100%;
+height:300%;
+
 background-image:
 repeating-linear-gradient(
 to bottom,
-rgba(255,255,255,.55) 0px,
-rgba(255,255,255,.55) 4px,
-transparent 4px,
-transparent 14px
+rgba(255,255,255,0.7) 0px,
+rgba(255,255,255,0.7) 2px,
+transparent 2px,
+transparent 18px
 );
 
-background-size:100% 14px;
-
-animation:heavyRainFall .18s linear infinite;
-opacity:.95;
-
-transform:skewX(-18deg);
-
-filter:blur(.4px);
+animation:rainFall .35s linear infinite;
+opacity:.7;
 
 }
 
-.heavyRain::after{
+@keyframes rainFall{
+
+0%{
+transform:translateY(0);
+}
+
+100%{
+transform:translateY(300px);
+}
+
+}
+
+/* LIGHT RAIN */
+
+.lightRain{
 
 background:
-radial-gradient(
-circle,
-rgba(255,255,255,.18),
-transparent 60%
+linear-gradient(
+to bottom,
+rgba(0,0,0,0.2),
+rgba(0,0,0,0.4)
 );
 
-animation:lightningFlash 4s infinite;
+}
+
+.lightRain::before{
+
+content:"";
+position:absolute;
+top:-100%;
+left:0;
+width:100%;
+height:300%;
+
+background-image:
+repeating-linear-gradient(
+to bottom,
+rgba(255,255,255,0.5) 0px,
+rgba(255,255,255,0.5) 1px,
+transparent 1px,
+transparent 25px
+);
+
+animation:rainFall 1s linear infinite;
 
 }
 
-@keyframes heavyRainFall{
+/* NORMAL RAIN */
 
-from{
-transform:translateY(-100%) skewX(-18deg);
-}
+.normalRain{
 
-to{
-transform:translateY(100%) skewX(-18deg);
-}
-
-}
-
-@keyframes lightningFlash{
-
-0%{
-opacity:0;
-}
-
-2%{
-opacity:1;
-}
-
-4%{
-opacity:0;
-}
-
-40%{
-opacity:0;
-}
-
-42%{
-opacity:.7;
-}
-
-44%{
-opacity:0;
-}
-
-100%{
-opacity:0;
-}
+background:
+linear-gradient(
+to bottom,
+rgba(0,0,0,0.3),
+rgba(0,0,0,0.5)
+);
 
 }
 
-@keyframes stormDark{
+.normalRain::before{
 
-0%{
-filter:brightness(1);
-}
+content:"";
+position:absolute;
+top:-100%;
+left:0;
+width:100%;
+height:300%;
 
-50%{
-filter:brightness(.85);
-}
+background-image:
+repeating-linear-gradient(
+to bottom,
+rgba(255,255,255,0.6) 0px,
+rgba(255,255,255,0.6) 2px,
+transparent 2px,
+transparent 20px
+);
 
-100%{
-filter:brightness(1);
-}
-
-}
-
-@keyframes flashCloud{
-
-0%{
-opacity:0;
-}
-
-50%{
-opacity:.5;
-}
-
-100%{
-opacity:0;
-}
+animation:rainFall .6s linear infinite;
 
 }
-
 
 /* ===== FARM FLOATING BUTTON ===== */
 
