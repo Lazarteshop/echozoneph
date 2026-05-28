@@ -334,6 +334,65 @@ $("shoutList").innerHTML=html
 
 window.sendShoutout=sendShoutout
 
+// ===== WEATHER BACKGROUND FX =====
+
+function showWeatherEffect(weather){
+
+const overlay =
+document.getElementById(
+"weatherOverlay"
+)
+
+if(!overlay) return
+
+overlay.className = ""
+overlay.style.display = "block"
+
+if(weather.includes("Heavy")){
+
+overlay.classList.add(
+"heavyRain"
+)
+
+}
+
+else if(weather.includes("Normal")){
+
+overlay.classList.add(
+"normalRain"
+)
+
+}
+
+else if(weather.includes("Light")){
+
+overlay.classList.add(
+"lightRain"
+)
+
+}else{
+
+overlay.style.display = "none"
+
+}
+
+}
+
+function hideWeatherEffect(){
+
+const overlay =
+document.getElementById(
+"weatherOverlay"
+)
+
+if(!overlay) return
+
+overlay.style.display = "none"
+
+overlay.className = ""
+
+}
+
 // ================= EXISTING SYSTEM =================
 
 function spin(){
@@ -1118,10 +1177,10 @@ await saveUser()
 loadFarmInfo()
 loadTreeView()
 
+hideWeatherEffect()
+
 alert(
-
-"🌧 Rain applied"
-
+"🌧 Rain claimed successfully"
 )
 
 }
@@ -1450,6 +1509,9 @@ return
 const rain=randomRainType()
 
 userData.farm.lastRain=rain
+
+// SHOW EFFECT
+showWeatherEffect(rain)
 
 let grow=1
 
