@@ -1501,6 +1501,24 @@ ${userData.farm.level}
 
 }
 
+// AUTO WEATHER EFFECT
+
+if(
+userData.farm.lastRain &&
+!userData.farm.harvestReady
+){
+
+showWeatherEffect(
+userData.farm.lastRain
+)
+
+}else{
+
+hideWeatherEffect()
+
+}
+
+
 async function growFarm(){
 
 if(!userData?.farm?.seed)
@@ -1996,6 +2014,9 @@ overflow:auto;
 </head>
 
 <body>
+
+<!-- WEATHER OVERLAY -->
+<div id="weatherOverlay"></div>
 
 <h2>CASHECHO WALLET</h2>
 
