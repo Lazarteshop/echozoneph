@@ -1731,6 +1731,140 @@ transform:translateY(0px)
 
 }
 
+/* ===== FULLSCREEN WEATHER FX ===== */
+
+#weatherOverlay{
+
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+pointer-events:none;
+z-index:9998;
+display:none;
+overflow:hidden;
+
+}
+
+/* HEAVY RAIN */
+
+.heavyRain{
+
+background:
+linear-gradient(
+to bottom,
+rgba(0,0,0,0.4),
+rgba(0,0,0,0.7)
+);
+
+}
+
+.heavyRain::before{
+
+content:"";
+position:absolute;
+top:-100%;
+left:0;
+width:100%;
+height:300%;
+
+background-image:
+repeating-linear-gradient(
+to bottom,
+rgba(255,255,255,0.7) 0px,
+rgba(255,255,255,0.7) 2px,
+transparent 2px,
+transparent 18px
+);
+
+animation:rainFall .35s linear infinite;
+opacity:.7;
+
+}
+
+@keyframes rainFall{
+
+0%{
+transform:translateY(0);
+}
+
+100%{
+transform:translateY(300px);
+}
+
+}
+
+/* LIGHT RAIN */
+
+.lightRain{
+
+background:
+linear-gradient(
+to bottom,
+rgba(0,0,0,0.2),
+rgba(0,0,0,0.4)
+);
+
+}
+
+.lightRain::before{
+
+content:"";
+position:absolute;
+top:-100%;
+left:0;
+width:100%;
+height:300%;
+
+background-image:
+repeating-linear-gradient(
+to bottom,
+rgba(255,255,255,0.5) 0px,
+rgba(255,255,255,0.5) 1px,
+transparent 1px,
+transparent 25px
+);
+
+animation:rainFall 1s linear infinite;
+
+}
+
+/* NORMAL RAIN */
+
+.normalRain{
+
+background:
+linear-gradient(
+to bottom,
+rgba(0,0,0,0.3),
+rgba(0,0,0,0.5)
+);
+
+}
+
+.normalRain::before{
+
+content:"";
+position:absolute;
+top:-100%;
+left:0;
+width:100%;
+height:300%;
+
+background-image:
+repeating-linear-gradient(
+to bottom,
+rgba(255,255,255,0.6) 0px,
+rgba(255,255,255,0.6) 2px,
+transparent 2px,
+transparent 20px
+);
+
+animation:rainFall .6s linear infinite;
+
+}
+
 /* ===== FARM FLOATING BUTTON ===== */
 
 #farmBtn{
