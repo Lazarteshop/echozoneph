@@ -345,13 +345,18 @@ document.getElementById(
 
 if(!overlay) return
 
-overlay.className = ""
-overlay.style.display = "block"
+overlay.style.display="block"
 
-if(weather.includes("Heavy")){
+overlay.className=""
+
+if(weather.includes("Light")){
 
 overlay.classList.add(
-"heavyRain"
+"lightRain"
+)
+
+createRainDrops(
+"lightRain"
 )
 
 }
@@ -362,17 +367,27 @@ overlay.classList.add(
 "normalRain"
 )
 
-}
-
-else if(weather.includes("Light")){
-
-overlay.classList.add(
-"lightRain"
+createRainDrops(
+"normalRain"
 )
 
-}else{
+}
 
-overlay.style.display = "none"
+else if(weather.includes("Heavy")){
+
+overlay.classList.add(
+"heavyRain"
+)
+
+createRainDrops(
+"heavyRain"
+)
+
+}
+
+else{
+
+hideWeatherEffect()
 
 }
 
@@ -387,9 +402,91 @@ document.getElementById(
 
 if(!overlay) return
 
-overlay.style.display = "none"
+overlay.style.display="none"
 
-overlay.className = ""
+overlay.className=""
+
+overlay.innerHTML=""
+
+}
+
+function createRainDrops(type){
+
+const overlay =
+document.getElementById(
+"weatherOverlay"
+)
+
+if(!overlay) return
+
+overlay.innerHTML=""
+
+let amount=0
+let minSpeed=0
+let maxSpeed=0
+
+// LIGHT RAIN
+
+amount=80
+minSpeed=1.5
+maxSpeed=2.2
+
+}
+
+// NORMAL RAIN
+
+if(type==="normalRain"){
+
+amount=180
+minSpeed=.8
+maxSpeed=1.4
+
+}
+
+// HEAVY RAIN
+
+if(type==="heavyRain"){
+
+amount=420
+minSpeed=.25
+maxSpeed=.7
+
+}
+
+for(let i=0;i<amount;i++){
+
+const rain=
+document.createElement("div")
+
+rain.className=
+"rainDrop"
+
+rain.style.left=
+Math.random()*100+"vw"
+
+const size=
+Math.random()*25+15
+
+rain.style.height=
+size+"px"
+
+rain.style.opacity=
+Math.random()
+
+rain.style.animationDuration=
+(
+Math.random()*
+(maxSpeed-minSpeed)
++
+minSpeed
+)+"s"
+
+rain.style.animationDelay=
+Math.random()*2+"s"
+
+overlay.appendChild(rain)
+
+}
 
 }
 
