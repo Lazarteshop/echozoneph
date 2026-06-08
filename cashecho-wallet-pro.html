@@ -77,6 +77,16 @@ nextCaptcha:0
 }
 }
 
+setTimeout(()=>{
+
+const tc=document.getElementById("ticketCount")
+
+if(tc){
+tc.innerText=userData.captcha.tickets || 0
+}
+
+},500)
+
 // ===== FARM DEFAULT DATA =====
 
 if(!userData.farm){
@@ -313,6 +323,10 @@ document.getElementById(
 "captchaCountdown"
 ).innerText =
 seconds
+
+if(captchaCountdownInterval){
+clearInterval(captchaCountdownInterval)
+}
 
 captchaCountdownInterval=
 setInterval(()=>{
