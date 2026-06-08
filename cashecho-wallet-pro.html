@@ -204,12 +204,12 @@ let captchaCountdownInterval=null
 
 function buyCaptchaTicket(){
 
-if(userData.cashechobalance < 1){
-alert("Need ₱1")
+if(userData.cashechobalance < 0.05){
+alert("Need ₱0.05")
 return
 }
 
-userData.cashechobalance -= 1
+userData.cashechobalance -= 0.05
 userData.captcha.tickets++
 
 saveUser()
