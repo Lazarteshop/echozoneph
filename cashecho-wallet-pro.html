@@ -65,6 +65,18 @@ userData.lastSpinReset = userData.lastSpinReset || ""
 
 spins = userData.spins
 
+// ===== captcha DEFAULT DATA =====
+
+if(!userData.captcha){
+userData.captcha = {
+tickets:0,
+active:false,
+captcha:"",
+startTime:0,
+nextCaptcha:0
+}
+}
+
 // ===== FARM DEFAULT DATA =====
 
 if(!userData.farm){
@@ -175,6 +187,244 @@ document.querySelectorAll(".tab")
 $(tab).style.display="block"
 
 }
+
+
+let captchaInterval=null
+let captchaCountdownInterval=null
+
+function buyCaptchaTicket(){
+
+if(userData.cashechobalance < 1){
+alert("Need ₱1")
+return
+}
+
+userData.cashechobalance -= 1
+userData.captcha.tickets++
+
+saveUser()
+
+document.getElementById(
+"ticketCount"
+).innerText =
+userData.captcha.tickets
+
+alert("Ticket added")
+
+if(!captchaInterval){
+startCaptchaSystem()
+}
+
+}
+
+window.buyCaptchaTicket=
+buyCaptchaTicket
+
+function generateCaptcha(){
+
+const chars =
+"ABCDEFGHJKLMNPQRSTUVWXYZ123456789"
+
+let text=""
+
+for(let i=0;i<6;i++){
+
+text += chars[
+Math.floor(
+Math.random()*chars.length
+)
+]
+
+}
+
+return text
+
+}
+
+function startCaptchaSystem(){
+
+let timer = 180
+
+captchaInterval =
+setInterval(()=>{
+
+timer--
+
+document.getElementById(
+"captchaTimer"
+).innerText =
+Math.floor(timer/60)
+.toString()
+.padStart(2,"0")
++
+":"
++
+(timer%60)
+.toString()
+.padStart(2,"0")
+
+if(timer<=0){
+
+timer=180
+
+showCaptcha()
+
+}
+
+},1000)
+
+}
+
+function showCaptcha(){
+
+if(userData.captcha.tickets <= 0)
+return
+
+userData.captcha.tickets--
+
+saveUser()
+
+document.getElementById(
+"ticketCount"
+).innerText =
+userData.captcha.tickets
+
+const code =
+generateCaptcha()
+
+userData.captcha.captcha =
+code
+
+userData.captcha.startTime =
+Date.now()
+
+document.getElementById(
+"captchaText"
+).innerText = code
+
+document.getElementById(
+"captchaBox"
+).style.display =
+"block"
+
+let seconds = 10
+
+document.getElementById(
+"captchaCountdown"
+).innerText =
+seconds
+
+captchaCountdownInterval=
+setInterval(()=>{
+
+seconds--
+
+document.getElementById(
+"captchaCountdown"
+).innerText=
+seconds
+
+if(seconds<=0){
+
+clearInterval(
+captchaCountdownInterval
+)
+
+document.getElementById(
+"captchaBox"
+).style.display="none"
+
+alert("Captcha expired")
+
+}
+
+},1000)
+
+}
+
+function submitCaptcha(){
+
+const input =
+document.getElementById(
+"captchaInput"
+).value
+.trim()
+
+if(
+input !==
+userData.captcha.captcha
+){
+
+alert("Wrong captcha")
+return
+
+}
+
+clearInterval(
+captchaCountdownInterval
+)
+
+const elapsed =
+(Date.now() -
+userData.captcha.startTime)
+/1000
+
+let reward=0
+
+if(elapsed<=3){
+
+reward=5
+
+}else if(
+elapsed<=5
+){
+
+reward=1
+
+}else if(
+elapsed<=7
+){
+
+reward=0.50
+
+}else{
+
+reward=0.01
+
+}
+
+userData.cashechobalance += reward
+
+userData.walletHistory.push({
+
+type:"captcha",
+
+amount:reward,
+
+date:Date.now()
+
+})
+
+saveUser()
+loadHistory()
+
+document.getElementById(
+"captchaBox"
+).style.display="none"
+
+document.getElementById(
+"captchaInput"
+).value=""
+
+alert(
+"✅ Correct!\nReward ₱"+
+reward.toFixed(2)
+)
+
+}
+
+window.submitCaptcha=
+submitCaptcha
 
 // ================= SHOUTOUT SYSTEM =================
 
@@ -847,6 +1097,13 @@ html+="<div>🪙 Interest ₱"+h.amount.toFixed(2)+"</div>"
 
 if(h.type==="redpacket")
 html+="<div>🧧 Red Packet ₱"+h.amount+"</div>"
+
+if(h.type==="captcha")
+html +=
+"<div>⌨️ Captcha Reward ₱"+
+h.amount+
+"</div>"
+
 
 if(h.type==="shout")
 html+="<div>📢 Shout Reward ₱"+h.amount+"</div>"
@@ -2178,6 +2435,9 @@ Lucky Coins
 📢 Shoutout
 </button>
 
+<button onclick="showTab('captchaTab')">
+⌨️ Typing Task
+</button>
 </div>
 
 <div id="slotTab" class="tab">
@@ -2224,6 +2484,16 @@ Claim Interest
 
 <div id="shoutList" style="margin-top:15px"></div>
 </div>
+
+<div id="captchaTab" class="tab">
+
+<h3>⌨️ Typing Captcha Earn</h3>
+
+<p>Tickets:
+<span id="ticketCount">0</span>
+</p>
+
+<button onclick="buyCaptchaTicket()">
 
 <h3>Wallet History</h3>
 
