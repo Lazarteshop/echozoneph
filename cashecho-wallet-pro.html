@@ -65,69 +65,99 @@ userData.lastSpinReset = userData.lastSpinReset || ""
 
 spins = userData.spins
 
-// ===== invite DEFAULT DATA =====
+// ================= INVITE FRIENDS SYSTEM =================
 
 document.getElementById("inviteBtn").onclick = async () => {
 
-const userId = currentUser.uid; // user ID
+if(!username){
+alert("Please login first")
+return
+}
 
 const referralLink =
-`https://echozoneph.vercel.app/eZphusers.html?ref=${userId}`;
+`https://echozoneph.vercel.app/eZphusers.html?ref=${encodeURIComponent(username)}`;
+
+try{
 
 if(navigator.share){
 
 await navigator.share({
-title:"Join Cashecho",
-text:"Register now and earn rewards!",
+title:"CASHECHO WALLET",
+text:"Join CASHECHO WALLET and start earning rewards!",
 url:referralLink
 });
 
 }else{
 
-navigator.clipboard.writeText(referralLink);
+await navigator.clipboard.writeText(referralLink);
 
 alert(
-"Referral link copied!\n\n" +
+"✅ Referral link copied!\n\n"+
 referralLink
 );
 
 }
 
+}catch(err){
+
+console.log(err);
+
+}
+
 };
 
-const params = new URLSearchParams(
-window.location.search
-);
+async function rewardReferrer(referrerUsername){
 
-const referredBy = params.get("ref");
+try{
+
+const { data: row, error } = await supabase
+.from("pin77_users")
+.select("*")
+.eq("username", referrerUsername)
+.single();
+
+if(error || !row){
+return;
+}
+
+let refUserData = row.data || {};
+
+refUserData.cashechobalance =
+Number(refUserData.cashechobalance || 0) + 10;
+
+refUserData.walletHistory =
+Array.isArray(refUserData.walletHistory)
+? refUserData.walletHistory
+: [];
+
+refUserData.walletHistory.push({
+type:"referral",
+amount:10,
+date:Date.now()
+});
+
+await supabase
+.from("pin77_users")
+.update({
+data: refUserData
+})
+.eq("username", referrerUsername);
+
+}catch(err){
+
+console.log("Referral reward error:",err);
+
+}
+
+}
+
+const referredBy =
+new URLSearchParams(window.location.search)
+.get("ref");
 
 if(referredBy){
 
 await rewardReferrer(referredBy);
-
-}
-
-async function rewardReferrer(referrerId){
-
-const { data:user } =
-await supabase
-.from("users")
-.select("cashechoWallet")
-.eq("uid", referrerId)
-.single();
-
-if(!user) return;
-
-const currentBalance =
-Number(user.cashechoWallet || 0);
-
-await supabase
-.from("users")
-.update({
-cashechoWallet:
-currentBalance + 10
-})
-.eq("uid", referrerId);
 
 }
 
