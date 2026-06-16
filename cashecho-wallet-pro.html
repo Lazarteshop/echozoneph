@@ -65,6 +65,18 @@ userData.lastSpinReset = userData.lastSpinReset || ""
 
 spins = userData.spins
 
+// ================= yellow card SYSTEM =================
+
+if(!userData.mathCard){
+    userData.mathCard = {
+        type:null, // trial o yellow
+        expires:0,
+        trialPurchased:false,
+        diamonds:0,
+        active:false
+    };
+}
+
 // ================= INVITE FRIENDS SYSTEM =================
 
 document.getElementById("inviteBtn").onclick = async () => {
@@ -1985,6 +1997,339 @@ growFarm()
 
 startFarmGrowth() 
 
+// ===== yellow card =====
+function toggleMathPanel(){
+
+const panel =
+document.getElementById("mathPanel");
+
+if(panel.style.display==="block"){
+
+panel.style.display="none";
+
+}else{
+
+panel.style.display="block";
+
+updateMathUI();
+
+generateMathQuestion();
+
+loadYellowRequests();
+
+}
+
+}
+
+window.toggleMathPanel=
+toggleMathPanel;
+
+async function buyTrialCard(){
+
+if(userData.mathCard.trialPurchased){
+
+alert("Trial card can only be purchased once.");
+
+return;
+
+}
+
+if(userData.cashechobalance<20){
+
+alert("Need ₱20");
+
+return;
+
+}
+
+userData.cashechobalance-=20;
+
+userData.mathCard.type="trial";
+
+userData.mathCard.expires=
+Date.now()+(24*60*60*1000);
+
+userData.mathCard.trialPurchased=true;
+
+userData.mathCard.active=true;
+
+await saveUser();
+
+updateMathUI();
+
+alert("Trial Card Activated");
+
+}
+
+async function requestYellowCard(){
+
+const {error}=await supabase
+.from("yellow_requests")
+.insert({
+
+username:username,
+status:"Pending",
+created_at:Date.now()
+
+});
+
+if(error){
+
+alert("Request failed");
+
+return;
+
+}
+
+alert(
+"Please pay ₱100 through GCash QR and wait for admin approval."
+);
+
+}
+
+function generateMathQuestion(){
+
+if(!userData.mathCard.active)
+return;
+
+const ops=["+","-","×","÷"];
+
+const op=
+ops[Math.floor(Math.random()*4)];
+
+let a,b,answer;
+
+if(op==="+"){
+
+a=Math.floor(Math.random()*100)+1;
+b=Math.floor(Math.random()*100)+1;
+
+answer=a+b;
+
+}
+
+if(op==="-"){
+
+a=Math.floor(Math.random()*100)+1;
+b=Math.floor(Math.random()*a)+1;
+
+answer=a-b;
+
+}
+
+if(op==="×"){
+
+a=Math.floor(Math.random()*12)+1;
+b=Math.floor(Math.random()*12)+1;
+
+answer=a*b;
+
+}
+
+if(op==="÷"){
+
+answer=Math.floor(Math.random()*12)+1;
+
+b=Math.floor(Math.random()*12)+1;
+
+a=answer*b;
+
+}
+
+userData.currentMathAnswer=
+answer;
+
+document.getElementById(
+"mathQuestion"
+).innerText=
+`${a} ${op} ${b} = ?`;
+
+}
+
+async function submitMathAnswer(){
+
+if(!userData.mathCard.active){
+
+alert("No active card");
+
+return;
+
+}
+
+const input=
+Number(
+document.getElementById("mathAnswer").value
+);
+
+if(input!==userData.currentMathAnswer){
+
+alert("Wrong Answer");
+
+generateMathQuestion();
+
+return;
+
+}
+
+let reward=
+userData.mathCard.type==="yellow"
+?20
+:10;
+
+userData.mathCard.diamonds+=reward;
+
+if(userData.mathCard.diamonds>=30000){
+
+userData.mathCard.diamonds-=30000;
+
+userData.cashechobalance+=2;
+
+alert("30,000 Diamonds converted to ₱2");
+
+}
+
+await saveUser();
+
+updateMathUI();
+
+generateMathQuestion();
+
+document.getElementById(
+"mathAnswer"
+).value="";
+
+}
+
+async function loadYellowRequests(){
+
+if(username!==TEAM_LEADER)
+return;
+
+const {data}=await supabase
+.from("yellow_requests")
+.select("*")
+.eq("status","Pending");
+
+let html="";
+
+data.forEach(r=>{
+
+html+=`
+
+<div style="
+padding:10px;
+background:#0f172a;
+margin:10px 0;
+border-radius:10px;
+">
+
+${r.username}
+
+<br><br>
+
+<button onclick="
+approveYellowCard(
+${r.id},
+'${r.username}'
+)
+">
+
+Approve
+
+</button>
+
+</div>
+
+`;
+
+});
+
+document.getElementById(
+"yellowRequests"
+).innerHTML=html;
+
+}
+
+async function approveYellowCard(
+requestId,
+requestUser
+){
+
+if(username!==TEAM_LEADER){
+
+alert("Only admin");
+
+return;
+
+}
+
+const {data:userRow}=await supabase
+.from("pin77_users")
+.select("*")
+.eq("username",requestUser)
+.single();
+
+let targetUser=
+userRow.data ?? {};
+
+if(!targetUser.mathCard){
+
+targetUser.mathCard={
+
+type:null,
+expires:0,
+trialPurchased:false,
+diamonds:0,
+active:false
+
+};
+
+}
+
+targetUser.mathCard.type="yellow";
+
+targetUser.mathCard.expires=
+Date.now()+(10*24*60*60*1000);
+
+targetUser.mathCard.active=true;
+
+await supabase
+.from("pin77_users")
+.update({
+
+data:targetUser
+
+})
+.eq("username",requestUser);
+
+await supabase
+.from("yellow_requests")
+.update({
+
+status:"Approved"
+
+})
+.eq("id",requestId);
+
+alert("Yellow Card Approved");
+
+loadYellowRequests();
+
+}
+
+function updateMathUI(){
+
+document.getElementById(
+"cardType"
+).innerText=
+userData.mathCard.type || "None";
+
+document.getElementById(
+"mathDiamonds"
+).innerText=
+userData.mathCard.diamonds || 0;
+
+}
 
 // ===== CLAIM LAND =====
 
@@ -2104,6 +2449,40 @@ loadStore()
 startCountdown()
 startAutoRefresh()
 
+setInterval(async()=>{
+
+if(!userData?.mathCard?.active)
+return;
+
+if(Date.now()>userData.mathCard.expires){
+
+userData.mathCard.active=false;
+
+userData.mathCard.type=null;
+
+await saveUser();
+
+alert("Your card has expired.");
+
+return;
+
+}
+
+userData.mathCard.diamonds+=267;
+
+if(userData.mathCard.diamonds>=30000){
+
+userData.mathCard.diamonds-=30000;
+
+userData.cashechobalance+=2;
+
+}
+
+await saveUser();
+
+updateMathUI();
+
+},60000);
 </script>
 
 <style>
@@ -2265,6 +2644,25 @@ rgba(0,0,0,.92)
 backdrop-filter:blur(4px);
 
 animation:stormDark 3s infinite;
+
+}
+
+/* ===== yellow card ===== */
+#mathBtn{
+
+position:fixed;
+bottom:210px;
+left:20px;
+width:70px;
+height:70px;
+border-radius:50%;
+background:#f59e0b;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:30px;
+cursor:pointer;
+z-index:9999;
 
 }
 
@@ -2577,6 +2975,10 @@ Submit
 
 <div id="history"></div>
 
+<!-- yellow card Button -->
+<div id="mathBtn" onclick="toggleMathPanel()">
+🧮
+</div>
 
 <!-- Floating Invite Button -->
 <button id="inviteBtn" class="invite-btn">
@@ -2714,6 +3116,68 @@ Close
 </button>
 
 </div>
+
+<div id="mathPanel" style="
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+width:90%;
+max-width:400px;
+background:#1e293b;
+padding:20px;
+border-radius:20px;
+z-index:10000;
+">
+
+<h3>🧮 Math Card</h3>
+<p>
+Card:
+<span id="cardType">None</span>
+</p>
+
+<p>
+Diamonds:
+<span id="mathDiamonds">0</span>
+</p>
+
+<p id="mathQuestion">
+No Question
+</p>
+
+<input
+id="mathAnswer"
+placeholder="Answer"
+style="width:100%;padding:10px;">
+
+<br><br>
+
+<button onclick="submitMathAnswer()">
+Submit
+</button>
+
+<hr>
+<button onclick="buyTrialCard()">
+Buy Trial Card ₱20
+</button>
+
+<br><br>
+
+<button onclick="requestYellowCard()">
+Request Yellow Card ₱100
+</button>
+
+<hr>
+
+<div id="yellowRequests"></div>
+
+<button onclick="toggleMathPanel()">
+Close
+</button>
+
+</div>
+
 
 <audio id="radioPlayer" src="https://stream-288.zeno.fm/536cwdq78heuv?zt=eyJhbGciOiJIUzI1NiJ9.eyJzdHJlYW0iOiI1MzZjd2RxNzhoZXV2IiwiaG9zdCI6InN0cmVhbS0yODguemVuby5mbSIsInRtIjpmYWxzZSwicnR0bCI6NSwianRpIjoiNk51bExLR2JSWTYwa3BTY3RkUXVCQSIsImlhdCI6MTc3NzUzMjU3MSwiZXhwIjoxNzc3NTMyNjMxfQ.Fg8EzgiZJrsb1oIA7gD5Kt495VS_d3jGbnz0rzmdzxk" preload="auto" playsinline></audio>
 
