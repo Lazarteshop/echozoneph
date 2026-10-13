@@ -3,146 +3,336 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>EchoZonePH APPStore</title>
+<meta name="theme-color" content="#0f9d58">
+<meta name="description" content="Discover Z-oneApp and Z-onemessenger from EchoZone Team.">
 
 <style>
-body{
+* {
+  box-sizing: border-box;
+}
+
+body {
   font-family: Arial, sans-serif;
-  background:#f2f2f2;
-  margin:0;
+  background: #f2f5f8;
+  margin: 0;
+  color: #17243b;
 }
-.header{
-  background:#0f9d58;
-  color:white;
-  padding:15px;
-  text-align:center;
-  font-size:20px;
+
+.header {
+  background: linear-gradient(135deg, #087b49, #0fbd83);
+  color: white;
+  padding: 24px 12px;
+  text-align: center;
 }
-.container{
-  max-width:500px;
-  margin:20px auto;
-  background:white;
-  border-radius:12px;
-  box-shadow:0 4px 10px rgba(0,0,0,0.1);
-  overflow:hidden;
+
+.header h1 {
+  margin: 0;
+  font-size: 27px;
 }
-.app-header{
-  display:flex;
-  padding:15px;
+
+.header p {
+  margin: 8px 0 0;
+  font-size: 14px;
 }
-.app-icon{
-  width:80px;
-  height:80px;
-  border-radius:20px;
+
+.container {
+  max-width: 650px;
+  margin: 20px auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  overflow: hidden;
+  border: 1px solid #e3e9ef;
 }
-.app-info{
-  margin-left:15px;
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 18px;
 }
-.app-name{
-  font-size:20px;
-  font-weight:bold;
+
+.app-icon {
+  width: 82px;
+  height: 82px;
+  object-fit: cover;
+  border-radius: 19px;
+  flex-shrink: 0;
 }
-.install-btn{
-  display:block;
-  margin:15px;
-  background:#0f9d58;
-  color:white;
-  text-align:center;
-  padding:12px;
-  border-radius:8px;
-  font-size:18px;
-  text-decoration:none;
+
+.app-info {
+  min-width: 0;
 }
-.install-btn:hover{
-  background:#0c7a45;
+
+.app-name {
+  font-size: 21px;
+  font-weight: bold;
+  margin-bottom: 7px;
+  overflow-wrap: anywhere;
 }
-.screenshots{
-  display:flex;
-  overflow-x:auto;
-  padding:10px;
+
+.app-info p {
+  margin: 5px 0;
+  color: #596579;
+  font-size: 13px;
 }
-.screenshots img{
-  width:200px;
-  margin-right:10px;
-  border-radius:10px;
+
+.install-btn {
+  display: block;
+  margin: 0 18px 18px;
+  background: #0f9d58;
+  color: white;
+  text-align: center;
+  padding: 14px;
+  border-radius: 9px;
+  font-size: 16px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: background 0.2s;
 }
-.description{
-  padding:15px;
-  font-size:14px;
+
+.install-btn:hover {
+  background: #087b45;
+}
+
+.messenger-btn {
+  background: #0866e9;
+}
+
+.messenger-btn:hover {
+  background: #084fc0;
+}
+
+.screenshots {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 0 15px 15px;
+  scroll-snap-type: x mandatory;
+}
+
+.screenshots img {
+  width: 72%;
+  max-width: 240px;
+  height: 330px;
+  object-fit: cover;
+  flex: 0 0 auto;
+  border-radius: 11px;
+  border: 1px solid #e2e7ed;
+  scroll-snap-align: start;
+  background: #eef3f9;
+}
+
+.description {
+  padding: 0 18px 20px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #455168;
+}
+
+.description h3 {
+  color: #17243b;
+  font-size: 17px;
+  margin: 0 0 8px;
+}
+
+.features {
+  padding-left: 20px;
+  margin-bottom: 0;
+}
+
+.footer {
+  text-align: center;
+  color: #697586;
+  padding: 15px;
+  font-size: 12px;
+}
+
+@media (max-width: 420px) {
+  .header h1 {
+    font-size: 23px;
+  }
+
+  .app-header {
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .app-icon {
+    width: 68px;
+    height: 68px;
+  }
+
+  .app-name {
+    font-size: 18px;
+  }
+
+  .screenshots img {
+    height: 290px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">EchoZonePH APPStore</div>
+<header class="header">
+  <h1>EchoZonePH APPStore</h1>
+  <p>Explore • Connect • Share • Together</p>
+</header>
 
-<div class="container">
+<main>
 
-  <div class="app-header">
-    <img src="https://echozoneph.vercel.app/pwa-icon-512.jpg" class="app-icon">
-    <div class="app-info">
-      <div class="app-name">Z-oneApp</div>
-      <div>Developer: EchoZone Team</div>
-      <div>Version: 1.0</div>
+  <!-- Z-ONEAPP CONTAINER -->
+  <section class="container">
+
+    <div class="app-header">
+      <img
+        src="https://echozoneph.vercel.app/pwa-icon-512.jpg"
+        class="app-icon"
+        alt="Z-oneApp icon"
+      >
+
+      <div class="app-info">
+        <div class="app-name">Z-oneApp</div>
+        <p>Developer: EchoZone Team</p>
+        <p>Version: 1.0</p>
+      </div>
     </div>
-  </div>
 
-  <!-- INSTALL BUTTON -->
-  <a class="install-btn" href="#" onclick="installApp()">Install App</a>
+    <a
+      class="install-btn"
+      href="https://echozoneph.vercel.app/EchoZone.apk"
+      onclick="return confirmInstall('Z-oneApp');"
+    >
+      ⬇ Install Z-oneApp
+    </a>
 
-  <!-- Screenshots -->
-  <div class="screenshots">
-    <img src="https://echozoneph.vercel.app/1771133882319.jpg">
-    <img src="https://echozoneph.vercel.app/1771133892953.jpg">
-    <img src="https://echozoneph.vercel.app/1771133936006.jpg">
-  </div>
+    <div class="screenshots">
+      <img
+        src="https://echozoneph.vercel.app/1771133882319.jpg"
+        alt="Z-oneApp screenshot 1"
+        loading="lazy"
+      >
+      <img
+        src="https://echozoneph.vercel.app/1771133892953.jpg"
+        alt="Z-oneApp screenshot 2"
+        loading="lazy"
+      >
+      <img
+        src="https://echozoneph.vercel.app/1771133936006.jpg"
+        alt="Z-oneApp screenshot 3"
+        loading="lazy"
+      >
+    </div>
 
-  <div class="description">
-    <b>About this app</b><br><br>
-    Ang Z-oneApp ay ang #1 All-in-One Digital Community, Website Viewer, at Micro-Earning Platform sa Pilipinas na nagbibigay ng tunay na pagkakataon upang mag-explore ng mga negosyo at kumita araw-araw sa pamamagitan ng GCash!
-  </div>
-</div>
+    <div class="description">
+      <h3>About this app</h3>
+
+      Ang Z-oneApp ay isang all-in-one digital community platform
+      na ginawa upang tulungan ang mga user na kumonekta,
+      magbahagi ng content, makipag-ugnayan sa komunidad, at
+      mag-explore ng mga digital service.
+
+      <ul class="features">
+        <li>Social posts at community interaction</li>
+        <li>Photo at video content sharing</li>
+        <li>Digital services at website viewing</li>
+        <li>Available rewards at earning features, ayon sa kasalukuyang app rules</li>
+      </ul>
+    </div>
+
+  </section>
+
+
+  <!-- Z-ONEMESSENGER CONTAINER -->
+  <section class="container">
+
+    <div class="app-header">
+      <img
+        src="https://echozoneph.vercel.app/zonemessenger-icon.png"
+        class="app-icon"
+        alt="Z-onemessenger icon"
+        onerror="this.onerror=null;this.src='https://echozoneph.vercel.app/pwa-icon-512.jpg';"
+      >
+
+      <div class="app-info">
+        <div class="app-name">Z-onemessenger</div>
+        <p>Developer: EchoZone Team</p>
+        <p>Version: 1.0</p>
+      </div>
+    </div>
+
+    <a
+      class="install-btn messenger-btn"
+      href="https://echozoneph.vercel.app/ZoneMessenger.apk"
+      onclick="return confirmInstall('Z-onemessenger');"
+    >
+      ⬇ Install Z-onemessenger
+    </a>
+
+    <!-- Messenger screenshots: replace these sample image paths
+         with your actual Z-onemessenger screenshots when available. -->
+    <div class="screenshots">
+      <img
+        src="https://echozoneph.vercel.app/zonemessenger-screen1.jpg"
+        alt="Z-onemessenger welcome screen"
+        loading="lazy"
+        onerror="this.onerror=null;this.src='https://placehold.co/480x700/0866e9/ffffff?text=Z-onemessenger';"
+      >
+
+      <img
+        src="https://echozoneph.vercel.app/zonemessenger-screen2.jpg"
+        alt="Z-onemessenger chat list"
+        loading="lazy"
+        onerror="this.onerror=null;this.src='https://placehold.co/480x700/0866e9/ffffff?text=Chat+List';"
+      >
+
+      <img
+        src="https://echozoneph.vercel.app/zonemessenger-screen3.jpg"
+        alt="Z-onemessenger conversation screen"
+        loading="lazy"
+        onerror="this.onerror=null;this.src='https://placehold.co/480x700/0866e9/ffffff?text=Messaging';"
+      >
+    </div>
+
+    <div class="description">
+      <h3>About this app</h3>
+
+      Ang Z-onemessenger ay isang messaging app concept ng
+      EchoZone Team na idinisenyo para sa mas madali at mabilis
+      na pakikipag-ugnayan sa mga kaibigan, pamilya, at komunidad.
+
+      <ul class="features">
+        <li>Madaling makipag-ugnayan sa ibang user</li>
+        <li>Maayos at user-friendly na messaging interface</li>
+        <li>Disenyo para sa personal at group conversations</li>
+        <li>Isang digital communication experience para sa EchoZone community</li>
+      </ul>
+
+      Tandaan: Ang mga feature na aktuwal na magagamit ay
+      nakadepende sa functionality ng naka-install na app.
+    </div>
+
+  </section>
+
+</main>
+
+<footer class="footer">
+  © 2026 EchoZonePH APPStore · EchoZone Team
+</footer>
 
 <script>
-function installApp(){
-  if(confirm("Download and install EchoZonePH App?")){
-    window.location.href="https://echozoneph.vercel.app/EchoZone.apk";
-  }
-}
-</script>
-   <div class="app-header">
-    <img src="https://echozoneph.vercel.app/pwa-icon-512.jpg" class="app-icon">
-    <div class="app-info">
-      <div class="app-name">Z-onemessenger</div>
-      <div>Developer: EchoZone Team</div>
-      <div>Version: 1.0</div>
-    </div>
-  </div>
-
-  <!-- INSTALL BUTTON -->
-  <a class="install-btn" href="#" onclick="installApp()">Install App</a>
-
-  <!-- Screenshots -->
-  <div class="screenshots">
-    <img src="https://echozoneph.vercel.app/1771133882319.jpg">
-    <img src="https://echozoneph.vercel.app/1771133892953.jpg">
-    <img src="https://echozoneph.vercel.app/1771133936006.jpg">
-  </div>
-
-  <div class="description">
-    <b>About this app</b><br><br>
-    Ang Z-oneApp ay ang #1 All-in-One Digital Community, Website Viewer, at Micro-Earning Platform sa Pilipinas na nagbibigay ng tunay na pagkakataon upang mag-explore ng mga negosyo at kumita araw-araw sa pamamagitan ng GCash!
-  </div>
-</div>
-
-<script>
-function installApp(){
-  if(confirm("Download and install EchoZonePH App?")){
-    window.location.href="https://echozoneph.vercel.app/ZoneMessenger.apk";
-  }
+function confirmInstall(appName) {
+  return confirm(
+    "Gusto mo bang i-download ang APK ng " +
+    appName +
+    "?"
+  );
 }
 </script>
 
 </body>
-</html>
+  </html>
