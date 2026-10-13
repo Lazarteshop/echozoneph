@@ -111,6 +111,38 @@ function installApp(){
   }
 }
 </script>
+   <div class="app-header">
+    <img src="https://echozoneph.vercel.app/pwa-icon-512.jpg" class="app-icon">
+    <div class="app-info">
+      <div class="app-name">Z-onemessenger</div>
+      <div>Developer: EchoZone Team</div>
+      <div>Version: 1.0</div>
+    </div>
+  </div>
+
+  <!-- INSTALL BUTTON -->
+  <a class="install-btn" href="#" onclick="installApp()">Install App</a>
+
+  <!-- Screenshots -->
+  <div class="screenshots">
+    <img src="https://echozoneph.vercel.app/1771133882319.jpg">
+    <img src="https://echozoneph.vercel.app/1771133892953.jpg">
+    <img src="https://echozoneph.vercel.app/1771133936006.jpg">
+  </div>
+
+  <div class="description">
+    <b>About this app</b><br><br>
+    Ang Z-oneApp ay ang #1 All-in-One Digital Community, Website Viewer, at Micro-Earning Platform sa Pilipinas na nagbibigay ng tunay na pagkakataon upang mag-explore ng mga negosyo at kumita araw-araw sa pamamagitan ng GCash!
+  </div>
+</div>
+
+<script>
+function installApp(){
+  if(confirm("Download and install EchoZonePH App?")){
+    window.location.href="https://echozoneph.vercel.app/ZoneMessenger.apk";
+  }
+}
+</script>
 
 </body>
 </html>
