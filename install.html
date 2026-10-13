@@ -6,7 +6,7 @@
 
 <title>EchoZonePH APPStore</title>
 <meta name="theme-color" content="#0f9d58">
-<meta name="description" content="Discover Z-oneApp and Z-onemessenger from EchoZone Team.">
+<meta name="description" content="Discover digital apps from EchoZone Team.">
 
 <style>
 * {
@@ -14,52 +14,53 @@
 }
 
 body {
+  margin: 0;
   font-family: Arial, sans-serif;
   background: #f2f5f8;
-  margin: 0;
   color: #17243b;
 }
 
 .header {
   background: linear-gradient(135deg, #087b49, #0fbd83);
   color: white;
-  padding: 24px 12px;
+  padding: 25px 12px;
   text-align: center;
 }
 
 .header h1 {
+  font-size: 26px;
   margin: 0;
-  font-size: 27px;
 }
 
 .header p {
-  margin: 8px 0 0;
   font-size: 14px;
+  margin: 8px 0 0;
 }
 
 .container {
-  max-width: 650px;
+  max-width: 600px;
   margin: 20px auto;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-  overflow: hidden;
   border: 1px solid #e3e9ef;
+  border-radius: 15px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.07);
+  overflow: hidden;
 }
 
 .app-header {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 14px;
   padding: 18px;
 }
 
 .app-icon {
-  width: 82px;
-  height: 82px;
+  width: 78px;
+  height: 78px;
   object-fit: cover;
-  border-radius: 19px;
+  border-radius: 18px;
   flex-shrink: 0;
+  background: #eef2f6;
 }
 
 .app-info {
@@ -69,108 +70,141 @@ body {
 .app-name {
   font-size: 21px;
   font-weight: bold;
-  margin-bottom: 7px;
   overflow-wrap: anywhere;
 }
 
 .app-info p {
-  margin: 5px 0;
-  color: #596579;
+  margin: 6px 0 0;
   font-size: 13px;
+  color: #657185;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  padding: 0 18px 18px;
+}
+
+.btn {
+  flex: 1;
+  display: inline-block;
+  padding: 13px 8px;
+  text-align: center;
+  text-decoration: none;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.read-btn {
+  background: #e8f5ed;
+  color: #087b49;
+}
+
+.read-btn:hover {
+  background: #d5eddf;
 }
 
 .install-btn {
-  display: block;
-  margin: 0 18px 18px;
   background: #0f9d58;
   color: white;
-  text-align: center;
-  padding: 14px;
-  border-radius: 9px;
-  font-size: 16px;
-  font-weight: bold;
-  text-decoration: none;
-  transition: background 0.2s;
 }
 
 .install-btn:hover {
   background: #087b45;
 }
 
-.messenger-btn {
+.messenger-install {
   background: #0866e9;
 }
 
-.messenger-btn:hover {
+.messenger-install:hover {
   background: #084fc0;
+}
+
+/* DETAILS: hidden until Read More is pressed */
+.app-details {
+  display: none;
+  padding-bottom: 20px;
+}
+
+.app-details.open {
+  display: block;
 }
 
 .screenshots {
   display: flex;
-  gap: 10px;
+  gap: 12px;
+  padding: 0 15px 18px;
   overflow-x: auto;
-  padding: 0 15px 15px;
   scroll-snap-type: x mandatory;
 }
 
 .screenshots img {
   width: 72%;
-  max-width: 240px;
-  height: 330px;
-  object-fit: cover;
+  max-width: 235px;
+  height: 310px;
   flex: 0 0 auto;
-  border-radius: 11px;
-  border: 1px solid #e2e7ed;
+  object-fit: cover;
+  object-position: top;
+  border: 1px solid #e0e6ed;
+  border-radius: 10px;
+  background: #eef2f6;
   scroll-snap-align: start;
-  background: #eef3f9;
 }
 
 .description {
-  padding: 0 18px 20px;
+  padding: 0 18px;
   font-size: 14px;
   line-height: 1.7;
   color: #455168;
 }
 
 .description h3 {
-  color: #17243b;
-  font-size: 17px;
   margin: 0 0 8px;
+  font-size: 18px;
+  color: #17243b;
 }
 
 .features {
   padding-left: 20px;
-  margin-bottom: 0;
 }
 
 .footer {
   text-align: center;
+  padding: 20px 12px;
   color: #697586;
-  padding: 15px;
   font-size: 12px;
 }
 
 @media (max-width: 420px) {
   .header h1 {
-    font-size: 23px;
-  }
-
-  .app-header {
-    gap: 12px;
-    padding: 14px;
+    font-size: 22px;
   }
 
   .app-icon {
-    width: 68px;
-    height: 68px;
+    width: 65px;
+    height: 65px;
   }
 
   .app-name {
     font-size: 18px;
   }
 
+  .actions {
+    padding-left: 12px;
+    padding-right: 12px;
+    gap: 8px;
+  }
+
+  .btn {
+    font-size: 13px;
+  }
+
   .screenshots img {
-    height: 290px;
+    height: 280px;
   }
 }
 </style>
@@ -185,13 +219,15 @@ body {
 
 <main>
 
-  <!-- Z-ONEAPP CONTAINER -->
+  <!-- =================================
+       Z-ONEAPP
+  ================================== -->
   <section class="container">
 
     <div class="app-header">
       <img
-        src="https://echozoneph.vercel.app/pwa-icon-512.jpg"
         class="app-icon"
+        src="https://echozoneph.vercel.app/pwa-icon-512.jpg"
         alt="Z-oneApp icon"
       >
 
@@ -202,58 +238,85 @@ body {
       </div>
     </div>
 
-    <a
-      class="install-btn"
-      href="https://echozoneph.vercel.app/EchoZone.apk"
-      onclick="return confirmInstall('Z-oneApp');"
-    >
-      ⬇ Install Z-oneApp
-    </a>
+    <div class="actions">
+      <button
+        type="button"
+        class="btn read-btn"
+        aria-expanded="false"
+        aria-controls="zoneapp-details"
+        onclick="toggleDetails('zoneapp-details', this)"
+      >
+        Read More +
+      </button>
 
-    <div class="screenshots">
-      <img
-        src="https://echozoneph.vercel.app/1771133882319.jpg"
-        alt="Z-oneApp screenshot 1"
-        loading="lazy"
+      <a
+        class="btn install-btn"
+        href="https://echozoneph.vercel.app/EchoZone.apk"
+        onclick="return confirmInstall('Z-oneApp')"
       >
-      <img
-        src="https://echozoneph.vercel.app/1771133892953.jpg"
-        alt="Z-oneApp screenshot 2"
-        loading="lazy"
-      >
-      <img
-        src="https://echozoneph.vercel.app/1771133936006.jpg"
-        alt="Z-oneApp screenshot 3"
-        loading="lazy"
-      >
+        ⬇ Install
+      </a>
     </div>
 
-    <div class="description">
-      <h3>About this app</h3>
+    <div class="app-details" id="zoneapp-details">
 
-      Ang Z-oneApp ay isang all-in-one digital community platform
-      na ginawa upang tulungan ang mga user na kumonekta,
-      magbahagi ng content, makipag-ugnayan sa komunidad, at
-      mag-explore ng mga digital service.
+      <div class="screenshots">
+        <img
+          src="https://echozoneph.vercel.app/1771133882319.jpg"
+          alt="Z-oneApp screenshot 1"
+          loading="lazy"
+        >
 
-      <ul class="features">
-        <li>Social posts at community interaction</li>
-        <li>Photo at video content sharing</li>
-        <li>Digital services at website viewing</li>
-        <li>Available rewards at earning features, ayon sa kasalukuyang app rules</li>
-      </ul>
+        <img
+          src="https://echozoneph.vercel.app/1771133892953.jpg"
+          alt="Z-oneApp screenshot 2"
+          loading="lazy"
+        >
+
+        <img
+          src="https://echozoneph.vercel.app/1771133936006.jpg"
+          alt="Z-oneApp screenshot 3"
+          loading="lazy"
+        >
+      </div>
+
+      <div class="description">
+        <h3>About this app</h3>
+
+        Ang Z-oneApp ay isang all-in-one digital community
+        platform na nagbibigay-daan sa mga user na kumonekta,
+        magbahagi ng content, makipag-ugnayan sa komunidad,
+        at mag-explore ng mga digital service.
+
+        <ul class="features">
+          <li>Social posts at community interaction</li>
+          <li>Photo at video content sharing</li>
+          <li>Digital services at website viewing</li>
+          <li>Rewards at earning features, kung available sa app</li>
+        </ul>
+
+        <button
+          type="button"
+          class="btn read-btn"
+          onclick="toggleDetails('zoneapp-details', this, true)"
+        >
+          Read Less −
+        </button>
+      </div>
+
     </div>
-
   </section>
 
 
-  <!-- Z-ONEMESSENGER CONTAINER -->
+  <!-- =================================
+       Z-ONEMESSENGER
+  ================================== -->
   <section class="container">
 
     <div class="app-header">
       <img
-        src="https://echozoneph.vercel.app/zonemessenger-icon.png"
         class="app-icon"
+        src="https://echozoneph.vercel.app/zonemessenger-icon.png"
         alt="Z-onemessenger icon"
         onerror="this.onerror=null;this.src='https://echozoneph.vercel.app/pwa-icon-512.jpg';"
       >
@@ -265,57 +328,81 @@ body {
       </div>
     </div>
 
-    <a
-      class="install-btn messenger-btn"
-      href="https://echozoneph.vercel.app/ZoneMessenger.apk"
-      onclick="return confirmInstall('Z-onemessenger');"
-    >
-      ⬇ Install Z-onemessenger
-    </a>
-
-    <!-- Messenger screenshots: replace these sample image paths
-         with your actual Z-onemessenger screenshots when available. -->
-    <div class="screenshots">
-      <img
-        src="https://echozoneph.vercel.app/zonemessenger-screen1.jpg"
-        alt="Z-onemessenger welcome screen"
-        loading="lazy"
-        onerror="this.onerror=null;this.src='https://placehold.co/480x700/0866e9/ffffff?text=Z-onemessenger';"
+    <div class="actions">
+      <button
+        type="button"
+        class="btn read-btn"
+        aria-expanded="false"
+        aria-controls="messenger-details"
+        onclick="toggleDetails('messenger-details', this)"
       >
+        Read More +
+      </button>
 
-      <img
-        src="https://echozoneph.vercel.app/zonemessenger-screen2.jpg"
-        alt="Z-onemessenger chat list"
-        loading="lazy"
-        onerror="this.onerror=null;this.src='https://placehold.co/480x700/0866e9/ffffff?text=Chat+List';"
+      <a
+        class="btn install-btn messenger-install"
+        href="https://echozoneph.vercel.app/ZoneMessenger.apk"
+        onclick="return confirmInstall('Z-onemessenger')"
       >
-
-      <img
-        src="https://echozoneph.vercel.app/zonemessenger-screen3.jpg"
-        alt="Z-onemessenger conversation screen"
-        loading="lazy"
-        onerror="this.onerror=null;this.src='https://placehold.co/480x700/0866e9/ffffff?text=Messaging';"
-      >
+        ⬇ Install
+      </a>
     </div>
 
-    <div class="description">
-      <h3>About this app</h3>
+    <div class="app-details" id="messenger-details">
 
-      Ang Z-onemessenger ay isang messaging app concept ng
-      EchoZone Team na idinisenyo para sa mas madali at mabilis
-      na pakikipag-ugnayan sa mga kaibigan, pamilya, at komunidad.
+      <div class="screenshots">
 
-      <ul class="features">
-        <li>Madaling makipag-ugnayan sa ibang user</li>
-        <li>Maayos at user-friendly na messaging interface</li>
-        <li>Disenyo para sa personal at group conversations</li>
-        <li>Isang digital communication experience para sa EchoZone community</li>
-      </ul>
+        <img
+          src="https://echozoneph.vercel.app/zonemessenger-screen1.jpg"
+          alt="Z-onemessenger welcome screen"
+          loading="lazy"
+          onerror="this.onerror=null;this.src='https://placehold.co/480x700/0866e9/ffffff?text=Z-onemessenger';"
+        >
 
-      Tandaan: Ang mga feature na aktuwal na magagamit ay
-      nakadepende sa functionality ng naka-install na app.
+        <img
+          src="https://echozoneph.vercel.app/zonemessenger-screen2.jpg"
+          alt="Z-onemessenger chat list"
+          loading="lazy"
+          onerror="this.onerror=null;this.src='https://placehold.co/480x700/0866e9/ffffff?text=Chat+List';"
+        >
+
+        <img
+          src="https://echozoneph.vercel.app/zonemessenger-screen3.jpg"
+          alt="Z-onemessenger conversation screen"
+          loading="lazy"
+          onerror="this.onerror=null;this.src='https://placehold.co/480x700/0866e9/ffffff?text=Messaging';"
+        >
+
+      </div>
+
+      <div class="description">
+        <h3>About this app</h3>
+
+        Ang Z-onemessenger ay isang messaging app mula sa
+        EchoZone Team na idinisenyo upang gawing mas madali
+        ang digital communication at pakikipag-ugnayan
+        sa mga kaibigan, pamilya, at komunidad.
+
+        <ul class="features">
+          <li>Messaging-focused user interface</li>
+          <li>Disenyo para sa personal na pag-uusap</li>
+          <li>Maayos na chat experience</li>
+          <li>Digital communication para sa EchoZone community</li>
+        </ul>
+
+        Ang aktuwal na messaging features ay nakadepende sa
+        functionality na suportado ng naka-install na app.
+
+        <button
+          type="button"
+          class="btn read-btn"
+          onclick="toggleDetails('messenger-details', this, true)"
+        >
+          Read Less −
+        </button>
+      </div>
+
     </div>
-
   </section>
 
 </main>
@@ -325,14 +412,50 @@ body {
 </footer>
 
 <script>
+function toggleDetails(id, button, forceClose) {
+  const details = document.getElementById(id);
+
+  if (!details) return;
+
+  const isOpen = details.classList.contains('open');
+  const shouldOpen = forceClose ? false : !isOpen;
+
+  details.classList.toggle('open', shouldOpen);
+
+  // Update the main Read More button.
+  const mainButton = document.querySelector(
+    '[aria-controls="' + id + '"]'
+  );
+
+  if (mainButton) {
+    mainButton.textContent = shouldOpen
+      ? 'Read Less −'
+      : 'Read More +';
+
+    mainButton.setAttribute(
+      'aria-expanded',
+      String(shouldOpen)
+    );
+  }
+
+  // Update the Read Less button inside the expanded section.
+  const innerButton = details.querySelector(
+    '.description button'
+  );
+
+  if (innerButton) {
+    innerButton.textContent = 'Read Less −';
+  }
+}
+
 function confirmInstall(appName) {
   return confirm(
-    "Gusto mo bang i-download ang APK ng " +
+    'Gusto mo bang i-download ang APK ng ' +
     appName +
-    "?"
+    '?'
   );
 }
 </script>
 
 </body>
-  </html>
+</html>
